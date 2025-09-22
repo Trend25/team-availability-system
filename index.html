@@ -1139,8 +1139,8 @@
             return hashHex;
         }
 
-        // SecureAdmin2025! şifresinin hash değeri (önceden hesaplanmış)
-        const ADMIN_PASSWORD_HASH = 'a7c96262c21db9a06fd49e307d694fd95f624569f9b35bb3ffacd880440f9787';
+       // Güvenlik için bu satır kaldırıldı - setup.html kullanın
+   const ADMIN_PASSWORD_HASH = localStorage.getItem('adminPasswordHash') || 'LUTFEN_SETUP_CALISTIRIN';
 
         // Dil değiştirme fonksiyonu
         function changeLanguage(lang) {
