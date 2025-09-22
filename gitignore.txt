@@ -1,0 +1,99 @@
+# Configuration files - CRITICAL SECURITY
+config.js
+config.json
+*.config.js
+.env
+.env.local
+.env.production
+
+# Security sensitive files
+passwords.txt
+*.key
+*.pem
+*.cert
+admin_password*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+error.log
+access.log
+
+# Dependencies (if added later)
+node_modules/
+bower_components/
+
+# Build files
+dist/
+build/
+*.min.js
+*.min.css
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Personal notes
+notes.txt
+TODO.txt
+personal/
+
+# Database files (if used)
+*.db
+*.sqlite
+*.sqlite3
+
+# Session files
+sessions/
+*.session
+
+# Cache
+.cache/
+*.cache
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Custom ignores for this project
+setup-complete.flag
+local-settings.js
+team-data-backup.json
+availability-export*.csv

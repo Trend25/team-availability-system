@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Wizard - Team Availability System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .setup-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .setup-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .setup-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-help {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .password-strength {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .strength-weak {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .strength-medium {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .strength-strong {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-right: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .code-output {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 20px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .checklist {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .checklist-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #4facfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <button class="lang-btn active" onclick="changeLanguage('tr')">TR</button>
+        <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
+    </div>
+
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>🚀 <span data-lang="setup-title">Kurulum Sihirbazı</span></h1>
+            <p data-lang="setup-subtitle">Team Availability System ilk kurulum</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 33%"></div>
+        </div>
+
+        <!-- Step 1: Admin Password -->
+        <div class="step active" id="step1">
+            <h2 data-lang="step1-title">Adım 1: Yönetici Şifresi</h2>
+            
+            <div class="warning-message">
+                <strong data-lang="security-warning">⚠️ Güvenlik Uyarısı:</strong>
+                <span data-lang="security-text">Varsayılan şifre güvenlik riski oluşturur. Güçlü bir şifre belirleyin.</span>
+            </div>
+
+            <div class="form-group">
+                <label for="adminPassword" data-lang="password-label">Yeni Yönetici Şifresi:</label>
+                <input type="password" id="adminPassword" placeholder="En az 12 karakter">
+                <div class="form-help" data-lang="password-help">
+                    En az 12 karakter, büyük/küçük harf, rakam ve özel karakter içermeli
+                </div>
+                <div id="passwordStrength" class="password-strength" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword" data-lang="confirm-label">Şifre Tekrar:</label>
+                <input type="password" id="confirmPassword" placeholder="Şifreyi tekrar girin">
+            </div>
+
+            <div class="buttons">
+                <div></div>
+                <button class="btn" onclick="validateStep1()" data-lang="next-btn">İleri</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Configuration -->
+        <div class="step" id="step2">
+            <h2 data-lang="step2-title">Adım 2: Sistem Ayarları</h2>
+
+            <div class="form-group">
+                <label for="timezone" data-lang="timezone-label">Varsayılan Saat Dilimi:</label>
+                <select id="timezone">
+                    <option value="Europe/Istanbul">Türkiye (UTC+3)</option>
+                    <option value="Europe/London">London (UTC+0/+1)</option>
+                    <option value="Europe/Berlin">Berlin (UTC+1/+2)</option>
+                    <option value="America/New_York">New York (UTC-5/-4)</option>
+                    <option value="America/Los_Angeles">Los Angeles (UTC-8/-7)</option>
+                    <option value="Asia/Dubai">Dubai (UTC+4)</option>
+                    <option value="Asia/Singapore">Singapore (UTC+8)</option>
+                    <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="defaultLang" data-lang="language-label">Varsayılan Dil:</label>
+                <select id="defaultLang">
+                    <option value="tr">Türkçe</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="companyName" data-lang="company-label">Şirket/Takım Adı (Opsiyonel):</label>
+                <input type="text" id="companyName" placeholder="Örn: Acme Technology">
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep(1)" data-lang="back-btn">Geri</button>
+                <button class="btn" onclick="validateStep2()" data-lang="next-btn">İleri</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Generate Config -->
+        <div class="step" id="step3">
+            <h2 data-lang="step3-title">Adım 3: Yapılandırma Dosyası</h2>
+
+            <div class="success-message" id="successMessage">
+                <strong data-lang="success-title">✅ Yapılandırma Hazır!</strong>
+                <p data-lang="success-text">Aşağıdaki kodu kopyalayıp config.js olarak kaydedin.</p>
+            </div>
+
+            <div class="code-output" id="configOutput">
+                // Yapılandırma oluşturuluyor...
+            </div>
+
+            <button class="copy-btn" onclick="copyConfig()" data-lang="copy-btn">📋 Kopyala</button>
+
+            <div class="checklist">
+                <h3 data-lang="checklist-title">✅ Kurulum Kontrol Listesi:</h3>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check1">
+                    <label for="check1" data-lang="check1">config.js dosyasını oluşturdum</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2">
+                    <label for="check2" data-lang="check2">config.js dosyasını .gitignore'a ekledim</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check3">
+                    <label for="check3" data-lang="check3">Ana dosyadan varsayılan hash'i sildim</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check4">
+                    <label for="check4" data-lang="check4">Yönetici şifresini güvenli bir yerde sakladım</label>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep(2)" data-lang="back-btn">Geri</button>
+                <button class="btn" onclick="completeSetup()" data-lang="complete-btn">Kurulumu Tamamla</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'tr';
+        let configData = {};
+
+        const translations = {
+            tr: {
+                'setup-title': 'Kurulum Sihirbazı',
+                'setup-subtitle': 'Team Availability System ilk kurulum',
+                'step1-title': 'Adım 1: Yönetici Şifresi',
+                'security-warning': '⚠️ Güvenlik Uyarısı:',
+                'security-text': 'Varsayılan şifre güvenlik riski oluşturur. Güçlü bir şifre belirleyin.',
+                'password-label': 'Yeni Yönetici Şifresi:',
+                'password-help': 'En az 12 karakter, büyük/küçük harf, rakam ve özel karakter içermeli',
+                'confirm-label': 'Şifre Tekrar:',
+                'next-btn': 'İleri',
+                'back-btn': 'Geri',
+                'step2-title': 'Adım 2: Sistem Ayarları',
+                'timezone-label': 'Varsayılan Saat Dilimi:',
+                'language-label': 'Varsayılan Dil:',
+                'company-label': 'Şirket/Takım Adı (Opsiyonel):',
+                'step3-title': 'Adım 3: Yapılandırma Dosyası',
+                'success-title': '✅ Yapılandırma Hazır!',
+                'success-text': 'Aşağıdaki kodu kopyalayıp config.js olarak kaydedin.',
+                'copy-btn': '📋 Kopyala',
+                'checklist-title': '✅ Kurulum Kontrol Listesi:',
+                'check1': 'config.js dosyasını oluşturdum',
+                'check2': 'config.js dosyasını .gitignore\'a ekledim',
+                'check3': 'Ana dosyadan varsayılan hash\'i sildim',
+                'check4': 'Yönetici şifresini güvenli bir yerde sakladım',
+                'complete-btn': 'Kurulumu Tamamla',
+                'weak-password': 'Zayıf şifre',
+                'medium-password': 'Orta güçlükte',
+                'strong-password': 'Güçlü şifre',
+                'password-mismatch': 'Şifreler eşleşmiyor!',
+                'password-too-short': 'Şifre en az 12 karakter olmalı!',
+                'setup-complete': 'Kurulum tamamlandı! Artık uygulamayı kullanabilirsiniz.',
+                'copy-success': 'Kopyalandı!'
+            },
+            en: {
+                'setup-title': 'Setup Wizard',
+                'setup-subtitle': 'Team Availability System initial setup',
+                'step1-title': 'Step 1: Admin Password',
+                'security-warning': '⚠️ Security Warning:',
+                'security-text': 'Default password is a security risk. Set a strong password.',
+                'password-label': 'New Admin Password:',
+                'password-help': 'At least 12 characters, uppercase/lowercase, numbers and special characters',
+                'confirm-label': 'Confirm Password:',
+                'next-btn': 'Next',
+                'back-btn': 'Back',
+                'step2-title': 'Step 2: System Settings',
+                'timezone-label': 'Default Timezone:',
+                'language-label': 'Default Language:',
+                'company-label': 'Company/Team Name (Optional):',
+                'step3-title': 'Step 3: Configuration File',
+                'success-title': '✅ Configuration Ready!',
+                'success-text': 'Copy the code below and save it as config.js',
+                'copy-btn': '📋 Copy',
+                'checklist-title': '✅ Setup Checklist:',
+                'check1': 'Created config.js file',
+                'check2': 'Added config.js to .gitignore',
+                'check3': 'Removed default hash from main file',
+                'check4': 'Stored admin password securely',
+                'complete-btn': 'Complete Setup',
+                'weak-password': 'Weak password',
+                'medium-password': 'Medium strength',
+                'strong-password': 'Strong password',
+                'password-mismatch': 'Passwords don\'t match!',
+                'password-too-short': 'Password must be at least 12 characters!',
+                'setup-complete': 'Setup complete! You can now use the application.',
+                'copy-success': 'Copied!'
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        function getTranslation(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        async function hashPassword(password) {
+            const msgUint8 = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        function checkPasswordStrength(password) {
+            const strengthDiv = document.getElementById('passwordStrength');
+            let strength = 0;
+            let message = '';
+
+            if (password.length >= 12) strength++;
+            if (password.length >= 16) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+            if (strength < 3) {
+                strengthDiv.className = 'password-strength strength-weak';
+                message = getTranslation('weak-password');
+            } else if (strength < 5) {
+                strengthDiv.className = 'password-strength strength-medium';
+                message = getTranslation('medium-password');
+            } else {
+                strengthDiv.className = 'password-strength strength-strong';
+                message = getTranslation('strong-password');
+            }
+
+            strengthDiv.textContent = message;
+            strengthDiv.style.display = password.length > 0 ? 'block' : 'none';
+
+            return strength >= 3;
+        }
+
+        document.getElementById('adminPassword').addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+
+        async function validateStep1() {
+            const password = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password.length < 12) {
+                alert(getTranslation('password-too-short'));
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert(getTranslation('password-mismatch'));
+                return;
+            }
+
+            if (!checkPasswordStrength(password)) {
+                if (!confirm(getTranslation('weak-password') + '. ' + (currentLanguage === 'tr' ? 'Yine de devam etmek istiyor musunuz?' : 'Do you still want to continue?'))) {
+                    return;
+                }
+            }
+
+            configData.passwordHash = await hashPassword(password);
+            configData.password = password; // For display only, will not be saved
+            goToStep(2);
+        }
+
+        function validateStep2() {
+            configData.timezone = document.getElementById('timezone').value;
+            configData.defaultLanguage = document.getElementById('defaultLang').value;
+            configData.companyName = document.getElementById('companyName').value || '';
+            
+            generateConfig();
+            goToStep(3);
+        }
+
+        function generateConfig() {
+            const config = `// Team Availability System Configuration
+// Generated: ${new Date().toISOString()}
+// ⚠️ IMPORTANT: Add this file to .gitignore!
+
+const APP_CONFIG = {
+    // Admin password hash (SHA-256)
+    // Password: [REMOVED FOR SECURITY]
+    ADMIN_PASSWORD_HASH: '${configData.passwordHash}',
+    
+    // System settings
+    DEFAULT_TIMEZONE: '${configData.timezone}',
+    DEFAULT_LANGUAGE: '${configData.defaultLanguage}',
+    ${configData.companyName ? `COMPANY_NAME: '${configData.companyName}',` : ''}
+    
+    // Security settings
+    SESSION_TIMEOUT: 3600000, // 1 hour in milliseconds
+    MAX_LOGIN_ATTEMPTS: 5,
+    LOGIN_COOLDOWN: 300000, // 5 minutes
+    
+    // Feature flags
+    ENABLE_GOOGLE_CALENDAR: true,
+    ENABLE_EMAIL_NOTIFICATIONS: false,
+    ENABLE_AUDIT_LOG: true,
+    
+    // API endpoints (if using backend)
+    API_BASE_URL: '', // Leave empty for local storage
+    
+    // Version
+    VERSION: '1.0.0',
+    LAST_UPDATED: '${new Date().toISOString()}'
+};
+
+// Export for use in main application
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = APP_CONFIG;
+}`;
+
+            document.getElementById('configOutput').textContent = config;
+            document.getElementById('successMessage').style.display = 'block';
+        }
+
+        function copyConfig() {
+            const configText = document.getElementById('configOutput').textContent;
+            navigator.clipboard.writeText(configText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ ' + getTranslation('copy-success');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function goToStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            document.getElementById(`step${stepNumber}`).classList.add('active');
+            
+            const progress = stepNumber * 33;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function completeSetup() {
+            const allChecked = document.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length === 4;
+            
+            if (!allChecked) {
+                if (!confirm(currentLanguage === 'tr' 
+                    ? 'Tüm adımları tamamlamadınız. Yine de devam etmek istiyor musunuz?' 
+                    : 'You haven\'t completed all steps. Do you still want to continue?')) {
+                    return;
+                }
+            }
+
+            alert(getTranslation('setup-complete'));
+            
+            // Show instructions
+            const instructions = `
+${currentLanguage === 'tr' ? '📌 SONRAKİ ADIMLAR:' : '📌 NEXT STEPS:'}
+
+1. config.js ${currentLanguage === 'tr' ? 'dosyasını proje klasörüne kaydedin' : 'file to project folder'}
+2. .gitignore ${currentLanguage === 'tr' ? 'dosyasına ekleyin:' : 'file add:'}
+   config.js
+   *.log
+   .env
+
+3. index.html ${currentLanguage === 'tr' ? 'dosyasını düzenleyin:' : 'file edit:'}
+   - ${currentLanguage === 'tr' ? 'Varsayılan hash satırını silin' : 'Remove default hash line'}
+   - config.js ${currentLanguage === 'tr' ? 'dosyasını import edin' : 'file import'}
+
+4. ${currentLanguage === 'tr' ? 'Yönetici şifreniz:' : 'Your admin password:'} ${configData.password}
+   ${currentLanguage === 'tr' ? '⚠️ Bu şifreyi güvenli bir yerde saklayın!' : '⚠️ Store this password securely!'}
+
+5. ${currentLanguage === 'tr' ? 'Uygulamayı başlatın:' : 'Start application:'}
+   - index.html ${currentLanguage === 'tr' ? 'dosyasını tarayıcıda açın' : 'open in browser'}
+            `;
+            
+            console.log(instructions);
+            
+            // Option to open main app
+            if (confirm(currentLanguage === 'tr' 
+                ? 'Ana uygulamayı açmak ister misiniz?' 
+                : 'Would you like to open the main application?')) {
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

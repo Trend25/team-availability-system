@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Availability System / Takım Müsaitlik Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #4facfe;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            border: none;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4facfe;
+            border-bottom: 3px solid #4facfe;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        /* Form Stilleri */
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+            color: #212529;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Üye Kartları */
+        .member-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .member-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .member-email {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .member-code {
+            background: #e7f3ff;
+            color: #0056b3;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* Kod Giriş Ekranı */
+        .code-entry {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .code-entry input {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Toplu Seçim Araçları */
+        .bulk-selection {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .selected-dates-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        /* 1 Aylık Takvim */
+        .month-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .calendar-month {
+            margin-bottom: 30px;
+        }
+
+        .month-header {
+            background: #4facfe;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .day-cell {
+            min-height: 80px;
+            padding: 8px;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        .day-cell:last-child {
+            border-right: none;
+        }
+
+        .day-cell.weekend {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .day-cell.other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        .day-cell.available {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .day-cell.unavailable {
+            background: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        .day-cell.selected {
+            border: 3px solid #ffc107;
+            background: #fff3cd;
+        }
+
+        .day-cell.not-set:hover:not(.weekend):not(.other-month) {
+            background: #fff3cd;
+        }
+
+        .day-number {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .time-display {
+            font-size: 0.7rem;
+            color: #495057;
+            text-align: center;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #adb5bd;
+        }
+
+        .close:hover {
+            color: #495057;
+        }
+
+        /* Yönetici Takvim Grid */
+        .calendar-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        .calendar-grid {
+            display: grid;
+            min-width: 1200px;
+        }
+
+        .member-name-cell {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: 600;
+            color: #495057;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            min-width: 200px;
+        }
+
+        .date-header-cell {
+            background: #4facfe;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 2px solid #dee2e6;
+            min-width: 80px;
+        }
+
+        .availability-cell {
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2px;
+        }
+
+        .availability-cell.available {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .availability-cell.unavailable {
+            background: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        .availability-cell.not-set {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .availability-cell.weekend {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .time-slot {
+            font-size: 0.7rem;
+            color: #495057;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .legend-available {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .legend-unavailable {
+            background: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        .legend-not-set {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .legend-weekend {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .legend-selected {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .scroll-container {
+            overflow-x: auto;
+            border-radius: 10px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+        }
+
+        .participant-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .participant-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .participant-checkbox:hover {
+            background: #e9ecef;
+        }
+
+        .participant-checkbox input[type="checkbox"] {
+            width: auto;
+        }
+
+        .timezone-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .month-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .bulk-buttons {
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .participant-selection {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="language-selector">
+                <button class="lang-btn active" onclick="changeLanguage('tr')">TR</button>
+                <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
+            </div>
+            <h1>📅 <span data-lang="header-title">Takım Müsaitlik Sistemi</span></h1>
+            <p data-lang="header-subtitle">Aylık müsaitlik takibi ve akıllı toplantı planlama (Hafta İçi)</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('admin-panel')">👨‍💼 <span data-lang="tab-admin">Yönetici Paneli</span></button>
+            <button class="tab" onclick="showTab('member-login')">👤 <span data-lang="tab-member">Müsaitlik Girişi</span></button>
+            <button class="tab" onclick="showTab('calendar-view')">📊 <span data-lang="tab-calendar">Takvim Görünümü</span></button>
+            <button class="tab" onclick="showTab('meeting-planner')">📋 <span data-lang="tab-meeting">Toplantı Planlama</span></button>
+        </div>
+
+        <div class="content">
+            <!-- YÖNETİCİ PANELİ -->
+            <div id="admin-panel" class="tab-content active">
+                <!-- Admin Giriş Ekranı -->
+                <div id="adminLoginScreen">
+                    <h2>🔒 <span data-lang="admin-login-title">Yönetici Paneli Girişi</span></h2>
+                    
+                    <div class="code-entry">
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="adminCode" data-lang="admin-password-label">Yönetici Kodunu Girin:</label>
+                                <input type="password" id="adminCode" placeholder="Admin password" maxlength="50">
+                            </div>
+                            <button class="btn" onclick="adminLogin()">🚪 <span data-lang="admin-login-btn">Yönetici Girişi</span></button>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                            <strong data-lang="security-warning-title">⚠️ Güvenlik Uyarısı:</strong><br>
+                            <span data-lang="security-warning-text">Bu panel sadece takım yöneticileri içindir. Yetkisiz erişim tespit edildiğinde sistem logları tutulur.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Panel İçeriği -->
+                <div id="adminPanelContent" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>👨‍💼 <span data-lang="admin-panel-title">Yönetici Paneli - Ekip Kurulumu</span></h2>
+                        <button class="btn btn-secondary" onclick="adminLogout()">🚪 <span data-lang="logout-btn">Çıkış Yap</span></button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>🌍 <span data-lang="timezone-settings">Saat Dilimi Ayarları</span></h3>
+                        <div class="timezone-info">
+                            <strong data-lang="timezone-info">ℹ️ Saat Dilimi:</strong> <span data-lang="timezone-desc">Ekibinizin çalıştığı saat dilimini seçin. Tüm müsaitlik saatleri bu saat dilimine göre hesaplanacaktır.</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="timezone" data-lang="timezone-label">Saat Dilimi:</label>
+                            <select id="timezone">
+                                <option value="Europe/Istanbul">Türkiye (UTC+3)</option>
+                                <option value="Europe/London">London (UTC+0/+1)</option>
+                                <option value="Europe/Berlin">Berlin (UTC+1/+2)</option>
+                                <option value="America/New_York">New York (UTC-5/-4)</option>
+                                <option value="America/Los_Angeles">Los Angeles (UTC-8/-7)</option>
+                                <option value="Asia/Dubai">Dubai (UTC+4)</option>
+                                <option value="Asia/Singapore">Singapore (UTC+8)</option>
+                                <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>➕ <span data-lang="add-member-title">Yeni Ekip Üyesi Ekle</span></h3>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label for="memberName" data-lang="member-name-label">Üye Adı:</label>
+                                <input type="text" id="memberName" placeholder="Örnek: Ahmet Yılmaz">
+                            </div>
+                            <div class="form-group">
+                                <label for="memberEmail" data-lang="member-email-label">Email Adresi:</label>
+                                <input type="email" id="memberEmail" placeholder="ahmet@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="memberRole" data-lang="member-role-label">Pozisyon:</label>
+                                <input type="text" id="memberRole" placeholder="Örnek: Danışman">
+                            </div>
+                        </div>
+
+                        <button class="btn" onclick="addMember()">➕ <span data-lang="add-member-btn">Üye Ekle ve Kod Oluştur</span></button>
+                    </div>
+
+                    <div id="membersList">
+                        <h3>📋 <span data-lang="members-list-title">Mevcut Ekip Üyeleri ve Kodları</span></h3>
+                        <div id="membersDisplay" class="empty-state">
+                            <span data-lang="no-members">Henüz ekip üyesi eklenmemiş.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÜYE GİRİŞİ -->
+            <div id="member-login" class="tab-content" style="display: none;">
+                <div id="codeEntryScreen">
+                    <h2>🔒 <span data-lang="member-login-title">Müsaitlik Girişi</span></h2>
+                    
+                    <div class="code-entry">
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="memberCode" data-lang="member-code-label">Size Verilen Kodu Girin:</label>
+                                <input type="text" id="memberCode" placeholder="ÖRNEK: ABC123" maxlength="6" style="text-transform: uppercase;">
+                            </div>
+                            <button class="btn" onclick="loginWithCode()">🚪 <span data-lang="member-login-btn">Giriş Yap</span></button>
+                        </div>
+                        
+                        <p style="color: #6c757d; margin-top: 20px;">
+                            💡 <span data-lang="code-hint">Kodunuzu bilmiyorsanız yöneticinize başvurun.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div id="availabilityScreen" style="display: none;">
+                    <h2 id="memberWelcome">👋 <span data-lang="welcome">Hoş Geldiniz!</span></h2>
+                    
+                    <div class="timezone-info">
+                        <strong id="currentTimezone">🌍 <span data-lang="timezone-display">Saat Dilimi: Türkiye (UTC+3)</span></strong>
+                        <div style="margin-top: 5px; font-size: 0.9rem; color: #495057;">
+                            <span data-lang="timezone-note">Tüm saatler bu saat dilimine göredir. Şu anki saat:</span> <span id="currentTime"></span>
+                        </div>
+                    </div>
+
+                    <div class="month-selector">
+                        <label data-lang="month-select">📅 Ay Seçimi:</label>
+                        <select id="monthSelect">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </select>
+                        <button class="btn" onclick="loadMonthCalendar()">📅 <span data-lang="load-calendar">Takvimi Yükle</span></button>
+                    </div>
+
+                    <div class="bulk-selection">
+                        <h4>🎯 <span data-lang="bulk-select-title">Toplu Tarih Seçimi</span></h4>
+                        <p data-lang="bulk-select-desc">Birden fazla günü seçerek aynı anda müsaitlik ayarlayabilirsiniz.</p>
+                        <div class="bulk-buttons">
+                            <button class="btn btn-small btn-warning" onclick="selectAllMondays()" data-lang="all-monday">Tüm Pazartesi</button>
+                            <button class="btn btn-small btn-warning" onclick="selectAllTuesdays()" data-lang="all-tuesday">Tüm Salı</button>
+                            <button class="btn btn-small btn-warning" onclick="selectAllWednesdays()" data-lang="all-wednesday">Tüm Çarşamba</button>
+                            <button class="btn btn-small btn-warning" onclick="selectAllThursdays()" data-lang="all-thursday">Tüm Perşembe</button>
+                            <button class="btn btn-small btn-warning" onclick="selectAllFridays()" data-lang="all-friday">Tüm Cuma</button>
+                            <button class="btn btn-small btn-secondary" onclick="clearSelection()" data-lang="clear-selection">Seçimi Temizle</button>
+                        </div>
+                        <div id="selectedDatesInfo" class="selected-dates-info" style="display: none;">
+                            <strong data-lang="selected-days">Seçili Günler:</strong> <span id="selectedDatesCount">0</span> <span data-lang="days-selected">gün seçildi</span>
+                            <br><button class="btn btn-small" style="margin-top: 10px;" onclick="openBulkAvailabilityModal()" data-lang="bulk-set-availability">Seçili Günlere Toplu Müsaitlik Ayarla</button>
+                        </div>
+                    </div>
+
+                    <div id="monthCalendar"></div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 15px;">
+                        <button class="btn btn-success" onclick="saveAllAvailability()">💾 <span data-lang="save-all">Tüm Müsaitlikleri Kaydet</span></button>
+                        <button class="btn" onclick="logout()">🚪 <span data-lang="logout-btn">Çıkış Yap</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAKVİM GÖRÜNÜMÜ -->
+            <div id="calendar-view" class="tab-content" style="display: none;">
+                <h2>📊 <span data-lang="team-calendar-title">Ekip Müsaitlik Takvimi</span></h2>
+
+                <div class="month-selector">
+                    <label for="viewMonth" data-lang="month-select">Ay Seçimi:</label>
+                    <select id="viewMonth">
+                        <!-- Dinamik olarak doldurulacak -->
+                    </select>
+                    <button class="btn" onclick="updateManagerCalendarView()">📅 <span data-lang="update-calendar">Takvimi Güncelle</span></button>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-available"></div>
+                        <span data-lang="legend-available">Müsait (Hafta İçi)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-unavailable"></div>
+                        <span data-lang="legend-unavailable">Müsait Değil</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-not-set"></div>
+                        <span data-lang="legend-not-set">Bilgi Girilmemiş</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-weekend"></div>
+                        <span data-lang="legend-weekend">Hafta Sonu</span>
+                    </div>
+                </div>
+
+                <div id="managerCalendarContainer" class="scroll-container">
+                    <div class="empty-state">
+                        <span data-lang="calendar-empty">Önce ekip üyelerini ekleyin ve ay seçin.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOPLANTI PLANLAMA -->
+            <div id="meeting-planner" class="tab-content" style="display: none;">
+                <h2>📋 <span data-lang="meeting-planning-title">Toplantı Planlama</span></h2>
+                
+                <div class="form-section">
+                    <h3>🎯 <span data-lang="meeting-info">Toplantı Bilgileri</span></h3>
+                    
+                    <div class="form-group">
+                        <label for="meetingTitle" data-lang="meeting-title-label">Toplantı Başlığı:</label>
+                        <input type="text" id="meetingTitle" placeholder="Haftalık Değerlendirme">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="meetingDuration" data-lang="duration-label">Süre (dakika):</label>
+                            <input type="number" id="meetingDuration" placeholder="60" min="15" max="480">
+                        </div>
+                        <div class="form-group">
+                            <label for="searchStartDate" data-lang="search-start-label">Arama Başlangıç Tarihi:</label>
+                            <input type="date" id="searchStartDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="searchEndDate" data-lang="search-end-label">Arama Bitiş Tarihi:</label>
+                            <input type="date" id="searchEndDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="preferredTime" data-lang="preferred-time-label">Tercih Edilen Saat Aralığı:</label>
+                            <select id="preferredTime">
+                                <option value="" data-lang="all-hours">Tüm saatler</option>
+                                <option value="morning" data-lang="morning">Sabah (09:00-12:00)</option>
+                                <option value="afternoon" data-lang="afternoon">Öğleden sonra (13:00-17:00)</option>
+                                <option value="evening" data-lang="evening">Akşam (17:00-20:00)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-lang="participants-label">Katılımcılar:</label>
+                        <div id="participantSelection" class="participant-selection">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="findOptimalMeetingTime()">🔍 <span data-lang="find-optimal-time">En Uygun Zamanı Bul</span></button>
+                </div>
+
+                <div id="meetingResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tek Gün Müsaitlik Modal -->
+    <div id="availabilityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">📅 <span data-lang="set-availability">Müsaitlik Ayarla</span></h3>
+                <span class="close" onclick="closeAvailabilityModal()">&times;</span>
+            </div>
+            <div id="modalBody">
+                <div class="form-group">
+                    <label for="dayAvailable" data-lang="day-available-label">Bu gün müsait misiniz?</label>
+                    <select id="dayAvailable">
+                        <option value="available" data-lang="available">✅ Müsait</option>
+                        <option value="unavailable" data-lang="unavailable">❌ Müsait Değil</option>
+                    </select>
+                </div>
+                <div id="timeSlots">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime" data-lang="start-time">Başlangıç Saati:</label>
+                            <input type="time" id="startTime" value="09:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime" data-lang="end-time">Bitiş Saati:</label>
+                            <input type="time" id="endTime" value="17:00">
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn" onclick="saveDayAvailability()">💾 <span data-lang="save">Kaydet</span></button>
+                    <button class="btn-secondary btn" onclick="closeAvailabilityModal()">❌ <span data-lang="cancel">İptal</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toplu Müsaitlik Modal -->
+    <div id="bulkAvailabilityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📅 <span data-lang="bulk-availability-title">Toplu Müsaitlik Ayarla</span></h3>
+                <span class="close" onclick="closeBulkAvailabilityModal()">&times;</span>
+            </div>
+            <div id="bulkModalBody">
+                <div class="form-group">
+                    <label for="bulkAvailable" data-lang="bulk-available-label">Seçili günlerde müsait misiniz?</label>
+                    <select id="bulkAvailable">
+                        <option value="available" data-lang="available">✅ Müsait</option>
+                        <option value="unavailable" data-lang="unavailable">❌ Müsait Değil</option>
+                    </select>
+                </div>
+                <div id="bulkTimeSlots">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bulkStartTime" data-lang="start-time">Başlangıç Saati:</label>
+                            <input type="time" id="bulkStartTime" value="09:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="bulkEndTime" data-lang="end-time">Bitiş Saati:</label>
+                            <input type="time" id="bulkEndTime" value="17:00">
+                        </div>
+                    </div>
+                </div>
+                <div id="bulkSelectedList" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <!-- Seçili tarihler buraya listelenecek -->
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn" onclick="saveBulkAvailability()">💾 <span data-lang="save-all-btn">Tümünü Kaydet</span></button>
+                    <button class="btn-secondary btn" onclick="closeBulkAvailabilityModal()">❌ <span data-lang="cancel">İptal</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dil sistemi
+        let currentLanguage = 'tr';
+        
+        const translations = {
+            tr: {
+                'header-title': 'Takım Müsaitlik Sistemi',
+                'header-subtitle': 'Aylık müsaitlik takibi ve akıllı toplantı planlama (Hafta İçi)',
+                'tab-admin': 'Yönetici Paneli',
+                'tab-member': 'Müsaitlik Girişi',
+                'tab-calendar': 'Takvim Görünümü',
+                'tab-meeting': 'Toplantı Planlama',
+                'admin-login-title': 'Yönetici Paneli Girişi',
+                'admin-password-label': 'Yönetici Kodunu Girin:',
+                'admin-login-btn': 'Yönetici Girişi',
+                'security-warning-title': '⚠️ Güvenlik Uyarısı:',
+                'security-warning-text': 'Bu panel sadece takım yöneticileri içindir. Yetkisiz erişim tespit edildiğinde sistem logları tutulur.',
+                'admin-panel-title': 'Yönetici Paneli - Ekip Kurulumu',
+                'logout-btn': 'Çıkış Yap',
+                'timezone-settings': 'Saat Dilimi Ayarları',
+                'timezone-info': 'ℹ️ Saat Dilimi:',
+                'timezone-desc': 'Ekibinizin çalıştığı saat dilimini seçin. Tüm müsaitlik saatleri bu saat dilimine göre hesaplanacaktır.',
+                'timezone-label': 'Saat Dilimi:',
+                'add-member-title': 'Yeni Ekip Üyesi Ekle',
+                'member-name-label': 'Üye Adı:',
+                'member-email-label': 'Email Adresi:',
+                'member-role-label': 'Pozisyon:',
+                'add-member-btn': 'Üye Ekle ve Kod Oluştur',
+                'members-list-title': 'Mevcut Ekip Üyeleri ve Kodları',
+                'no-members': 'Henüz ekip üyesi eklenmemiş.',
+                'member-login-title': 'Müsaitlik Girişi',
+                'member-code-label': 'Size Verilen Kodu Girin:',
+                'member-login-btn': 'Giriş Yap',
+                'code-hint': 'Kodunuzu bilmiyorsanız yöneticinize başvurun.',
+                'welcome': 'Hoş Geldiniz!',
+                'timezone-display': 'Saat Dilimi:',
+                'timezone-note': 'Tüm saatler bu saat dilimine göredir. Şu anki saat:',
+                'month-select': '📅 Ay Seçimi:',
+                'load-calendar': 'Takvimi Yükle',
+                'bulk-select-title': 'Toplu Tarih Seçimi',
+                'bulk-select-desc': 'Birden fazla günü seçerek aynı anda müsaitlik ayarlayabilirsiniz.',
+                'all-monday': 'Tüm Pazartesi',
+                'all-tuesday': 'Tüm Salı',
+                'all-wednesday': 'Tüm Çarşamba',
+                'all-thursday': 'Tüm Perşembe',
+                'all-friday': 'Tüm Cuma',
+                'clear-selection': 'Seçimi Temizle',
+                'selected-days': 'Seçili Günler:',
+                'days-selected': 'gün seçildi',
+                'bulk-set-availability': 'Seçili Günlere Toplu Müsaitlik Ayarla',
+                'save-all': 'Tüm Müsaitlikleri Kaydet',
+                'team-calendar-title': 'Ekip Müsaitlik Takvimi',
+                'update-calendar': 'Takvimi Güncelle',
+                'legend-available': 'Müsait (Hafta İçi)',
+                'legend-unavailable': 'Müsait Değil',
+                'legend-not-set': 'Bilgi Girilmemiş',
+                'legend-weekend': 'Hafta Sonu',
+                'calendar-empty': 'Önce ekip üyelerini ekleyin ve ay seçin.',
+                'meeting-planning-title': 'Toplantı Planlama',
+                'meeting-info': 'Toplantı Bilgileri',
+                'meeting-title-label': 'Toplantı Başlığı:',
+                'duration-label': 'Süre (dakika):',
+                'search-start-label': 'Arama Başlangıç Tarihi:',
+                'search-end-label': 'Arama Bitiş Tarihi:',
+                'preferred-time-label': 'Tercih Edilen Saat Aralığı:',
+                'all-hours': 'Tüm saatler',
+                'morning': 'Sabah (09:00-12:00)',
+                'afternoon': 'Öğleden sonra (13:00-17:00)',
+                'evening': 'Akşam (17:00-20:00)',
+                'participants-label': 'Katılımcılar:',
+                'find-optimal-time': 'En Uygun Zamanı Bul',
+                'set-availability': 'Müsaitlik Ayarla',
+                'day-available-label': 'Bu gün müsait misiniz?',
+                'available': '✅ Müsait',
+                'unavailable': '❌ Müsait Değil',
+                'start-time': 'Başlangıç Saati:',
+                'end-time': 'Bitiş Saati:',
+                'save': 'Kaydet',
+                'cancel': 'İptal',
+                'bulk-availability-title': 'Toplu Müsaitlik Ayarla',
+                'bulk-available-label': 'Seçili günlerde müsait misiniz?',
+                'save-all-btn': 'Tümünü Kaydet',
+                'regenerate-code': 'Kod Yenile',
+                'delete-member': 'Üyeyi Sil',
+                'wrong-password': 'Hatalı yönetici şifresi!',
+                'all-fields-required': 'Lütfen tüm alanları doldurunuz.',
+                'member-added': 'Üye başarıyla eklendi!',
+                'share-code': 'Bu kodu güvenli şekilde',
+                'share-with': 'ile paylaşın.'
+            },
+            en: {
+                'header-title': 'Team Availability System',
+                'header-subtitle': 'Monthly availability tracking and smart meeting planning (Weekdays)',
+                'tab-admin': 'Admin Panel',
+                'tab-member': 'Availability Entry',
+                'tab-calendar': 'Calendar View',
+                'tab-meeting': 'Meeting Planning',
+                'admin-login-title': 'Admin Panel Login',
+                'admin-password-label': 'Enter Admin Code:',
+                'admin-login-btn': 'Admin Login',
+                'security-warning-title': '⚠️ Security Warning:',
+                'security-warning-text': 'This panel is for team administrators only. Unauthorized access attempts are logged.',
+                'admin-panel-title': 'Admin Panel - Team Setup',
+                'logout-btn': 'Logout',
+                'timezone-settings': 'Timezone Settings',
+                'timezone-info': 'ℹ️ Timezone:',
+                'timezone-desc': 'Select your team\'s working timezone. All availability times will be calculated according to this timezone.',
+                'timezone-label': 'Timezone:',
+                'add-member-title': 'Add New Team Member',
+                'member-name-label': 'Member Name:',
+                'member-email-label': 'Email Address:',
+                'member-role-label': 'Position:',
+                'add-member-btn': 'Add Member and Generate Code',
+                'members-list-title': 'Current Team Members and Codes',
+                'no-members': 'No team members added yet.',
+                'member-login-title': 'Availability Entry',
+                'member-code-label': 'Enter Your Code:',
+                'member-login-btn': 'Login',
+                'code-hint': 'Contact your administrator if you don\'t know your code.',
+                'welcome': 'Welcome!',
+                'timezone-display': 'Timezone:',
+                'timezone-note': 'All times are according to this timezone. Current time:',
+                'month-select': '📅 Select Month:',
+                'load-calendar': 'Load Calendar',
+                'bulk-select-title': 'Bulk Date Selection',
+                'bulk-select-desc': 'You can set availability for multiple days at once.',
+                'all-monday': 'All Mondays',
+                'all-tuesday': 'All Tuesdays',
+                'all-wednesday': 'All Wednesdays',
+                'all-thursday': 'All Thursdays',
+                'all-friday': 'All Fridays',
+                'clear-selection': 'Clear Selection',
+                'selected-days': 'Selected Days:',
+                'days-selected': 'days selected',
+                'bulk-set-availability': 'Set Bulk Availability for Selected Days',
+                'save-all': 'Save All Availability',
+                'team-calendar-title': 'Team Availability Calendar',
+                'update-calendar': 'Update Calendar',
+                'legend-available': 'Available (Weekdays)',
+                'legend-unavailable': 'Not Available',
+                'legend-not-set': 'No Info',
+                'legend-weekend': 'Weekend',
+                'calendar-empty': 'Add team members first and select month.',
+                'meeting-planning-title': 'Meeting Planning',
+                'meeting-info': 'Meeting Information',
+                'meeting-title-label': 'Meeting Title:',
+                'duration-label': 'Duration (minutes):',
+                'search-start-label': 'Search Start Date:',
+                'search-end-label': 'Search End Date:',
+                'preferred-time-label': 'Preferred Time Range:',
+                'all-hours': 'All hours',
+                'morning': 'Morning (09:00-12:00)',
+                'afternoon': 'Afternoon (13:00-17:00)',
+                'evening': 'Evening (17:00-20:00)',
+                'participants-label': 'Participants:',
+                'find-optimal-time': 'Find Optimal Time',
+                'set-availability': 'Set Availability',
+                'day-available-label': 'Are you available this day?',
+                'available': '✅ Available',
+                'unavailable': '❌ Not Available',
+                'start-time': 'Start Time:',
+                'end-time': 'End Time:',
+                'save': 'Save',
+                'cancel': 'Cancel',
+                'bulk-availability-title': 'Set Bulk Availability',
+                'bulk-available-label': 'Are you available on selected days?',
+                'save-all-btn': 'Save All',
+                'regenerate-code': 'Regenerate Code',
+                'delete-member': 'Delete Member',
+                'wrong-password': 'Wrong admin password!',
+                'all-fields-required': 'Please fill in all fields.',
+                'member-added': 'Member added successfully!',
+                'share-code': 'Share this code securely with',
+                'share-with': ''
+            }
+        };
+
+        // Global değişkenler
+        let teamMembers = [];
+        let availability = {};
+        let currentLoggedInMember = null;
+        let currentTimezone = 'Europe/Istanbul';
+        let currentEditingDate = null;
+        let selectedDates = new Set();
+        let isEventListenersAdded = false;
+        let isAdminLoggedIn = false;
+
+        // Güvenli şifre hash fonksiyonu
+        async function hashPassword(password) {
+            const msgUint8 = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // SecureAdmin2025! şifresinin hash değeri (önceden hesaplanmış)
+        const ADMIN_PASSWORD_HASH = 'a7c96262c21db9a06fd49e307d694fd95f624569f9b35bb3ffacd880440f9787';
+
+        // Dil değiştirme fonksiyonu
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Butonları güncelle
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Metinleri güncelle
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            // Placeholder'ları güncelle
+            updatePlaceholders();
+        }
+
+        function updatePlaceholders() {
+            const placeholderMap = {
+                tr: {
+                    'memberName': 'Örnek: Ahmet Yılmaz',
+                    'memberEmail': 'ahmet@example.com',
+                    'memberRole': 'Örnek: Danışman',
+                    'memberCode': 'ÖRNEK: ABC123',
+                    'meetingTitle': 'Haftalık Değerlendirme'
+                },
+                en: {
+                    'memberName': 'Example: John Doe',
+                    'memberEmail': 'john@example.com',
+                    'memberRole': 'Example: Consultant',
+                    'memberCode': 'EXAMPLE: ABC123',
+                    'meetingTitle': 'Weekly Review'
+                }
+            };
+            
+            Object.keys(placeholderMap[currentLanguage]).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.placeholder = placeholderMap[currentLanguage][id];
+                }
+            });
+        }
+
+        function getTranslation(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        function showTab(tabName) {
+            if (tabName === 'admin-panel' && !isAdminLoggedIn) {
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                document.getElementById(tabName).style.display = 'block';
+                event.target.classList.add('active');
+                
+                document.getElementById('adminLoginScreen').style.display = 'block';
+                document.getElementById('adminPanelContent').style.display = 'none';
+                return;
+            }
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                timeZone: currentTimezone, 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const currentTimeElement = document.getElementById('currentTime');
+            if (currentTimeElement) {
+                currentTimeElement.textContent = timeString;
+            }
+        }
+
+        function setupEventListeners() {
+            if (isEventListenersAdded) return;
+            
+            document.getElementById('timezone').addEventListener('change', function() {
+                currentTimezone = this.value;
+                updateCurrentTime();
+            });
+
+            document.getElementById('dayAvailable').addEventListener('change', function() {
+                toggleTimeSlots(this.value === 'available');
+            });
+
+            document.getElementById('bulkAvailable').addEventListener('change', function() {
+                toggleBulkTimeSlots(this.value === 'available');
+            });
+            
+            isEventListenersAdded = true;
+        }
+
+        function generateMemberCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        async function adminLogin() {
+            const enteredPassword = document.getElementById('adminCode').value;
+            const enteredHash = await hashPassword(enteredPassword);
+            
+            if (enteredHash === ADMIN_PASSWORD_HASH) {
+                isAdminLoggedIn = true;
+                document.getElementById('adminLoginScreen').style.display = 'none';
+                document.getElementById('adminPanelContent').style.display = 'block';
+                
+                showToast('✅ ' + (currentLanguage === 'tr' ? 'Yönetici girişi başarılı!' : 'Admin login successful!'), 'success');
+                updateMembersList();
+            } else {
+                const codeInput = document.getElementById('adminCode');
+                codeInput.style.borderColor = '#dc3545';
+                codeInput.style.backgroundColor = '#f8d7da';
+                
+                alert(getTranslation('wrong-password'));
+                
+                setTimeout(() => {
+                    codeInput.style.borderColor = '#dee2e6';
+                    codeInput.style.backgroundColor = 'white';
+                    codeInput.value = '';
+                }, 2000);
+            }
+        }
+
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminLoginScreen').style.display = 'block';
+            document.getElementById('adminPanelContent').style.display = 'none';
+            document.getElementById('adminCode').value = '';
+            
+            showToast('🚪 ' + (currentLanguage === 'tr' ? 'Yönetici oturumu kapatıldı' : 'Admin logged out'), 'warning');
+        }
+
+        function addMember() {
+            if (!isAdminLoggedIn) {
+                alert(currentLanguage === 'tr' ? '⌛ Bu işlem için yönetici yetkisi gereklidir.' : '⌛ Admin authorization required for this action.');
+                return;
+            }
+            
+            const name = document.getElementById('memberName').value.trim();
+            const email = document.getElementById('memberEmail').value.trim();
+            const role = document.getElementById('memberRole').value.trim();
+
+            if (!name || !email || !role) {
+                alert(getTranslation('all-fields-required'));
+                return;
+            }
+
+            const code = generateMemberCode();
+            const member = {
+                id: Date.now(),
+                name,
+                email,
+                role,
+                code
+            };
+
+            teamMembers.push(member);
+            updateMembersList();
+            updateParticipantSelection();
+            clearMemberForm();
+            
+            alert(`${getTranslation('member-added')}\n\n👤 ${currentLanguage === 'tr' ? 'İsim' : 'Name'}: ${name}\n📧 Email: ${email}\n📋 ${currentLanguage === 'tr' ? 'Pozisyon' : 'Position'}: ${role}\n🔑 ${currentLanguage === 'tr' ? 'Kod' : 'Code'}: ${code}\n\n⚠️ ${getTranslation('share-code')} ${name} ${getTranslation('share-with')}`);
+        }
+
+        function clearMemberForm() {
+            document.getElementById('memberName').value = '';
+            document.getElementById('memberEmail').value = '';
+            document.getElementById('memberRole').value = '';
+        }
+
+        function updateMembersList() {
+            const display = document.getElementById('membersDisplay');
+            
+            if (teamMembers.length === 0) {
+                display.innerHTML = `<div class="empty-state">${getTranslation('no-members')}</div>`;
+                return;
+            }
+
+            display.innerHTML = teamMembers.map(member => `
+                <div class="member-card">
+                    <div class="member-name">👤 ${member.name}</div>
+                    <div class="member-email">📧 ${member.email}</div>
+                    <div style="color: #6c757d; margin-bottom: 10px;">📋 ${member.role}</div>
+                    <div class="member-code">🔑 ${currentLanguage === 'tr' ? 'KOD' : 'CODE'}: ${member.code}</div>
+                    <div style="font-size: 0.9rem; color: #6c757d; margin-bottom: 15px;">
+                        ${currentLanguage === 'tr' 
+                            ? `Bu kodu ${member.name} ile paylaşarak müsaitlik bilgilerini girmesini sağlayabilirsiniz.`
+                            : `Share this code with ${member.name} to allow them to enter their availability.`}
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-small btn-secondary" onclick="regenerateMemberCode(${member.id})">
+                            🔄 ${getTranslation('regenerate-code')}
+                        </button>
+                        <button class="btn btn-small" style="background: #dc3545;" onclick="deleteMember(${member.id})">
+                            🗑️ ${getTranslation('delete-member')}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            
+            let bgColor, textColor, borderColor;
+            switch(type) {
+                case 'success':
+                    bgColor = '#d4edda';
+                    textColor = '#155724';
+                    borderColor = '#c3e6cb';
+                    break;
+                case 'warning':
+                    bgColor = '#fff3cd';
+                    textColor = '#856404';
+                    borderColor = '#ffeaa7';
+                    break;
+                case 'error':
+                    bgColor = '#f8d7da';
+                    textColor = '#721c24';
+                    borderColor = '#f5c6cb';
+                    break;
+                default:
+                    bgColor = '#d1ecf1';
+                    textColor = '#0c5460';
+                    borderColor = '#bee5eb';
+            }
+            
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                background: ${bgColor}; color: ${textColor}; padding: 15px 20px;
+                border-radius: 8px; border: 1px solid ${borderColor};
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideIn 0.3s ease;
+            `;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function regenerateMemberCode(memberId) {
+            const member = teamMembers.find(m => m.id === memberId);
+            if (!member) return;
+            
+            const oldCode = member.code;
+            member.code = generateMemberCode();
+            
+            updateMembersList();
+            
+            const message = currentLanguage === 'tr' 
+                ? `🔄 ${member.name} için yeni kod oluşturuldu!\n\nEski kod: ${oldCode}\nYeni kod: ${member.code}\n\n⚠️ Eski kod artık geçersizdir.`
+                : `🔄 New code generated for ${member.name}!\n\nOld code: ${oldCode}\nNew code: ${member.code}\n\n⚠️ Old code is now invalid.`;
+            
+            alert(message);
+        }
+
+        function deleteMember(memberId) {
+            const member = teamMembers.find(m => m.id === memberId);
+            if (!member) return;
+            
+            const confirmMessage = currentLanguage === 'tr'
+                ? `⚠️ ${member.name} isimli üyeyi silmek istediğinizden emin misiniz?\n\nBu işlem:\n• Üyenin tüm müsaitlik verilerini silecek\n• Kodunu geçersiz kılacak\n• Geri alınamaz\n\nDevam etmek istiyor musunuz?`
+                : `⚠️ Are you sure you want to delete ${member.name}?\n\nThis will:\n• Delete all availability data for this member\n• Invalidate their code\n• Cannot be undone\n\nDo you want to continue?`;
+            
+            if (confirm(confirmMessage)) {
+                teamMembers = teamMembers.filter(m => m.id !== memberId);
+                delete availability[memberId];
+                updateParticipantSelection();
+                updateMembersList();
+                
+                const message = currentLanguage === 'tr' 
+                    ? `✅ ${member.name} başarıyla silindi.`
+                    : `✅ ${member.name} deleted successfully.`;
+                
+                alert(message);
+            }
+        }
+
+        function loginWithCode() {
+            const code = document.getElementById('memberCode').value.trim().toUpperCase();
+            
+            if (!code) {
+                alert(currentLanguage === 'tr' ? 'Lütfen kodunuzu giriniz.' : 'Please enter your code.');
+                return;
+            }
+
+            const member = teamMembers.find(m => m.code === code);
+            
+            if (!member) {
+                alert(currentLanguage === 'tr' ? 'Geçersiz kod! Lütfen doğru kodu giriniz.' : 'Invalid code! Please enter the correct code.');
+                return;
+            }
+
+            currentLoggedInMember = member;
+            document.getElementById('codeEntryScreen').style.display = 'none';
+            document.getElementById('availabilityScreen').style.display = 'block';
+            
+            const welcomeText = currentLanguage === 'tr' 
+                ? `👋 Hoş Geldiniz, ${member.name}!`
+                : `👋 Welcome, ${member.name}!`;
+            document.getElementById('memberWelcome').innerHTML = welcomeText;
+            
+            setupEventListeners();
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000);
+            populateMonthOptions();
+            
+            document.getElementById('monthSelect').value = '2025-09';
+            loadMonthCalendar();
+        }
+
+        function logout() {
+            currentLoggedInMember = null;
+            selectedDates.clear();
+            document.getElementById('codeEntryScreen').style.display = 'block';
+            document.getElementById('availabilityScreen').style.display = 'none';
+            document.getElementById('memberCode').value = '';
+            updateSelectedDatesInfo();
+        }
+
+        function populateMonthOptions() {
+            const monthSelect = document.getElementById('monthSelect');
+            const viewMonthSelect = document.getElementById('viewMonth');
+            const options = [];
+            
+            const startYear = 2025;
+            const startMonth = 8;
+            
+            for (let i = 0; i <= 12; i++) {
+                const year = startMonth + i >= 12 ? startYear + 1 : startYear;
+                const month = (startMonth + i) % 12;
+                
+                const date = new Date(year, month, 1);
+                const value = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                const text = date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
+                options.push({value, text});
+            }
+
+            const optionsHtml = options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+            if (monthSelect) {
+                monthSelect.innerHTML = optionsHtml;
+            }
+            if (viewMonthSelect) {
+                viewMonthSelect.innerHTML = optionsHtml;
+            }
+        }
+
+        function loadMonthCalendar() {
+            const monthValue = document.getElementById('monthSelect').value;
+            if (!monthValue) return;
+            
+            const [year, month] = monthValue.split('-').map(Number);
+            const monthDate = new Date(year, month - 1, 1);
+            
+            const calendarHtml = generateMonthCalendar(monthDate);
+            document.getElementById('monthCalendar').innerHTML = calendarHtml;
+        }
+
+        function generateMonthCalendar(monthDate) {
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+            const monthName = monthDate.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+            const daysInMonth = lastDay.getDate();
+            
+            const dayHeaders = currentLanguage === 'tr' 
+                ? ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+                : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            let html = `
+                <div class="calendar-month">
+                    <div class="month-header">${monthName}</div>
+                    <div class="month-grid">
+            `;
+            
+            dayHeaders.forEach(day => {
+                html += `<div class="day-header">${day}</div>`;
+            });
+            
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += '<div class="day-cell other-month"></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                let cellClass = 'day-cell';
+                let timeDisplay = '';
+                
+                if (isWeekend) {
+                    cellClass += ' weekend';
+                } else {
+                    if (currentLoggedInMember && availability[currentLoggedInMember.id]) {
+                        const dayAvailability = availability[currentLoggedInMember.id][dateString];
+                        if (dayAvailability) {
+                            if (dayAvailability.available) {
+                                cellClass += ' available';
+                                timeDisplay = `<div class="time-display">${dayAvailability.start}-${dayAvailability.end}</div>`;
+                            } else {
+                                cellClass += ' unavailable';
+                                timeDisplay = `<div class="time-display">${currentLanguage === 'tr' ? 'Müsait Değil' : 'Not Available'}</div>`;
+                            }
+                        }
+                    }
+                    
+                    if (selectedDates.has(dateString)) {
+                        cellClass += ' selected';
+                    }
+                }
+                
+                const clickAction = isWeekend ? '' : `onclick="toggleDateSelection('${dateString}')" ondblclick="openAvailabilityModal('${dateString}')"`;
+                
+                html += `
+                    <div class="${cellClass}" ${clickAction}>
+                        <div class="day-number">${day}</div>
+                        ${timeDisplay}
+                    </div>
+                `;
+            }
+            
+            const totalCells = Math.ceil((daysInMonth + firstDayOfWeek) / 7) * 7;
+            const remainingCells = totalCells - daysInMonth - firstDayOfWeek;
+            for (let i = 1; i <= remainingCells; i++) {
+                html += '<div class="day-cell other-month"></div>';
+            }
+            
+            html += '</div></div>';
+            return html;
+        }
+
+        function toggleDateSelection(dateString) {
+            if (selectedDates.has(dateString)) {
+                selectedDates.delete(dateString);
+            } else {
+                selectedDates.add(dateString);
+            }
+            
+            updateSelectedDatesInfo();
+            refreshCalendarDisplay();
+        }
+
+        function refreshCalendarDisplay() {
+            loadMonthCalendar();
+        }
+
+        function updateSelectedDatesInfo() {
+            const info = document.getElementById('selectedDatesInfo');
+            const count = document.getElementById('selectedDatesCount');
+            
+            if (selectedDates.size > 0) {
+                if (count) count.textContent = selectedDates.size;
+                if (info) info.style.display = 'block';
+            } else {
+                if (info) info.style.display = 'none';
+            }
+        }
+
+        function selectAllMondays() {
+            selectByWeekday(1);
+        }
+
+        function selectAllTuesdays() {
+            selectByWeekday(2);
+        }
+
+        function selectAllWednesdays() {
+            selectByWeekday(3);
+        }
+
+        function selectAllThursdays() {
+            selectByWeekday(4);
+        }
+
+        function selectAllFridays() {
+            selectByWeekday(5);
+        }
+
+        function selectByWeekday(weekday) {
+            const monthValue = document.getElementById('monthSelect').value;
+            if (!monthValue) return;
+            
+            const [year, month] = monthValue.split('-').map(Number);
+            const lastDay = new Date(year, month, 0);
+            
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month - 1, day);
+                if (date.getDay() === weekday) {
+                    selectedDates.add(date.toISOString().split('T')[0]);
+                }
+            }
+            
+            updateSelectedDatesInfo();
+            refreshCalendarDisplay();
+        }
+
+        function clearSelection() {
+            selectedDates.clear();
+            updateSelectedDatesInfo();
+            refreshCalendarDisplay();
+        }
+
+        function openAvailabilityModal(dateString) {
+            currentEditingDate = dateString;
+            const date = new Date(dateString);
+            const formattedDate = date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('modalTitle').innerHTML = `📅 ${formattedDate} - ${getTranslation('set-availability')}`;
+            
+            if (currentLoggedInMember && availability[currentLoggedInMember.id]) {
+                const dayData = availability[currentLoggedInMember.id][dateString];
+                if (dayData) {
+                    document.getElementById('dayAvailable').value = dayData.available ? 'available' : 'unavailable';
+                    document.getElementById('startTime').value = dayData.start || '09:00';
+                    document.getElementById('endTime').value = dayData.end || '17:00';
+                    toggleTimeSlots(dayData.available);
+                } else {
+                    resetModalForm();
+                }
+            } else {
+                resetModalForm();
+            }
+            
+            document.getElementById('availabilityModal').style.display = 'block';
+        }
+
+        function resetModalForm() {
+            document.getElementById('dayAvailable').value = 'available';
+            document.getElementById('startTime').value = '09:00';
+            document.getElementById('endTime').value = '17:00';
+            toggleTimeSlots(true);
+        }
+
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').style.display = 'none';
+            currentEditingDate = null;
+        }
+
+        function openBulkAvailabilityModal() {
+            if (selectedDates.size === 0) {
+                alert(currentLanguage === 'tr' ? 'Önce günleri seçiniz.' : 'Please select days first.');
+                return;
+            }
+
+            const sortedDates = Array.from(selectedDates).sort();
+            const datesList = sortedDates.map(dateString => {
+                const date = new Date(dateString);
+                return date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+            }).join(', ');
+            
+            document.getElementById('bulkSelectedList').innerHTML = `
+                <strong>${getTranslation('selected-days')} (${selectedDates.size} ${getTranslation('days-selected').split(' ')[1]}):</strong><br>
+                <div style="margin-top: 5px; font-size: 0.9rem;">${datesList}</div>
+            `;
+            
+            document.getElementById('bulkAvailabilityModal').style.display = 'block';
+        }
+
+        function closeBulkAvailabilityModal() {
+            document.getElementById('bulkAvailabilityModal').style.display = 'none';
+        }
+
+        function toggleTimeSlots(show) {
+            const timeSlots = document.getElementById('timeSlots');
+            if (timeSlots) {
+                timeSlots.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function toggleBulkTimeSlots(show) {
+            const bulkTimeSlots = document.getElementById('bulkTimeSlots');
+            if (bulkTimeSlots) {
+                bulkTimeSlots.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function saveDayAvailability() {
+            if (!currentEditingDate || !currentLoggedInMember) return;
+            
+            const isAvailable = document.getElementById('dayAvailable').value === 'available';
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (!availability[currentLoggedInMember.id]) {
+                availability[currentLoggedInMember.id] = {};
+            }
+            
+            availability[currentLoggedInMember.id][currentEditingDate] = {
+                available: isAvailable,
+                start: isAvailable ? startTime : null,
+                end: isAvailable ? endTime : null
+            };
+            
+            closeAvailabilityModal();
+            
+            setTimeout(() => {
+                loadMonthCalendar();
+            }, 100);
+            
+            showToast(`✅ ${currentEditingDate} ${currentLanguage === 'tr' ? 'tarihli müsaitlik kaydedildi!' : 'availability saved!'}`, 'success');
+        }
+
+        function saveBulkAvailability() {
+            if (!currentLoggedInMember || selectedDates.size === 0) return;
+            
+            const isAvailable = document.getElementById('bulkAvailable').value === 'available';
+            const startTime = document.getElementById('bulkStartTime').value;
+            const endTime = document.getElementById('bulkEndTime').value;
+            
+            if (!availability[currentLoggedInMember.id]) {
+                availability[currentLoggedInMember.id] = {};
+            }
+            
+            const savedDates = [];
+            selectedDates.forEach(dateString => {
+                availability[currentLoggedInMember.id][dateString] = {
+                    available: isAvailable,
+                    start: isAvailable ? startTime : null,
+                    end: isAvailable ? endTime : null
+                };
+                savedDates.push(dateString);
+            });
+            
+            closeBulkAvailabilityModal();
+            clearSelection();
+            
+            setTimeout(() => {
+                loadMonthCalendar();
+            }, 100);
+            
+            showToast(`✅ ${savedDates.length} ${currentLanguage === 'tr' ? 'günün müsaitliği kaydedildi!' : 'days availability saved!'}`, 'success');
+        }
+
+        function saveAllAvailability() {
+            if (!currentLoggedInMember) {
+                alert(currentLanguage === 'tr' 
+                    ? 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.'
+                    : 'Your session has expired. Please login again.');
+                return;
+            }
+
+            alert(currentLanguage === 'tr' 
+                ? 'Tüm müsaitlik bilgileriniz başarıyla kaydedildi!'
+                : 'All your availability has been saved successfully!');
+        }
+
+        function getWorkdaysInMonth(year, month) {
+            const dates = [];
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month - 1, day);
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    dates.push(date.toISOString().split('T')[0]);
+                }
+            }
+
+            return dates;
+        }
+
+        function updateManagerCalendarView() {
+            const monthValue = document.getElementById('viewMonth').value;
+            if (!monthValue) {
+                alert(currentLanguage === 'tr' ? 'Lütfen bir ay seçiniz.' : 'Please select a month.');
+                return;
+            }
+            
+            const [year, month] = monthValue.split('-').map(Number);
+
+            if (teamMembers.length === 0) {
+                alert(currentLanguage === 'tr' ? 'Önce ekip üyelerini ekleyiniz.' : 'Add team members first.');
+                return;
+            }
+
+            const container = document.getElementById('managerCalendarContainer');
+            const monthDate = new Date(year, month - 1, 1);
+            const calendarHtml = generateManagerMonthCalendar(monthDate);
+            
+            container.innerHTML = calendarHtml;
+        }
+
+        function generateManagerMonthCalendar(monthDate) {
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+            const monthName = monthDate.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            const allDaysInMonth = [];
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                allDaysInMonth.push({
+                    day,
+                    dateString,
+                    isWeekend,
+                    dayName: date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { weekday: 'short' })
+                });
+            }
+            
+            const dayHeaders = currentLanguage === 'tr' 
+                ? ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+                : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            let html = `
+                <div class="calendar-container">
+                    <div style="background: #4facfe; color: white; padding: 20px; text-align: center; font-size: 1.3rem; font-weight: 600;">
+                        📅 ${monthName} - ${currentLanguage === 'tr' ? 'Ekip Müsaitlik Takvimi' : 'Team Availability Calendar'}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 200px repeat(7, 1fr); gap: 1px; background: #dee2e6;">
+                        
+                        <div style="background: #f8f9fa; padding: 15px; font-weight: 600; text-align: center;">
+                            ${currentLanguage === 'tr' ? 'Ekip / Gün' : 'Team / Day'}
+                        </div>
+                        
+                        ${dayHeaders.map(day => `
+                            <div style="background: #6c757d; color: white; padding: 12px; text-align: center; font-weight: 600; font-size: 0.9rem;">
+                                ${day}
+                            </div>
+                        `).join('')}
+                        
+                        ${teamMembers.map(member => {
+                            const memberWeeks = generateMemberWeekRows(member, year, month, allDaysInMonth);
+                            return memberWeeks;
+                        }).join('')}
+                        
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        function generateMemberWeekRows(member, year, month, allDaysInMonth) {
+            const firstDay = new Date(year, month, 1);
+            const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+            
+            const weeks = [];
+            let currentWeek = [];
+            
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                currentWeek.push(null);
+            }
+            
+            allDaysInMonth.forEach(dayInfo => {
+                currentWeek.push(dayInfo);
+                
+                if (currentWeek.length === 7) {
+                    weeks.push(currentWeek);
+                    currentWeek = [];
+                }
+            });
+            
+            while (currentWeek.length > 0 && currentWeek.length < 7) {
+                currentWeek.push(null);
+            }
+            if (currentWeek.length > 0) {
+                weeks.push(currentWeek);
+            }
+            
+            return weeks.map((week, weekIndex) => {
+                let weekHtml = '';
+                
+                if (weekIndex === 0) {
+                    weekHtml += `
+                        <div style="background: #f8f9fa; padding: 15px; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6; 
+                                   grid-row: span ${weeks.length}; display: flex; align-items: center; flex-direction: column; justify-content: center;">
+                            <div style="font-size: 1.1rem; margin-bottom: 5px;">${member.name}</div>
+                            <div style="font-size: 0.8rem; color: #6c757d;">${member.role}</div>
+                        </div>
+                    `;
+                }
+                
+                week.forEach(dayInfo => {
+                    if (!dayInfo) {
+                        weekHtml += '<div style="background: #f8f9fa; min-height: 50px;"></div>';
+                    } else {
+                        const availabilityInfo = availability[member.id] && availability[member.id][dayInfo.dateString];
+                        let cellClass = 'background: #fff3cd;';
+                        let content = dayInfo.day;
+                        let timeText = '';
+                        
+                        if (dayInfo.isWeekend) {
+                            cellClass = 'background: #f8f9fa; color: #6c757d;';
+                            content = `<span style="font-size: 0.8rem;">${dayInfo.day}<br>${currentLanguage === 'tr' ? 'H.Sonu' : 'W.End'}</span>`;
+                        } else if (availabilityInfo) {
+                            if (availabilityInfo.available) {
+                                cellClass = 'background: #d4edda; color: #155724;';
+                                timeText = `<div style="font-size: 0.7rem; margin-top: 2px;">${availabilityInfo.start}-${availabilityInfo.end}</div>`;="font-size: 0.7rem; margin-top: 2px;">${availabilityInfo.start}-${availabilityInfo.end}</div>`;
+                            } else {
+                                cellClass = 'background: #e2e3e5; color: #495057;';
+                                timeText = `<div style="font-size: 0.7rem; margin-top: 2px;">${currentLanguage === 'tr' ? 'Müsait Değil' : 'Not Available'}</div>`;
+                            }
+                        }
+                        
+                        weekHtml += `
+                            <div style="${cellClass} min-height: 50px; padding: 5px; text-align: center; border-bottom: 1px solid #dee2e6; display: flex; flex-direction: column; justify-content: center;">
+                                <div style="font-weight: 600; font-size: 0.9rem;">${content}</div>
+                                ${timeText}
+                            </div>
+                        `;
+                    }
+                });
+                
+                return weekIndex === 0 ? weekHtml : week.map(dayInfo => {
+                    if (!dayInfo) return '<div style="background: #f8f9fa; min-height: 50px;"></div>';
+                    
+                    const availabilityInfo = availability[member.id] && availability[member.id][dayInfo.dateString];
+                    let cellClass = 'background: #fff3cd;';
+                    let content = dayInfo.day;
+                    let timeText = '';
+                    
+                    if (dayInfo.isWeekend) {
+                        cellClass = 'background: #f8f9fa; color: #6c757d;';
+                        content = `<span style="font-size: 0.8rem;">${dayInfo.day}<br>${currentLanguage === 'tr' ? 'H.Sonu' : 'W.End'}</span>`;
+                    } else if (availabilityInfo) {
+                        if (availabilityInfo.available) {
+                            cellClass = 'background: #d4edda; color: #155724;';
+                            timeText = `<div style

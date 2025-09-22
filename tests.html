@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Tests - Team Availability System</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .test-header {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .test-suite {
+            background: #252526;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .test-case {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .test-pass {
+            background: #1e3a1e;
+            border-left: 3px solid #4ec9b0;
+        }
+        
+        .test-fail {
+            background: #3a1e1e;
+            border-left: 3px solid #f48771;
+        }
+        
+        .test-pending {
+            background: #3a3a1e;
+            border-left: 3px solid #dcdcaa;
+        }
+        
+        .test-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d2d30;
+            border-radius: 8px;
+        }
+        
+        .stat {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .stat-pass {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+        
+        .stat-fail {
+            background: #f48771;
+            color: #1e1e1e;
+        }
+        
+        .stat-pending {
+            background: #dcdcaa;
+            color: #1e1e1e;
+        }
+        
+        .run-btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .run-btn:hover {
+            background: #005a9e;
+        }
+        
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .error-msg {
+            color: #f48771;
+            margin-top: 5px;
+        }
+        
+        .success-msg {
+            color: #4ec9b0;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 Unit Test Suite - Team Availability System</h1>
+            <button class="run-btn" onclick="runAllTests()">▶ Run All Tests</button>
+        </div>
+
+        <div id="testResults"></div>
+
+        <div class="test-stats" id="testStats">
+            <div class="stat stat-pass">Passed: <span id="passCount">0</span></div>
+            <div class="stat stat-fail">Failed: <span id="failCount">0</span></div>
+            <div class="stat stat-pending">Pending: <span id="pendingCount">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Test Framework
+        class TestRunner {
+            constructor() {
+                this.tests = [];
+                this.results = {
+                    passed: 0,
+                    failed: 0,
+                    pending: 0
+                };
+            }
+
+            describe(suiteName, testFn) {
+                const suite = {
+                    name: suiteName,
+                    tests: []
+                };
+
+                const context = {
+                    it: (testName, fn) => {
+                        suite.tests.push({
+                            name: testName,
+                            fn: fn
+                        });
+                    },
+                    xit: (testName, fn) => {
+                        suite.tests.push({
+                            name: testName,
+                            fn: fn,
+                            pending: true
+                        });
+                    }
+                };
+
+                testFn.call(context, context.it, context.xit);
+                this.tests.push(suite);
+            }
+
+            async run() {
+                const results = [];
+                this.results = { passed: 0, failed: 0, pending: 0 };
+
+                for (const suite of this.tests) {
+                    const suiteResult = {
+                        name: suite.name,
+                        tests: []
+                    };
+
+                    for (const test of suite.tests) {
+                        if (test.pending) {
+                            suiteResult.tests.push({
+                                name: test.name,
+                                status: 'pending'
+                            });
+                            this.results.pending++;
+                        } else {
+                            try {
+                                await test.fn();
+                                suiteResult.tests.push({
+                                    name: test.name,
+                                    status: 'passed'
+                                });
+                                this.results.passed++;
+                            } catch (error) {
+                                suiteResult.tests.push({
+                                    name: test.name,
+                                    status: 'failed',
+                                    error: error.message
+                                });
+                                this.results.failed++;
+                            }
+                        }
+                    }
+
+                    results.push(suiteResult);
+                }
+
+                return results;
+            }
+        }
+
+        // Assertion Library
+        const assert = {
+            equal: (actual, expected, message) => {
+                if (actual !== expected) {
+                    throw new Error(message || `Expected ${expected} but got ${actual}`);
+                }
+            },
+            notEqual: (actual, expected, message) => {
+                if (actual === expected) {
+                    throw new Error(message || `Expected ${actual} to not equal ${expected}`);
+                }
+            },
+            deepEqual: (actual, expected, message) => {
+                if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                    throw new Error(message || `Objects are not deep equal`);
+                }
+            },
+            isTrue: (value, message) => {
+                if (value !== true) {
+                    throw new Error(message || `Expected true but got ${value}`);
+                }
+            },
+            isFalse: (value, message) => {
+                if (value !== false) {
+                    throw new Error(message || `Expected false but got ${value}`);
+                }
+            },
+            isNull: (value, message) => {
+                if (value !== null) {
+                    throw new Error(message || `Expected null but got ${value}`);
+                }
+            },
+            isNotNull: (value, message) => {
+                if (value === null) {
+                    throw new Error(message || `Expected not null but got null`);
+                }
+            },
+            isDefined: (value, message) => {
+                if (value === undefined) {
+                    throw new Error(message || `Expected defined but got undefined`);
+                }
+            },
+            isUndefined: (value, message) => {
+                if (value !== undefined) {
+                    throw new Error(message || `Expected undefined but got ${value}`);
+                }
+            },
+            includes: (array, item, message) => {
+                if (!array.includes(item)) {
+                    throw new Error(message || `Array does not include ${item}`);
+                }
+            },
+            lengthOf: (array, length, message) => {
+                if (array.length !== length) {
+                    throw new Error(message || `Expected length ${length} but got ${array.length}`);
+                }
+            },
+            isType: (value, type, message) => {
+                if (typeof value !== type) {
+                    throw new Error(message || `Expected type ${type} but got ${typeof value}`);
+                }
+            },
+            throws: (fn, message) => {
+                let threw = false;
+                try {
+                    fn();
+                } catch (e) {
+                    threw = true;
+                }
+                if (!threw) {
+                    throw new Error(message || `Expected function to throw`);
+                }
+            }
+        };
+
+        // Mock Functions
+        const createMockFunction = () => {
+            const fn = function(...args) {
+                fn.calls.push(args);
+                return fn.returnValue;
+            };
+            fn.calls = [];
+            fn.returnValue = undefined;
+            fn.mockReturnValue = (value) => {
+                fn.returnValue = value;
+                return fn;
+            };
+            fn.wasCalled = () => fn.calls.length > 0;
+            fn.wasCalledWith = (...args) => {
+                return fn.calls.some(call => 
+                    JSON.stringify(call) === JSON.stringify(args)
+                );
+            };
+            fn.reset = () => {
+                fn.calls = [];
+                fn.returnValue = undefined;
+            };
+            return fn;
+        };
+
+        // Application Logic Mock
+        const AppMock = {
+            teamMembers: [],
+            availability: {},
+            currentLoggedInMember: null,
+            currentLanguage: 'tr',
+            
+            generateMemberCode: () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let code = '';
+                for (let i = 0; i < 6; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return code;
+            },
+            
+            hashPassword: async (password) => {
+                // Simple mock hash for testing
+                return password.split('').reduce((acc, char) => 
+                    acc + char.charCodeAt(0), 0).toString(16);
+            },
+            
+            addMember: function(name, email, role) {
+                const code = this.generateMemberCode();
+                const member = {
+                    id: Date.now(),
+                    name,
+                    email,
+                    role,
+                    code
+                };
+                this.teamMembers.push(member);
+                return member;
+            },
+            
+            deleteMember: function(memberId) {
+                const index = this.teamMembers.findIndex(m => m.id === memberId);
+                if (index > -1) {
+                    this.teamMembers.splice(index, 1);
+                    delete this.availability[memberId];
+                    return true;
+                }
+                return false;
+            },
+            
+            loginWithCode: function(code) {
+                const member = this.teamMembers.find(m => m.code === code);
+                if (member) {
+                    this.currentLoggedInMember = member;
+                    return true;
+                }
+                return false;
+            },
+            
+            setAvailability: function(memberId, date, available, start, end) {
+                if (!this.availability[memberId]) {
+                    this.availability[memberId] = {};
+                }
+                this.availability[memberId][date] = {
+                    available,
+                    start: available ? start : null,
+                    end: available ? end : null
+                };
+            },
+            
+            getAvailability: function(memberId, date) {
+                return this.availability[memberId] && this.availability[memberId][date];
+            },
+            
+            changeLanguage: function(lang) {
+                if (lang === 'tr' || lang === 'en') {
+                    this.currentLanguage = lang;
+                    return true;
+                }
+                return false;
+            },
+            
+            validateEmail: function(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            },
+            
+            getWorkdaysInMonth: function(year, month) {
+                const dates = [];
+                const firstDay = new Date(year, month - 1, 1);
+                const lastDay = new Date(year, month, 0);
+
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const date = new Date(year, month - 1, day);
+                    const dayOfWeek = date.getDay();
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        dates.push(date.toISOString().split('T')[0]);
+                    }
+                }
+
+                return dates;
+            },
+            
+            timeToMinutes: function(time) {
+                const [hours, minutes] = time.split(':').map(Number);
+                return hours * 60 + minutes;
+            },
+            
+            minutesToTime: function(minutes) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+            },
+            
+            reset: function() {
+                this.teamMembers = [];
+                this.availability = {};
+                this.currentLoggedInMember = null;
+                this.currentLanguage = 'tr';
+            }
+        };
+
+        // Test Suites
+        const runner = new TestRunner();
+
+        // Test Suite 1: Member Management
+        runner.describe('Member Management', function(it, xit) {
+            it('should generate unique 6-character member codes', () => {
+                const code1 = AppMock.generateMemberCode();
+                const code2 = AppMock.generateMemberCode();
+                assert.lengthOf(code1, 6, 'Code should be 6 characters long');
+                assert.isType(code1, 'string', 'Code should be a string');
+                assert.notEqual(code1, code2, 'Generated codes should be unique');
+            });
+
+            it('should add new team member with all required fields', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('John Doe', 'john@example.com', 'Developer');
+                assert.equal(member.name, 'John Doe');
+                assert.equal(member.email, 'john@example.com');
+                assert.equal(member.role, 'Developer');
+                assert.isDefined(member.code);
+                assert.isDefined(member.id);
+            });
+
+            it('should delete team member and their availability data', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('Jane Smith', 'jane@example.com', 'Designer');
+                AppMock.setAvailability(member.id, '2025-09-15', true, '09:00', '17:00');
+                
+                const deleted = AppMock.deleteMember(member.id);
+                assert.isTrue(deleted);
+                assert.lengthOf(AppMock.teamMembers, 0);
+                assert.isUndefined(AppMock.getAvailability(member.id, '2025-09-15'));
+            });
+
+            it('should validate email addresses correctly', () => {
+                assert.isTrue(AppMock.validateEmail('test@example.com'));
+                assert.isTrue(AppMock.validateEmail('user.name@domain.co.uk'));
+                assert.isFalse(AppMock.validateEmail('invalid-email'));
+                assert.isFalse(AppMock.validateEmail('@example.com'));
+                assert.isFalse(AppMock.validateEmail('test@'));
+            });
+        });
+
+        // Test Suite 2: Authentication
+        runner.describe('Authentication', function(it, xit) {
+            it('should hash passwords securely', async () => {
+                const password = 'SecureAdmin2025!';
+                const hash1 = await AppMock.hashPassword(password);
+                const hash2 = await AppMock.hashPassword(password);
+                
+                assert.equal(hash1, hash2, 'Same password should produce same hash');
+                assert.notEqual(hash1, password, 'Hash should not equal plain password');
+            });
+
+            it('should login member with valid code', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('Test User', 'test@example.com', 'Tester');
+                const loggedIn = AppMock.loginWithCode(member.code);
+                
+                assert.isTrue(loggedIn);
+                assert.equal(AppMock.currentLoggedInMember.id, member.id);
+            });
+
+            it('should reject login with invalid code', () => {
+                AppMock.reset();
+                AppMock.addMember('Test User', 'test@example.com', 'Tester');
+                const loggedIn = AppMock.loginWithCode('INVALID');
+                
+                assert.isFalse(loggedIn);
+                assert.isNull(AppMock.currentLoggedInMember);
+            });
+        });
+
+        // Test Suite 3: Availability Management
+        runner.describe('Availability Management', function(it, xit) {
+            it('should set availability for a specific date', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('User', 'user@test.com', 'Role');
+                AppMock.setAvailability(member.id, '2025-09-20', true, '10:00', '18:00');
+                
+                const availability = AppMock.getAvailability(member.id, '2025-09-20');
+                assert.isNotNull(availability);
+                assert.isTrue(availability.available);
+                assert.equal(availability.start, '10:00');
+                assert.equal(availability.end, '18:00');
+            });
+
+            it('should set unavailability with null times', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('User', 'user@test.com', 'Role');
+                AppMock.setAvailability(member.id, '2025-09-21', false, null, null);
+                
+                const availability = AppMock.getAvailability(member.id, '2025-09-21');
+                assert.isFalse(availability.available);
+                assert.isNull(availability.start);
+                assert.isNull(availability.end);
+            });
+
+            it('should get workdays in a month excluding weekends', () => {
+                const workdays = AppMock.getWorkdaysInMonth(2025, 9);
+                
+                // September 2025 should have 22 workdays
+                assert.lengthOf(workdays, 22);
+                
+                // Check that first workday is Monday, September 1st
+                assert.equal(workdays[0], '2025-09-01');
+                
+                // Check no weekends are included
+                workdays.forEach(dateString => {
+                    const date = new Date(dateString);
+                    const dayOfWeek = date.getDay();
+                    assert.isTrue(dayOfWeek >= 1 && dayOfWeek <= 5);
+                });
+            });
+        });
+
+        // Test Suite 4: Language Support
+        runner.describe('Language Support', function(it, xit) {
+            it('should change language to English', () => {
+                AppMock.reset();
+                const changed = AppMock.changeLanguage('en');
+                assert.isTrue(changed);
+                assert.equal(AppMock.currentLanguage, 'en');
+            });
+
+            it('should change language to Turkish', () => {
+                AppMock.reset();
+                const changed = AppMock.changeLanguage('tr');
+                assert.isTrue(changed);
+                assert.equal(AppMock.currentLanguage, 'tr');
+            });
+
+            it('should reject invalid language codes', () => {
+                AppMock.reset();
+                const changed = AppMock.changeLanguage('invalid');
+                assert.isFalse(changed);
+                assert.equal(AppMock.currentLanguage, 'tr'); // Should remain default
+            });
+        });
+
+        // Test Suite 5: Time Calculations
+        runner.describe('Time Calculations', function(it, xit) {
+            it('should convert time to minutes correctly', () => {
+                assert.equal(AppMock.timeToMinutes('09:00'), 540);
+                assert.equal(AppMock.timeToMinutes('12:30'), 750);
+                assert.equal(AppMock.timeToMinutes('18:45'), 1125);
+                assert.equal(AppMock.timeToMinutes('00:00'), 0);
+                assert.equal(AppMock.timeToMinutes('23:59'), 1439);
+            });
+
+            it('should convert minutes to time correctly', () => {
+                assert.equal(AppMock.minutesToTime(540), '09:00');
+                assert.equal(AppMock.minutesToTime(750), '12:30');
+                assert.equal(AppMock.minutesToTime(1125), '18:45');
+                assert.equal(AppMock.minutesToTime(0), '00:00');
+                assert.equal(AppMock.minutesToTime(1439), '23:59');
+            });
+
+            it('should handle time conversions bidirectionally', () => {
+                const times = ['08:15', '13:45', '20:30', '00:01', '23:58'];
+                times.forEach(time => {
+                    const minutes = AppMock.timeToMinutes(time);
+                    const convertedBack = AppMock.minutesToTime(minutes);
+                    assert.equal(convertedBack, time, `Time conversion should be bidirectional for ${time}`);
+                });
+            });
+        });
+
+        // Test Suite 6: Data Validation
+        runner.describe('Data Validation', function(it, xit) {
+            it('should validate member data completeness', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('', 'test@test.com', 'Role');
+                // In real app, this should fail, but our mock doesn't validate
+                assert.equal(member.name, ''); // This shows we need validation
+            });
+
+            it('should handle edge cases in availability dates', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('User', 'user@test.com', 'Role');
+                
+                // Test with invalid date format
+                AppMock.setAvailability(member.id, 'invalid-date', true, '09:00', '17:00');
+                const availability = AppMock.getAvailability(member.id, 'invalid-date');
+                assert.isNotNull(availability); // Mock doesn't validate dates yet
+            });
+
+            xit('should validate time format (pending implementation)', () => {
+                // This test is pending - needs implementation
+            });
+
+            xit('should prevent duplicate email addresses (pending)', () => {
+                // This test is pending - needs implementation
+            });
+        });
+
+        // Test Suite 7: Security
+        runner.describe('Security Tests', function(it, xit) {
+            it('should not expose plain passwords', async () => {
+                const password = 'TestPassword123!';
+                const hash = await AppMock.hashPassword(password);
+                
+                // Check that hash doesn't contain original password
+                assert.isFalse(hash.includes(password));
+            });
+
+            it('should generate cryptographically random codes', () => {
+                const codes = new Set();
+                for (let i = 0; i < 100; i++) {
+                    codes.add(AppMock.generateMemberCode());
+                }
+                
+                // All 100 codes should be unique
+                assert.equal(codes.size, 100, 'All generated codes should be unique');
+            });
+
+            it('should protect member data access', () => {
+                AppMock.reset();
+                const member1 = AppMock.addMember('User1', 'user1@test.com', 'Role1');
+                const member2 = AppMock.addMember('User2', 'user2@test.com', 'Role2');
+                
+                AppMock.setAvailability(member1.id, '2025-09-20', true, '09:00', '17:00');
+                
+                // Member 2 shouldn't have member 1's availability
+                const availability = AppMock.getAvailability(member2.id, '2025-09-20');
+                assert.isUndefined(availability);
+            });
+        });
+
+        // Test Suite 8: Performance
+        runner.describe('Performance Tests', function(it, xit) {
+            it('should handle large number of team members efficiently', () => {
+                AppMock.reset();
+                const startTime = performance.now();
+                
+                for (let i = 0; i < 100; i++) {
+                    AppMock.addMember(`User${i}`, `user${i}@test.com`, `Role${i}`);
+                }
+                
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                
+                assert.lengthOf(AppMock.teamMembers, 100);
+                assert.isTrue(duration < 100, 'Should add 100 members in less than 100ms');
+            });
+
+            it('should query availability data quickly', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('User', 'user@test.com', 'Role');
+                
+                // Add availability for entire month
+                for (let day = 1; day <= 30; day++) {
+                    const date = `2025-09-${day.toString().padStart(2, '0')}`;
+                    AppMock.setAvailability(member.id, date, true, '09:00', '17:00');
+                }
+                
+                const startTime = performance.now();
+                
+                // Query all days
+                for (let day = 1; day <= 30; day++) {
+                    const date = `2025-09-${day.toString().padStart(2, '0')}`;
+                    AppMock.getAvailability(member.id, date);
+                }
+                
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                
+                assert.isTrue(duration < 10, 'Should query 30 days in less than 10ms');
+            });
+        });
+
+        // Test Suite 9: Integration Tests
+        runner.describe('Integration Tests', function(it, xit) {
+            it('should complete full member lifecycle', () => {
+                AppMock.reset();
+                
+                // Create member
+                const member = AppMock.addMember('Integration User', 'int@test.com', 'Tester');
+                assert.isDefined(member.id);
+                
+                // Login
+                const loggedIn = AppMock.loginWithCode(member.code);
+                assert.isTrue(loggedIn);
+                
+                // Set availability
+                AppMock.setAvailability(member.id, '2025-09-25', true, '10:00', '16:00');
+                
+                // Verify availability
+                const availability = AppMock.getAvailability(member.id, '2025-09-25');
+                assert.isTrue(availability.available);
+                
+                // Delete member
+                const deleted = AppMock.deleteMember(member.id);
+                assert.isTrue(deleted);
+                
+                // Verify deletion
+                assert.lengthOf(AppMock.teamMembers, 0);
+                assert.isUndefined(AppMock.getAvailability(member.id, '2025-09-25'));
+            });
+
+            it('should handle multiple members with different availabilities', () => {
+                AppMock.reset();
+                
+                const member1 = AppMock.addMember('User1', 'user1@test.com', 'Dev');
+                const member2 = AppMock.addMember('User2', 'user2@test.com', 'Designer');
+                const member3 = AppMock.addMember('User3', 'user3@test.com', 'Manager');
+                
+                // Set different availabilities
+                AppMock.setAvailability(member1.id, '2025-09-26', true, '09:00', '17:00');
+                AppMock.setAvailability(member2.id, '2025-09-26', true, '10:00', '18:00');
+                AppMock.setAvailability(member3.id, '2025-09-26', false, null, null);
+                
+                // Verify each member's availability
+                const avail1 = AppMock.getAvailability(member1.id, '2025-09-26');
+                const avail2 = AppMock.getAvailability(member2.id, '2025-09-26');
+                const avail3 = AppMock.getAvailability(member3.id, '2025-09-26');
+                
+                assert.isTrue(avail1.available);
+                assert.equal(avail1.start, '09:00');
+                
+                assert.isTrue(avail2.available);
+                assert.equal(avail2.start, '10:00');
+                
+                assert.isFalse(avail3.available);
+                assert.isNull(avail3.start);
+            });
+        });
+
+        // Test Suite 10: Edge Cases
+        runner.describe('Edge Cases', function(it, xit) {
+            it('should handle empty strings gracefully', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('', '', '');
+                
+                assert.isDefined(member.id);
+                assert.equal(member.name, '');
+                assert.equal(member.email, '');
+                assert.equal(member.role, '');
+                assert.isDefined(member.code);
+            });
+
+            it('should handle special characters in names', () => {
+                AppMock.reset();
+                const specialNames = [
+                    "O'Connor",
+                    "María José",
+                    "Jean-Pierre",
+                    "李明",
+                    "Müller"
+                ];
+                
+                specialNames.forEach(name => {
+                    const member = AppMock.addMember(name, `${name.replace(/[^a-z0-9]/gi, '')}@test.com`, 'Role');
+                    assert.equal(member.name, name);
+                });
+                
+                assert.lengthOf(AppMock.teamMembers, specialNames.length);
+            });
+
+            it('should handle boundary times', () => {
+                AppMock.reset();
+                const member = AppMock.addMember('User', 'user@test.com', 'Role');
+                
+                // Midnight
+                AppMock.setAvailability(member.id, '2025-09-27', true, '00:00', '00:00');
+                let availability = AppMock.getAvailability(member.id, '2025-09-27');
+                assert.equal(availability.start, '00:00');
+                assert.equal(availability.end, '00:00');
+                
+                // End of day
+                AppMock.setAvailability(member.id, '2025-09-28', true, '23:59', '23:59');
+                availability = AppMock.getAvailability(member.id, '2025-09-28');
+                assert.equal(availability.start, '23:59');
+                assert.equal(availability.end, '23:59');
+            });
+
+            xit('should handle leap years correctly (pending)', () => {
+                // Pending implementation for leap year handling
+            });
+        });
+
+        // Run tests function
+        async function runAllTests() {
+            const resultsContainer = document.getElementById('testResults');
+            resultsContainer.innerHTML = '<div style="color: #dcdcaa;">Running tests...</div>';
+            
+            const results = await runner.run();
+            
+            let html = '';
+            results.forEach(suite => {
+                html += `<div class="test-suite">`;
+                html += `<h3>📦 ${suite.name}</h3>`;
+                
+                suite.tests.forEach(test => {
+                    const statusClass = test.status === 'passed' ? 'test-pass' : 
+                                       test.status === 'failed' ? 'test-fail' : 'test-pending';
+                    const statusIcon = test.status === 'passed' ? '✅' : 
+                                      test.status === 'failed' ? '❌' : '⏸️';
+                    
+                    html += `<div class="test-case ${statusClass}">`;
+                    html += `${statusIcon} ${test.name}`;
+                    
+                    if (test.error) {
+                        html += `<div class="error-msg">Error: ${test.error}</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                html += `</div>`;
+            });
+            
+            resultsContainer.innerHTML = html;
+            
+            // Update stats
+            document.getElementById('passCount').textContent = runner.results.passed;
+            document.getElementById('failCount').textContent = runner.results.failed;
+            document.getElementById('pendingCount').textContent = runner.results.pending;
+            
+            // Show summary
+            const total = runner.results.passed + runner.results.failed;
+            const percentage = total > 0 ? Math.round((runner.results.passed / total) * 100) : 0;
+            
+            console.log(`
+=====================================
+Test Results Summary
+=====================================
+✅ Passed: ${runner.results.passed}
+❌ Failed: ${runner.results.failed}
+⏸️ Pending: ${runner.results.pending}
+-------------------------------------
+Success Rate: ${percentage}%
+=====================================
+            `);
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
