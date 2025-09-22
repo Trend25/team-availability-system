@@ -1,5 +1,22 @@
 # Team Availability System / Takım Müsaitlik Sistemi
 
+
+
+## ⚡ Hızlı Başlangıç
+
+### İlk Kurulum (ZORUNLU!)
+1. `setup.html` dosyasını indirip çalıştırın
+2. Yönetici şifrenizi belirleyin
+3. Oluşan ayarları kaydedin
+
+### Varsayılan Giriş Bilgisi
+- Yönetici Şifresi: `SecureAdmin2025!`
+- ⚠️ GÜVENLİK: İlk girişte hemen değiştirin!
+
+### Demo
+[Canlı Demo](https://TREND25.github.io/team-availability-system/)
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/team-availability-system)
 [![Language](https://img.shields.io/badge/language-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
