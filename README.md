@@ -1,82 +1,71 @@
 # Team Availability System / Takım Müsaitlik Sistemi
 
-
-
-## ⚡ Hızlı Başlangıç
-
-### İlk Kurulum (ZORUNLU!)
-1. `setup.html` dosyasını indirip çalıştırın
-2. Yönetici şifrenizi belirleyin
-3. Oluşan ayarları kaydedin
-
-### Varsayılan Giriş Bilgisi
-- Yönetici Şifresi: `SecureAdmin2025!`
-- ⚠️ GÜVENLİK: İlk girişte hemen değiştirin!
-
-### Demo
-[Canlı Demo](https://TREND25.github.io/team-availability-system/)
-
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/team-availability-system)
-[![Language](https://img.shields.io/badge/language-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Trend25/team-availability-system)
+[![Language Support](https://img.shields.io/badge/languages-TR%20%7C%20EN-green.svg)]()
+[![Browser Support](https://img.shields.io/badge/browser-Chrome%20%7C%20Firefox%20%7C%20Safari%20%7C%20Edge-orange.svg)]()
 
-A comprehensive team availability management and smart meeting planning system with bilingual support (TR/EN).
+Takım üyelerinin hafta içi müsaitlik durumlarını takip eden ve akıllı toplantı planlama özelliği sunan modern web uygulaması. Sunucu gerektirmeden, tamamen tarayıcı tabanlı çalışır.
 
-[🇹🇷 Türkçe](#türkçe) | [🇬🇧 English](#english)
+A comprehensive team availability management and smart meeting planning system with bilingual support (TR/EN). Works entirely in the browser without requiring a backend server.
 
----
+## ✨ Özellikler / Features
 
-## English
+### 🌍 Çok Dilli Destek / Multi-language Support
+- **Tam Türkçe ve İngilizce arayüz** / Full Turkish and English interface
+- **Dinamik dil değiştirme** / Dynamic language switching
+- **Yerelleştirilmiş tarih formatları** / Localized date formats
 
-### 🌟 Features
+### 👥 Takım Yönetimi / Team Management
+- **Benzersiz erişim kodları** ile takım üyelerini ekleyin / Add team members with unique access codes
+- **Güvenli şifre koruması** / Secure password protection
+- **E-posta doğrulaması** / Email validation
+- **Otomatik kod üretimi** / Automatic code generation
 
-- **Multi-language Support**: Full Turkish and English interface
-- **Team Management**: Add team members with unique access codes
-- **Availability Tracking**: Monthly availability calendar for weekdays
-- **Smart Meeting Planner**: Find optimal meeting times based on team availability
-- **Google Calendar Integration**: Create Google Meet meetings directly
-- **Secure Admin Panel**: Password-protected administrator access
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **No Backend Required**: Pure client-side application
+### 📅 Müsaitlik Takibi / Availability Tracking
+- **Hafta içi günler için aylık müsaitlik takvimi** / Monthly availability calendar for weekdays
+- **Esnek saat aralığı ayarları** / Flexible time range settings
+- **Toplu tarih seçimi** / Bulk date selection
+- **Gerçek zamanlı güncelleme** / Real-time updates
 
-### 🚀 Quick Start
+### 🤖 Akıllı Toplantı Planlayıcı / Smart Meeting Planner
+- **Optimal toplantı zamanları bulma** / Find optimal meeting times based on team availability
+- **Katılımcı uygunluk puanlama sistemi** / Participant availability scoring system
+- **Zaman aralığı tercihleri** (Sabah/Öğleden sonra/Akşam) / Time range preferences (Morning/Afternoon/Evening)
+- **Google Calendar entegrasyonu** / Google Calendar integration
 
-1. **Download the files**:
-```bash
-git clone https://github.com/yourusername/team-availability-system.git
-cd team-availability-system
-```
+### 🔧 Teknik Özellikler / Technical Features
+- **Sunucu gerektirmez** / No backend required - Pure client-side application
+- **Responsive tasarım** / Responsive design - Works on desktop, tablet, and mobile devices
+- **Modern tarayıcı desteği** / Modern browser support
+- **LocalStorage ile veri saklama** / LocalStorage data persistence
+- **Otomatik kaydetme** / Auto-save functionality
 
-2. **Initial Setup**:
-   - Open `setup.html` in your browser
-   - Set your admin password
-   - The setup file will generate a secure configuration
+## 🚀 Hızlı Başlangıç / Quick Start
 
-3. **Launch the application**:
-   - Open `index.html` in your browser
-   - Login with your admin password
+### Yöntem 1: Kurulum Sihirbazı (Önerilen) / Method 1: Setup Wizard (Recommended)
 
-### 🔐 Security Configuration
+1. **Dosyaları indirin** / Download the files:
+   ```bash
+   git clone https://github.com/Trend25/team-availability-system.git
+   cd team-availability-system
+   ```
 
-#### Default Admin Password (First Login Only)
-```
-SecureAdmin2025!
-```
+2. **Kurulum sihirbazını çalıştırın** / Run the setup wizard:
+   - `setup.html` dosyasını tarayıcınızda açın / Open `setup.html` in your browser
+   - Yönetici şifrenizi belirleyin / Set your admin password
+   - Sistem ayarlarını yapın / Configure system settings
+   - Oluşan `config.js` dosyasını kaydedin / Save the generated `config.js` file
 
-⚠️ **IMPORTANT**: Change this password immediately after first login!
+3. **Uygulamayı başlatın** / Launch the application:
+   - `index.html` dosyasını tarayıcınızda açın / Open `index.html` in your browser
+   - Yönetici şifrenizle giriş yapın / Login with your admin password
 
-#### How to Change Admin Password
+### Yöntem 2: Manuel Yapılandırma / Method 2: Manual Configuration
 
-1. **Method 1: Using Setup Script** (Recommended)
-   - Run `setup.html` before first use
-   - Enter your new password
-   - The script will generate a secure hash
-
-2. **Method 2: Manual Configuration**
-   - Generate password hash:
+1. **Şifre hash'i oluşturun** / Generate password hash:
    ```javascript
-   // In browser console
+   // Tarayıcı konsolunda / In browser console
    async function hashPassword(password) {
        const msgUint8 = new TextEncoder().encode(password);
        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -84,10 +73,11 @@ SecureAdmin2025!
        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
    }
    
-   // Generate your hash
-   hashPassword('YourNewPassword').then(console.log);
+   // Hash'inizi oluşturun / Generate your hash
+   hashPassword('YourSecurePassword123!').then(console.log);
    ```
-   - Create `config.js` file:
+
+2. **config.js dosyası oluşturun** / Create `config.js` file:
    ```javascript
    const APP_CONFIG = {
        ADMIN_PASSWORD_HASH: 'your-generated-hash-here',
@@ -96,267 +86,213 @@ SecureAdmin2025!
    };
    ```
 
-### 📋 Usage Guide
+## 📱 Kullanım Kılavuzu / Usage Guide
 
-#### For Administrators
+### Yönetici İşlemleri / Admin Operations
 
-1. **Login to Admin Panel**
-   - Click "Admin Panel" tab
-   - Enter admin password
-   - Access team management features
+1. **Yönetici Paneline Giriş** / Login to Admin Panel
+   - "Yönetici Paneli" sekmesine tıklayın / Click "Admin Panel" tab
+   - Yönetici şifresini girin / Enter admin password
+   - Takım yönetimi özelliklerine erişin / Access team management features
 
-2. **Add Team Members**
-   - Enter name, email, and position
-   - System generates unique 6-character code
-   - Share code securely with team member
+2. **Takım Üyesi Ekleme** / Add Team Members
+   - Ad, email ve pozisyon bilgilerini girin / Enter name, email, and position
+   - Sistem benzersiz 6 karakterli kod üretir / System generates unique 6-character code
+   - Kodu güvenli şekilde takım üyesiyle paylaşın / Share code securely with team member
 
-3. **View Team Calendar**
-   - Click "Calendar View" tab
-   - Select month to view
-   - See all team members' availability
+3. **Takım Takvimini Görüntüleme** / View Team Calendar
+   - "Takvim Görünümü" sekmesine tıklayın / Click "Calendar View" tab
+   - Görüntülenecek ayı seçin / Select month to view
+   - Tüm takım üyelerinin müsaitliğini görün / See all team members' availability
 
-4. **Plan Meetings**
-   - Go to "Meeting Planning" tab
-   - Set meeting details and duration
-   - Select participants
-   - Find optimal time slots
+### Takım Üyesi İşlemleri / Team Member Operations
 
-#### For Team Members
+1. **Kodla Giriş** / Login with Code
+   - "Müsaitlik Girişi" sekmesine tıklayın / Click "Availability Entry" tab
+   - 6 karakterli kodunuzu girin / Enter your 6-character code
+   - Müsaitlik takviminize erişin / Access your availability calendar
 
-1. **Login with Code**
-   - Click "Availability Entry" tab
-   - Enter your 6-character code
-   - Access your availability calendar
+2. **Müsaitlik Belirleme** / Set Availability
+   - Ay seçin / Select month
+   - Tarihleri seçmek için tıklayın / Click dates to select
+   - Müsaitlik ayarlamak için çift tıklayın / Double-click to set availability
+   - Birden fazla gün için toplu seçim kullanın / Use bulk selection for multiple days
 
-2. **Set Availability**
-   - Select month
-   - Click dates to select
-   - Double-click to set availability
-   - Use bulk selection for multiple days
+3. **Değişiklikleri Kaydetme** / Save Changes
+   - Girişlerinizi gözden geçirin / Review your entries
+   - "Tüm Müsaitlikleri Kaydet" butonuna tıklayın / Click "Save All Availability" button
 
-3. **Save Changes**
-   - Review your entries
-   - Click "Save All Availability"
+### Toplantı Planlama / Meeting Planning
 
-### 🛠️ Technical Details
+1. **Toplantı Bilgileri** / Meeting Information
+   - "Toplantı Planlama" sekmesine gidin / Go to "Meeting Planning" tab
+   - Toplantı detaylarını ve süresini belirleyin / Set meeting details and duration
+   - Tarih aralığını seçin / Select date range
 
-- **Technology**: Pure JavaScript, HTML5, CSS3
-- **Browser Support**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Dependencies**: None (standalone application)
-- **Security**: SHA-256 password hashing, secure random code generation
-- **Storage**: Local browser storage (no server required)
+2. **Katılımcı Seçimi** / Select Participants
+   - Katılımcıları seçin / Select participants
+   - Tercih edilen saat aralığını belirtin / Specify preferred time range
 
-### 📁 Project Structure
+3. **Optimal Zaman Bulma** / Find Optimal Time
+   - "En Uygun Zamanı Bul" butonuna tıklayın / Click "Find Optimal Time"
+   - Sistem en uygun zaman dilimlerini önerir / System suggests optimal time slots
+   - Google Calendar'a doğrudan ekleyebilirsiniz / Add directly to Google Calendar
 
-```
-team-availability-system/
-├── index.html           # Main application
-├── setup.html          # Initial setup wizard
-├── config.js           # Configuration file (generated)
-├── tests.html          # Unit test suite
-├── README.md           # Documentation
-├── LICENSE             # MIT License
-└── docs/
-    ├── SECURITY.md     # Security guidelines
-    ├── CONTRIBUTING.md # Contribution guide
-    └── API.md          # API documentation
-```
+## 🔒 Güvenlik / Security
 
-### 🧪 Testing
+### Güvenlik Özellikleri / Security Features
+- **SHA-256 şifre hash'leme** / SHA-256 password hashing
+- **Güvenli rastgele kod üretimi** / Secure random code generation
+- **Yerel veri depolaması** / Local data storage (no server required)
+- **Oturum yönetimi** / Session management
+- **Otomatik oturum kapatma** / Automatic logout
 
-Run the test suite:
-```bash
-# Open tests.html in your browser
-# Tests run automatically on load
-```
+### Güvenlik Önerileri / Security Recommendations
+- İlk kurulumda varsayılan şifreyi değiştirin / Change default password on first setup
+- Güçlü şifreler kullanın (min. 12 karakter) / Use strong passwords (min. 12 characters)
+- `config.js` dosyasını `.gitignore`'a ekleyin / Add `config.js` to `.gitignore`
+- Takım üyesi kodlarını güvenli şekilde paylaşın / Share member codes securely
 
-Test coverage includes:
-- Member management
-- Authentication
-- Availability tracking
-- Language support
-- Security features
-- Performance benchmarks
+## 🛠️ Teknical Özellikler / Technical Specifications
 
----
-
-## Türkçe
-
-### 🌟 Özellikler
-
-- **Çok Dilli Destek**: Tam Türkçe ve İngilizce arayüz
-- **Takım Yönetimi**: Benzersiz erişim kodlarıyla takım üyelerini ekleyin
-- **Müsaitlik Takibi**: Hafta içi günler için aylık müsaitlik takvimi
-- **Akıllı Toplantı Planlayıcı**: Takım müsaitliğine göre optimal toplantı zamanları bulun
-- **Google Calendar Entegrasyonu**: Doğrudan Google Meet toplantıları oluşturun
-- **Güvenli Yönetici Paneli**: Şifre korumalı yönetici erişimi
-- **Responsive Tasarım**: Masaüstü, tablet ve mobil cihazlarda çalışır
-- **Backend Gerektirmez**: Tamamen istemci taraflı uygulama
-
-### 🚀 Hızlı Başlangıç
-
-1. **Dosyaları indirin**:
-```bash
-git clone https://github.com/yourusername/team-availability-system.git
-cd team-availability-system
-```
-
-2. **İlk Kurulum**:
-   - `setup.html` dosyasını tarayıcınızda açın
-   - Yönetici şifrenizi belirleyin
-   - Kurulum dosyası güvenli bir yapılandırma oluşturacak
-
-3. **Uygulamayı başlatın**:
-   - `index.html` dosyasını tarayıcınızda açın
-   - Yönetici şifrenizle giriş yapın
-
-### 🔐 Güvenlik Yapılandırması
-
-#### Varsayılan Yönetici Şifresi (Sadece İlk Giriş)
-```
-SecureAdmin2025!
-```
-
-⚠️ **ÖNEMLİ**: Bu şifreyi ilk girişten hemen sonra değiştirin!
-
-#### Yönetici Şifresini Değiştirme
-
-1. **Yöntem 1: Kurulum Script'i Kullanarak** (Önerilen)
-   - İlk kullanımdan önce `setup.html` dosyasını çalıştırın
-   - Yeni şifrenizi girin
-   - Script güvenli bir hash oluşturacak
-
-2. **Yöntem 2: Manuel Yapılandırma**
-   - Şifre hash'i oluşturun:
-   ```javascript
-   // Tarayıcı konsolunda
-   async function hashPassword(password) {
-       const msgUint8 = new TextEncoder().encode(password);
-       const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-       const hashArray = Array.from(new Uint8Array(hashBuffer));
-       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-   }
-   
-   // Hash'inizi oluşturun
-   hashPassword('YeniSifreniz').then(console.log);
-   ```
-   - `config.js` dosyası oluşturun:
-   ```javascript
-   const APP_CONFIG = {
-       ADMIN_PASSWORD_HASH: 'olusturulan-hash-buraya',
-       DEFAULT_TIMEZONE: 'Europe/Istanbul',
-       DEFAULT_LANGUAGE: 'tr'
-   };
-   ```
-
-### 📋 Kullanım Kılavuzu
-
-#### Yöneticiler İçin
-
-1. **Yönetici Paneline Giriş**
-   - "Yönetici Paneli" sekmesine tıklayın
-   - Yönetici şifresini girin
-   - Takım yönetimi özelliklerine erişin
-
-2. **Takım Üyesi Ekleme**
-   - Ad, email ve pozisyon bilgilerini girin
-   - Sistem 6 karakterli benzersiz kod üretir
-   - Kodu güvenli şekilde takım üyesiyle paylaşın
-
-3. **Takım Takvimini Görüntüleme**
-   - "Takvim Görünümü" sekmesine tıklayın
-   - Görüntülenecek ayı seçin
-   - Tüm takım üyelerinin müsaitliğini görün
-
-4. **Toplantı Planlama**
-   - "Toplantı Planlama" sekmesine gidin
-   - Toplantı detaylarını ve süresini belirleyin
-   - Katılımcıları seçin
-   - Optimal zaman dilimlerini bulun
-
-#### Takım Üyeleri İçin
-
-1. **Kodla Giriş**
-   - "Müsaitlik Girişi" sekmesine tıklayın
-   - 6 karakterli kodunuzu girin
-   - Müsaitlik takviminize erişin
-
-2. **Müsaitlik Belirleme**
-   - Ay seçin
-   - Tarihleri seçmek için tıklayın
-   - Müsaitlik ayarlamak için çift tıklayın
-   - Birden fazla gün için toplu seçim kullanın
-
-3. **Değişiklikleri Kaydetme**
-   - Girişlerinizi gözden geçirin
-   - "Tüm Müsaitlikleri Kaydet" butonuna tıklayın
-
-### 🛠️ Teknik Detaylar
-
+### Sistem Gereksinimleri / System Requirements
 - **Teknoloji**: Pure JavaScript, HTML5, CSS3
 - **Tarayıcı Desteği**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Bağımlılıklar**: Yok (bağımsız uygulama)
-- **Güvenlik**: SHA-256 şifre hash'leme, güvenli rastgele kod üretimi
-- **Depolama**: Yerel tarayıcı depolaması (sunucu gerektirmez)
+- **Bağımlılıklar**: Yok (bağımsız uygulama) / None (standalone application)
+- **Sunucu**: Gerekmiyor / Not required
+- **Veritabanı**: LocalStorage / LocalStorage
 
-### 📁 Proje Yapısı
-
+### Proje Yapısı / Project Structure
 ```
 team-availability-system/
-├── index.html           # Ana uygulama
-├── setup.html          # İlk kurulum sihirbazı
-├── config.js           # Yapılandırma dosyası (üretilir)
-├── tests.html          # Unit test paketi
-├── README.md           # Dokümantasyon
-├── LICENSE             # MIT Lisansı
+├── index.html          # Ana uygulama / Main application
+├── setup.html          # İlk kurulum sihirbazı / Initial setup wizard
+├── config.js           # Yapılandırma dosyası (üretilir) / Configuration file (generated)
+├── tests.html          # Unit test paketi / Unit test suite
+├── README.md           # Dokümantasyon / Documentation
+├── LICENSE             # MIT Lisansı / MIT License
 └── docs/
-    ├── SECURITY.md     # Güvenlik kılavuzu
-    ├── CONTRIBUTING.md # Katkı kılavuzu
-    └── API.md          # API dokümantasyonu
+    ├── SECURITY.md     # Güvenlik kılavuzu / Security guidelines
+    ├── CONTRIBUTING.md # Katkı kılavuzu / Contribution guide
+    └── API.md          # API dokümantasyonu / API documentation
 ```
 
-### 🧪 Test
+### Performans Özellikleri / Performance Features
+- **Hafif**: Toplam boyut < 500KB / Lightweight: Total size < 500KB
+- **Hızlı**: İlk yükleme < 2 saniye / Fast: Initial load < 2 seconds
+- **Responsive**: Mobil uyumlu / Mobile responsive
+- **Offline**: İnternet bağlantısı gerektirmez / Works offline
 
-Test paketini çalıştırın:
+## 🧪 Test Edilmesi / Testing
+
+### Otomatik Testler / Automated Tests
+Test paketini çalıştırın / Run the test suite:
 ```bash
 # tests.html dosyasını tarayıcınızda açın
-# Testler otomatik olarak çalışır
+# Open tests.html in your browser
 ```
 
-Test kapsamı:
-- Üye yönetimi
-- Kimlik doğrulama
-- Müsaitlik takibi
-- Dil desteği
-- Güvenlik özellikleri
-- Performans ölçümleri
+Test kapsamı / Test coverage includes:
+- ✅ **Üye yönetimi** / Member management
+- ✅ **Kimlik doğrulama** / Authentication  
+- ✅ **Müsaitlik takibi** / Availability tracking
+- ✅ **Dil desteği** / Language support
+- ✅ **Güvenlik özellikleri** / Security features
+- ✅ **Performans ölçümleri** / Performance benchmarks
 
----
+### Manuel Test Senaryoları / Manual Test Scenarios
 
-## 🤝 Contributing
+1. **Yönetici İş Akışı** / Admin Workflow
+   - [ ] Yönetici girişi / Admin login
+   - [ ] Takım üyesi ekleme / Add team member
+   - [ ] Kod paylaşımı / Code sharing
+   - [ ] Takvim görüntüleme / Calendar viewing
 
+2. **Kullanıcı İş Akışı** / User Workflow  
+   - [ ] Kodla giriş / Login with code
+   - [ ] Müsaitlik girişi / Availability entry
+   - [ ] Toplu işlemler / Bulk operations
+   - [ ] Veri kaydetme / Data saving
+
+3. **Toplantı Planlama** / Meeting Planning
+   - [ ] Katılımcı seçimi / Participant selection
+   - [ ] Optimal zaman bulma / Find optimal times
+   - [ ] Google Calendar entegrasyonu / Google Calendar integration
+
+## 📊 Sürüm Geçmişi / Version History
+
+### v1.0.0 - İlk Yayın / Initial Release
+- ✅ Temel müsaitlik takibi / Basic availability tracking
+- ✅ Takım yönetimi / Team management 
+- ✅ Çok dilli destek / Multi-language support
+- ✅ Toplantı planlama / Meeting planning
+- ✅ Google Calendar entegrasyonu / Google Calendar integration
+
+### Gelecek Özellikler / Upcoming Features
+- 🔄 E-posta bildirimleri / Email notifications
+- 🔄 İstatistik raporları / Statistics reports
+- 🔄 Export/import işlevleri / Export/import functions
+- 🔄 Tekrarlayan toplantı desteği / Recurring meetings support
+- 🔄 Slack entegrasyonu / Slack integration
+
+## 🤝 Katkıda Bulunma / Contributing
+
+Projeye katkıda bulunmak istiyorsanız / To contribute to this project:
+
+1. **Repository'yi fork edin** / Fork the repository
+2. **Feature branch oluşturun** / Create a feature branch
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. **Değişikliklerinizi commit edin** / Commit your changes
+   ```bash
+   git commit -m 'Add: Harika yeni özellik'
+   ```
+4. **Branch'inizi push edin** / Push your branch
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. **Pull Request oluşturun** / Create a Pull Request
+
+Detaylar için [CONTRIBUTING.md](docs/CONTRIBUTING.md) dosyasını okuyun.
 Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## 📝 License
+## 📄 Lisans / License
 
+Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔒 Security
+## 🔐 Güvenlik Bildirimi / Security Disclosure
 
+Güvenlik endişeleriniz için [SECURITY.md](docs/SECURITY.md) dosyasını okuyun ve güvenlik açıklarını sorumlu şekilde bildirin.
 For security concerns, please read [SECURITY.md](docs/SECURITY.md) and report vulnerabilities responsibly.
 
-## 📞 Support
+## 📞 İletişim ve Destek / Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/team-availability-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/team-availability-system/discussions)
-- **Email**: your-email@example.com
+- **Issues**: [GitHub Issues](https://github.com/Trend25/team-availability-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Trend25/team-availability-system/discussions)
+- **Email**: [info@teamavailability.com](mailto:info@teamavailability.com)
 
-## 🙏 Acknowledgments
+## 🙏 Teşekkürler / Acknowledgments
 
-- Built with vanilla JavaScript for maximum compatibility
-- Inspired by modern team collaboration needs
-- Thanks to all contributors
+- **Vanilla JavaScript** ile maksimum uyumluluk için geliştirilmiştir / Built with vanilla JavaScript for maximum compatibility
+- **Modern takım işbirliği ihtiyaçları**ndan ilham alınmıştır / Inspired by modern team collaboration needs
+- **Tüm katkıda bulunanlara** teşekkürler / Thanks to all contributors
+
+## 📈 İstatistikler / Statistics
+
+![GitHub stars](https://img.shields.io/github/stars/Trend25/team-availability-system?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Trend25/team-availability-system?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Trend25/team-availability-system)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/Trend25/team-availability-system)
 
 ---
 
+<div align="center">
+
+**Daha iyi takım işbirliği için ❤️ ile yapıldı**  
 **Made with ❤️ for better team collaboration**
+
+[🚀 Demo'yu Deneyin](https://trend25.github.io/team-availability-system) • [📚 Dokümantasyon](docs/) • [🐛 Hata Bildir](https://github.com/Trend25/team-availability-system/issues/new)
+
+</div>
