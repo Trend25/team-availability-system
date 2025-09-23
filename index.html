@@ -615,6 +615,15 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -1132,18 +1141,25 @@
 
         // Güvenli şifre hash fonksiyonu
         async function hashPassword(password) {
-            const msgUint8 = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
+            try {
+                const msgUint8 = new TextEncoder().encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            } catch (error) {
+                console.error('Hash password error:', error);
+                return null;
+            }
         }
 
-       // Güvenlik için bu satır kaldırıldı - setup.html kullanın
-   const ADMIN_PASSWORD_HASH = localStorage.getItem('adminPasswordHash') || 'LUTFEN_SETUP_CALISTIRIN';
+        // SecureAdmin2025! şifresinin hash değeri (önceden hesaplanmış)
+        const ADMIN_PASSWORD_HASH = 'a7c96262c21db9a06fd49e307d694fd95f624569f9b35bb3ffacd880440f9787';
 
         // Dil değiştirme fonksiyonu
         function changeLanguage(lang) {
+            if (!['tr', 'en'].includes(lang)) return;
+            
             currentLanguage = lang;
             
             // Butonları güncelle
@@ -1182,7 +1198,7 @@
                 }
             };
             
-            Object.keys(placeholderMap[currentLanguage]).forEach(id => {
+            Object.keys(placeholderMap[currentLanguage] || {}).forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
                     element.placeholder = placeholderMap[currentLanguage][id];
@@ -1191,7 +1207,7 @@
         }
 
         function getTranslation(key) {
-            return translations[currentLanguage][key] || key;
+            return translations[currentLanguage]?.[key] || key;
         }
 
         function showTab(tabName) {
@@ -1225,33 +1241,46 @@
         }
 
         function updateCurrentTime() {
-            const now = new Date();
-            const timeString = now.toLocaleString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
-                timeZone: currentTimezone, 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            const currentTimeElement = document.getElementById('currentTime');
-            if (currentTimeElement) {
-                currentTimeElement.textContent = timeString;
+            try {
+                const now = new Date();
+                const timeString = now.toLocaleString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                    timeZone: currentTimezone, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const currentTimeElement = document.getElementById('currentTime');
+                if (currentTimeElement) {
+                    currentTimeElement.textContent = timeString;
+                }
+            } catch (error) {
+                console.error('Time update error:', error);
             }
         }
 
         function setupEventListeners() {
             if (isEventListenersAdded) return;
             
-            document.getElementById('timezone').addEventListener('change', function() {
-                currentTimezone = this.value;
-                updateCurrentTime();
-            });
+            const timezoneSelect = document.getElementById('timezone');
+            if (timezoneSelect) {
+                timezoneSelect.addEventListener('change', function() {
+                    currentTimezone = this.value;
+                    updateCurrentTime();
+                });
+            }
 
-            document.getElementById('dayAvailable').addEventListener('change', function() {
-                toggleTimeSlots(this.value === 'available');
-            });
+            const dayAvailableSelect = document.getElementById('dayAvailable');
+            if (dayAvailableSelect) {
+                dayAvailableSelect.addEventListener('change', function() {
+                    toggleTimeSlots(this.value === 'available');
+                });
+            }
 
-            document.getElementById('bulkAvailable').addEventListener('change', function() {
-                toggleBulkTimeSlots(this.value === 'available');
-            });
+            const bulkAvailableSelect = document.getElementById('bulkAvailable');
+            if (bulkAvailableSelect) {
+                bulkAvailableSelect.addEventListener('change', function() {
+                    toggleBulkTimeSlots(this.value === 'available');
+                });
+            }
             
             isEventListenersAdded = true;
         }
@@ -1265,19 +1294,40 @@
             return code;
         }
 
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
         async function adminLogin() {
-            const enteredPassword = document.getElementById('adminCode').value;
-            const enteredHash = await hashPassword(enteredPassword);
-            
-            if (enteredHash === ADMIN_PASSWORD_HASH) {
-                isAdminLoggedIn = true;
-                document.getElementById('adminLoginScreen').style.display = 'none';
-                document.getElementById('adminPanelContent').style.display = 'block';
+            const enteredPassword = document.getElementById('adminCode')?.value;
+            if (!enteredPassword) {
+                alert(getTranslation('all-fields-required'));
+                return;
+            }
+
+            try {
+                const enteredHash = await hashPassword(enteredPassword);
                 
-                showToast('✅ ' + (currentLanguage === 'tr' ? 'Yönetici girişi başarılı!' : 'Admin login successful!'), 'success');
-                updateMembersList();
-            } else {
-                const codeInput = document.getElementById('adminCode');
+                if (enteredHash === ADMIN_PASSWORD_HASH) {
+                    isAdminLoggedIn = true;
+                    document.getElementById('adminLoginScreen').style.display = 'none';
+                    document.getElementById('adminPanelContent').style.display = 'block';
+                    
+                    showToast('✅ ' + (currentLanguage === 'tr' ? 'Yönetici girişi başarılı!' : 'Admin login successful!'), 'success');
+                    updateMembersList();
+                } else {
+                    handleLoginError();
+                }
+            } catch (error) {
+                console.error('Admin login error:', error);
+                handleLoginError();
+            }
+        }
+
+        function handleLoginError() {
+            const codeInput = document.getElementById('adminCode');
+            if (codeInput) {
                 codeInput.style.borderColor = '#dc3545';
                 codeInput.style.backgroundColor = '#f8d7da';
                 
@@ -1295,23 +1345,37 @@
             isAdminLoggedIn = false;
             document.getElementById('adminLoginScreen').style.display = 'block';
             document.getElementById('adminPanelContent').style.display = 'none';
-            document.getElementById('adminCode').value = '';
+            const adminCodeInput = document.getElementById('adminCode');
+            if (adminCodeInput) {
+                adminCodeInput.value = '';
+            }
             
             showToast('🚪 ' + (currentLanguage === 'tr' ? 'Yönetici oturumu kapatıldı' : 'Admin logged out'), 'warning');
         }
 
         function addMember() {
             if (!isAdminLoggedIn) {
-                alert(currentLanguage === 'tr' ? '⌛ Bu işlem için yönetici yetkisi gereklidir.' : '⌛ Admin authorization required for this action.');
+                alert(currentLanguage === 'tr' ? '⏳ Bu işlem için yönetici yetkisi gereklidir.' : '⏳ Admin authorization required for this action.');
                 return;
             }
             
-            const name = document.getElementById('memberName').value.trim();
-            const email = document.getElementById('memberEmail').value.trim();
-            const role = document.getElementById('memberRole').value.trim();
+            const name = document.getElementById('memberName')?.value.trim();
+            const email = document.getElementById('memberEmail')?.value.trim();
+            const role = document.getElementById('memberRole')?.value.trim();
 
             if (!name || !email || !role) {
                 alert(getTranslation('all-fields-required'));
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                alert(currentLanguage === 'tr' ? 'Geçersiz email adresi!' : 'Invalid email address!');
+                return;
+            }
+
+            // Duplicate email kontrolü
+            if (teamMembers.some(member => member.email === email)) {
+                alert(currentLanguage === 'tr' ? 'Bu email adresi zaten kullanılıyor!' : 'This email address is already in use!');
                 return;
             }
 
@@ -1333,13 +1397,15 @@
         }
 
         function clearMemberForm() {
-            document.getElementById('memberName').value = '';
-            document.getElementById('memberEmail').value = '';
-            document.getElementById('memberRole').value = '';
+            ['memberName', 'memberEmail', 'memberRole'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = '';
+            });
         }
 
         function updateMembersList() {
             const display = document.getElementById('membersDisplay');
+            if (!display) return;
             
             if (teamMembers.length === 0) {
                 display.innerHTML = `<div class="empty-state">${getTranslation('no-members')}</div>`;
@@ -1369,7 +1435,7 @@
             `).join('');
         }
 
-        function showToast(message, type) {
+        function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             
             let bgColor, textColor, borderColor;
@@ -1406,7 +1472,9 @@
             document.body.appendChild(toast);
             
             setTimeout(() => {
-                toast.remove();
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
             }, 3000);
         }
 
@@ -1449,7 +1517,7 @@
         }
 
         function loginWithCode() {
-            const code = document.getElementById('memberCode').value.trim().toUpperCase();
+            const code = document.getElementById('memberCode')?.value.trim().toUpperCase();
             
             if (!code) {
                 alert(currentLanguage === 'tr' ? 'Lütfen kodunuzu giriniz.' : 'Please enter your code.');
@@ -1470,15 +1538,22 @@
             const welcomeText = currentLanguage === 'tr' 
                 ? `👋 Hoş Geldiniz, ${member.name}!`
                 : `👋 Welcome, ${member.name}!`;
-            document.getElementById('memberWelcome').innerHTML = welcomeText;
+            
+            const memberWelcome = document.getElementById('memberWelcome');
+            if (memberWelcome) {
+                memberWelcome.innerHTML = welcomeText;
+            }
             
             setupEventListeners();
             updateCurrentTime();
             setInterval(updateCurrentTime, 60000);
             populateMonthOptions();
             
-            document.getElementById('monthSelect').value = '2025-09';
-            loadMonthCalendar();
+            const monthSelect = document.getElementById('monthSelect');
+            if (monthSelect) {
+                monthSelect.value = '2025-09';
+                loadMonthCalendar();
+            }
         }
 
         function logout() {
@@ -1486,7 +1561,12 @@
             selectedDates.clear();
             document.getElementById('codeEntryScreen').style.display = 'block';
             document.getElementById('availabilityScreen').style.display = 'none';
-            document.getElementById('memberCode').value = '';
+            
+            const memberCodeInput = document.getElementById('memberCode');
+            if (memberCodeInput) {
+                memberCodeInput.value = '';
+            }
+            
             updateSelectedDatesInfo();
         }
 
@@ -1496,7 +1576,7 @@
             const options = [];
             
             const startYear = 2025;
-            const startMonth = 8;
+            const startMonth = 8; // September (0-based)
             
             for (let i = 0; i <= 12; i++) {
                 const year = startMonth + i >= 12 ? startYear + 1 : startYear;
@@ -1518,14 +1598,17 @@
         }
 
         function loadMonthCalendar() {
-            const monthValue = document.getElementById('monthSelect').value;
+            const monthValue = document.getElementById('monthSelect')?.value;
             if (!monthValue) return;
             
             const [year, month] = monthValue.split('-').map(Number);
             const monthDate = new Date(year, month - 1, 1);
             
             const calendarHtml = generateMonthCalendar(monthDate);
-            document.getElementById('monthCalendar').innerHTML = calendarHtml;
+            const monthCalendar = document.getElementById('monthCalendar');
+            if (monthCalendar) {
+                monthCalendar.innerHTML = calendarHtml;
+            }
         }
 
         function generateMonthCalendar(monthDate) {
@@ -1552,10 +1635,12 @@
                 html += `<div class="day-header">${day}</div>`;
             });
             
+            // Previous month empty cells
             for (let i = 0; i < firstDayOfWeek; i++) {
                 html += '<div class="day-cell other-month"></div>';
             }
             
+            // Current month days
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month, day);
                 const dateString = date.toISOString().split('T')[0];
@@ -1596,6 +1681,7 @@
                 `;
             }
             
+            // Next month empty cells
             const totalCells = Math.ceil((daysInMonth + firstDayOfWeek) / 7) * 7;
             const remainingCells = totalCells - daysInMonth - firstDayOfWeek;
             for (let i = 1; i <= remainingCells; i++) {
@@ -1633,28 +1719,14 @@
             }
         }
 
-        function selectAllMondays() {
-            selectByWeekday(1);
-        }
-
-        function selectAllTuesdays() {
-            selectByWeekday(2);
-        }
-
-        function selectAllWednesdays() {
-            selectByWeekday(3);
-        }
-
-        function selectAllThursdays() {
-            selectByWeekday(4);
-        }
-
-        function selectAllFridays() {
-            selectByWeekday(5);
-        }
+        function selectAllMondays() { selectByWeekday(1); }
+        function selectAllTuesdays() { selectByWeekday(2); }
+        function selectAllWednesdays() { selectByWeekday(3); }
+        function selectAllThursdays() { selectByWeekday(4); }
+        function selectAllFridays() { selectByWeekday(5); }
 
         function selectByWeekday(weekday) {
-            const monthValue = document.getElementById('monthSelect').value;
+            const monthValue = document.getElementById('monthSelect')?.value;
             if (!monthValue) return;
             
             const [year, month] = monthValue.split('-').map(Number);
@@ -1687,14 +1759,22 @@
                 day: 'numeric' 
             });
             
-            document.getElementById('modalTitle').innerHTML = `📅 ${formattedDate} - ${getTranslation('set-availability')}`;
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) {
+                modalTitle.innerHTML = `📅 ${formattedDate} - ${getTranslation('set-availability')}`;
+            }
             
             if (currentLoggedInMember && availability[currentLoggedInMember.id]) {
                 const dayData = availability[currentLoggedInMember.id][dateString];
                 if (dayData) {
-                    document.getElementById('dayAvailable').value = dayData.available ? 'available' : 'unavailable';
-                    document.getElementById('startTime').value = dayData.start || '09:00';
-                    document.getElementById('endTime').value = dayData.end || '17:00';
+                    const dayAvailable = document.getElementById('dayAvailable');
+                    const startTime = document.getElementById('startTime');
+                    const endTime = document.getElementById('endTime');
+                    
+                    if (dayAvailable) dayAvailable.value = dayData.available ? 'available' : 'unavailable';
+                    if (startTime) startTime.value = dayData.start || '09:00';
+                    if (endTime) endTime.value = dayData.end || '17:00';
+                    
                     toggleTimeSlots(dayData.available);
                 } else {
                     resetModalForm();
@@ -1703,18 +1783,29 @@
                 resetModalForm();
             }
             
-            document.getElementById('availabilityModal').style.display = 'block';
+            const modal = document.getElementById('availabilityModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
         }
 
         function resetModalForm() {
-            document.getElementById('dayAvailable').value = 'available';
-            document.getElementById('startTime').value = '09:00';
-            document.getElementById('endTime').value = '17:00';
+            const dayAvailable = document.getElementById('dayAvailable');
+            const startTime = document.getElementById('startTime');
+            const endTime = document.getElementById('endTime');
+            
+            if (dayAvailable) dayAvailable.value = 'available';
+            if (startTime) startTime.value = '09:00';
+            if (endTime) endTime.value = '17:00';
+            
             toggleTimeSlots(true);
         }
 
         function closeAvailabilityModal() {
-            document.getElementById('availabilityModal').style.display = 'none';
+            const modal = document.getElementById('availabilityModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
             currentEditingDate = null;
         }
 
@@ -1727,19 +1818,32 @@
             const sortedDates = Array.from(selectedDates).sort();
             const datesList = sortedDates.map(dateString => {
                 const date = new Date(dateString);
-                return date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+                return date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                    weekday: 'short', 
+                    day: '2-digit', 
+                    month: 'short' 
+                });
             }).join(', ');
             
-            document.getElementById('bulkSelectedList').innerHTML = `
-                <strong>${getTranslation('selected-days')} (${selectedDates.size} ${getTranslation('days-selected').split(' ')[1]}):</strong><br>
-                <div style="margin-top: 5px; font-size: 0.9rem;">${datesList}</div>
-            `;
+            const bulkSelectedList = document.getElementById('bulkSelectedList');
+            if (bulkSelectedList) {
+                bulkSelectedList.innerHTML = `
+                    <strong>${getTranslation('selected-days')} (${selectedDates.size} ${getTranslation('days-selected').split(' ')[1] || 'days'}):</strong><br>
+                    <div style="margin-top: 5px; font-size: 0.9rem;">${datesList}</div>
+                `;
+            }
             
-            document.getElementById('bulkAvailabilityModal').style.display = 'block';
+            const modal = document.getElementById('bulkAvailabilityModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
         }
 
         function closeBulkAvailabilityModal() {
-            document.getElementById('bulkAvailabilityModal').style.display = 'none';
+            const modal = document.getElementById('bulkAvailabilityModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function toggleTimeSlots(show) {
@@ -1759,9 +1863,15 @@
         function saveDayAvailability() {
             if (!currentEditingDate || !currentLoggedInMember) return;
             
-            const isAvailable = document.getElementById('dayAvailable').value === 'available';
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
+            const dayAvailable = document.getElementById('dayAvailable');
+            const startTime = document.getElementById('startTime');
+            const endTime = document.getElementById('endTime');
+            
+            if (!dayAvailable || !startTime || !endTime) return;
+            
+            const isAvailable = dayAvailable.value === 'available';
+            const startTimeValue = startTime.value;
+            const endTimeValue = endTime.value;
             
             if (!availability[currentLoggedInMember.id]) {
                 availability[currentLoggedInMember.id] = {};
@@ -1769,8 +1879,8 @@
             
             availability[currentLoggedInMember.id][currentEditingDate] = {
                 available: isAvailable,
-                start: isAvailable ? startTime : null,
-                end: isAvailable ? endTime : null
+                start: isAvailable ? startTimeValue : null,
+                end: isAvailable ? endTimeValue : null
             };
             
             closeAvailabilityModal();
@@ -1785,9 +1895,15 @@
         function saveBulkAvailability() {
             if (!currentLoggedInMember || selectedDates.size === 0) return;
             
-            const isAvailable = document.getElementById('bulkAvailable').value === 'available';
-            const startTime = document.getElementById('bulkStartTime').value;
-            const endTime = document.getElementById('bulkEndTime').value;
+            const bulkAvailable = document.getElementById('bulkAvailable');
+            const bulkStartTime = document.getElementById('bulkStartTime');
+            const bulkEndTime = document.getElementById('bulkEndTime');
+            
+            if (!bulkAvailable || !bulkStartTime || !bulkEndTime) return;
+            
+            const isAvailable = bulkAvailable.value === 'available';
+            const startTimeValue = bulkStartTime.value;
+            const endTimeValue = bulkEndTime.value;
             
             if (!availability[currentLoggedInMember.id]) {
                 availability[currentLoggedInMember.id] = {};
@@ -1797,8 +1913,8 @@
             selectedDates.forEach(dateString => {
                 availability[currentLoggedInMember.id][dateString] = {
                     available: isAvailable,
-                    start: isAvailable ? startTime : null,
-                    end: isAvailable ? endTime : null
+                    start: isAvailable ? startTimeValue : null,
+                    end: isAvailable ? endTimeValue : null
                 };
                 savedDates.push(dateString);
             });
@@ -1821,9 +1937,99 @@
                 return;
             }
 
-            alert(currentLanguage === 'tr' 
+            showToast(currentLanguage === 'tr' 
                 ? 'Tüm müsaitlik bilgileriniz başarıyla kaydedildi!'
-                : 'All your availability has been saved successfully!');
+                : 'All your availability has been saved successfully!', 'success');
+        }
+
+        function updateManagerCalendarView() {
+            const monthValue = document.getElementById('viewMonth')?.value;
+            if (!monthValue) {
+                alert(currentLanguage === 'tr' ? 'Lütfen bir ay seçiniz.' : 'Please select a month.');
+                return;
+            }
+            
+            if (teamMembers.length === 0) {
+                alert(currentLanguage === 'tr' ? 'Önce ekip üyelerini ekleyiniz.' : 'Add team members first.');
+                return;
+            }
+
+            const [year, month] = monthValue.split('-').map(Number);
+            const container = document.getElementById('managerCalendarContainer');
+            const monthDate = new Date(year, month - 1, 1);
+            const calendarHtml = generateManagerMonthCalendar(monthDate);
+            
+            if (container) {
+                container.innerHTML = calendarHtml;
+            }
+        }
+
+        function generateManagerMonthCalendar(monthDate) {
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+            const monthName = monthDate.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            const workdays = getWorkdaysInMonth(year, month + 1);
+            
+            let html = `
+                <div class="calendar-container">
+                    <div style="background: #4facfe; color: white; padding: 20px; text-align: center; font-size: 1.3rem; font-weight: 600;">
+                        📅 ${monthName} - ${currentLanguage === 'tr' ? 'Ekip Müsaitlik Takvimi' : 'Team Availability Calendar'}
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; min-width: 200px; position: sticky; left: 0; z-index: 10;">
+                                        ${currentLanguage === 'tr' ? 'Ekip Üyesi' : 'Team Member'}
+                                    </th>
+                                    ${workdays.map(dateString => {
+                                        const date = new Date(dateString);
+                                        const dayName = date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { 
+                                            weekday: 'short', 
+                                            day: '2-digit' 
+                                        });
+                                        return `<th style="background: #4facfe; color: white; padding: 12px 8px; border: 1px solid #dee2e6; min-width: 80px; font-size: 0.8rem;">${dayName}</th>`;
+                                    }).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${teamMembers.map(member => `
+                                    <tr>
+                                        <td style="background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; font-weight: 600; position: sticky; left: 0; z-index: 5;">
+                                            <div>${member.name}</div>
+                                            <div style="font-size: 0.8rem; color: #6c757d; font-weight: normal;">${member.role}</div>
+                                        </td>
+                                        ${workdays.map(dateString => {
+                                            const availabilityInfo = availability[member.id] && availability[member.id][dateString];
+                                            let cellStyle = 'background: #fff3cd;';
+                                            let content = currentLanguage === 'tr' ? 'Bilgi Yok' : 'No Info';
+                                            
+                                            if (availabilityInfo) {
+                                                if (availabilityInfo.available) {
+                                                    cellStyle = 'background: #d4edda; color: #155724;';
+                                                    content = `${availabilityInfo.start}<br>${availabilityInfo.end}`;
+                                                } else {
+                                                    cellStyle = 'background: #e2e3e5; color: #495057;';
+                                                    content = currentLanguage === 'tr' ? 'Müsait Değil' : 'Not Available';
+                                                }
+                                            }
+                                            
+                                            return `<td style="${cellStyle} padding: 8px; border: 1px solid #dee2e6; text-align: center; font-size: 0.7rem; min-height: 50px;">${content}</td>`;
+                                        }).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            return html;
         }
 
         function getWorkdaysInMonth(year, month) {
@@ -1834,7 +2040,7 @@
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const date = new Date(year, month - 1, day);
                 const dayOfWeek = date.getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Monday to Friday
                     dates.push(date.toISOString().split('T')[0]);
                 }
             }
@@ -1842,168 +2048,18 @@
             return dates;
         }
 
-        function updateManagerCalendarView() {
-            const monthValue = document.getElementById('viewMonth').value;
-            if (!monthValue) {
-                alert(currentLanguage === 'tr' ? 'Lütfen bir ay seçiniz.' : 'Please select a month.');
-                return;
-            }
+        function updateParticipantSelection() {
+            const container = document.getElementById('participantSelection');
+            if (!container) return;
             
-            const [year, month] = monthValue.split('-').map(Number);
-
             if (teamMembers.length === 0) {
-                alert(currentLanguage === 'tr' ? 'Önce ekip üyelerini ekleyiniz.' : 'Add team members first.');
+                container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
+                    ${currentLanguage === 'tr' ? 'Önce ekip üyelerini ekleyin.' : 'Add team members first.'}
+                </div>`;
                 return;
             }
 
-            const container = document.getElementById('managerCalendarContainer');
-            const monthDate = new Date(year, month - 1, 1);
-            const calendarHtml = generateManagerMonthCalendar(monthDate);
-            
-            container.innerHTML = calendarHtml;
-        }
-
-        function generateManagerMonthCalendar(monthDate) {
-            const year = monthDate.getFullYear();
-            const month = monthDate.getMonth();
-            const monthName = monthDate.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            
-            const allDaysInMonth = [];
-            for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month, day);
-                const dateString = date.toISOString().split('T')[0];
-                const dayOfWeek = date.getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                
-                allDaysInMonth.push({
-                    day,
-                    dateString,
-                    isWeekend,
-                    dayName: date.toLocaleDateString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US', { weekday: 'short' })
-                });
-            }
-            
-            const dayHeaders = currentLanguage === 'tr' 
-                ? ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
-                : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            
-            let html = `
-                <div class="calendar-container">
-                    <div style="background: #4facfe; color: white; padding: 20px; text-align: center; font-size: 1.3rem; font-weight: 600;">
-                        📅 ${monthName} - ${currentLanguage === 'tr' ? 'Ekip Müsaitlik Takvimi' : 'Team Availability Calendar'}
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 200px repeat(7, 1fr); gap: 1px; background: #dee2e6;">
-                        
-                        <div style="background: #f8f9fa; padding: 15px; font-weight: 600; text-align: center;">
-                            ${currentLanguage === 'tr' ? 'Ekip / Gün' : 'Team / Day'}
-                        </div>
-                        
-                        ${dayHeaders.map(day => `
-                            <div style="background: #6c757d; color: white; padding: 12px; text-align: center; font-weight: 600; font-size: 0.9rem;">
-                                ${day}
-                            </div>
-                        `).join('')}
-                        
-                        ${teamMembers.map(member => {
-                            const memberWeeks = generateMemberWeekRows(member, year, month, allDaysInMonth);
-                            return memberWeeks;
-                        }).join('')}
-                        
-                    </div>
-                </div>
-            `;
-            
-            return html;
-        }
-
-        function generateMemberWeekRows(member, year, month, allDaysInMonth) {
-            const firstDay = new Date(year, month, 1);
-            const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
-            
-            const weeks = [];
-            let currentWeek = [];
-            
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                currentWeek.push(null);
-            }
-            
-            allDaysInMonth.forEach(dayInfo => {
-                currentWeek.push(dayInfo);
-                
-                if (currentWeek.length === 7) {
-                    weeks.push(currentWeek);
-                    currentWeek = [];
-                }
-            });
-            
-            while (currentWeek.length > 0 && currentWeek.length < 7) {
-                currentWeek.push(null);
-            }
-            if (currentWeek.length > 0) {
-                weeks.push(currentWeek);
-            }
-            
-            return weeks.map((week, weekIndex) => {
-                let weekHtml = '';
-                
-                if (weekIndex === 0) {
-                    weekHtml += `
-                        <div style="background: #f8f9fa; padding: 15px; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6; 
-                                   grid-row: span ${weeks.length}; display: flex; align-items: center; flex-direction: column; justify-content: center;">
-                            <div style="font-size: 1.1rem; margin-bottom: 5px;">${member.name}</div>
-                            <div style="font-size: 0.8rem; color: #6c757d;">${member.role}</div>
-                        </div>
-                    `;
-                }
-                
-                week.forEach(dayInfo => {
-                    if (!dayInfo) {
-                        weekHtml += '<div style="background: #f8f9fa; min-height: 50px;"></div>';
-                    } else {
-                        const availabilityInfo = availability[member.id] && availability[member.id][dayInfo.dateString];
-                        let cellClass = 'background: #fff3cd;';
-                        let content = dayInfo.day;
-                        let timeText = '';
-                        
-                        if (dayInfo.isWeekend) {
-                            cellClass = 'background: #f8f9fa; color: #6c757d;';
-                            content = `<span style="font-size: 0.8rem;">${dayInfo.day}<br>${currentLanguage === 'tr' ? 'H.Sonu' : 'W.End'}</span>`;
-                        } else if (availabilityInfo) {
-                            if (availabilityInfo.available) {
-                                cellClass = 'background: #d4edda; color: #155724;';
-                                timeText = `<div style="font-size: 0.7rem; margin-top: 2px;">${availabilityInfo.start}-${availabilityInfo.end}</div>`;="font-size: 0.7rem; margin-top: 2px;">${availabilityInfo.start}-${availabilityInfo.end}</div>`;
-                            } else {
-                                cellClass = 'background: #e2e3e5; color: #495057;';
-                                timeText = `<div style="font-size: 0.7rem; margin-top: 2px;">${currentLanguage === 'tr' ? 'Müsait Değil' : 'Not Available'}</div>`;
-                            }
-                        }
-                        
-                        weekHtml += `
-                            <div style="${cellClass} min-height: 50px; padding: 5px; text-align: center; border-bottom: 1px solid #dee2e6; display: flex; flex-direction: column; justify-content: center;">
-                                <div style="font-weight: 600; font-size: 0.9rem;">${content}</div>
-                                ${timeText}
-                            </div>
-                        `;
-                    }
-                });
-                
-                return weekIndex === 0 ? weekHtml : week.map(dayInfo => {
-                    if (!dayInfo) return '<div style="background: #f8f9fa; min-height: 50px;"></div>';
-                    
-                    const availabilityInfo = availability[member.id] && availability[member.id][dayInfo.dateString];
-                    let cellClass = 'background: #fff3cd;';
-                    let content = dayInfo.day;
-                    let timeText = '';
-                    
-                    if (dayInfo.isWeekend) {
-                        cellClass = 'background: #f8f9fa; color: #6c757d;';
-                        content = `<span style="font-size: 0.8rem;">${dayInfo.day}<br>${currentLanguage === 'tr' ? 'H.Sonu' : 'W.End'}</span>`;
-                    } else if (availabilityInfo) {
-                        if (availabilityInfo.available) {
-                            cellClass = 'background: #d4edda; color: #155724;';
-                            timeText = `<div style
+            container.innerHTML = teamMembers.map(member => `
+                <div class="participant-checkbox">
+                    <input type="checkbox" id="participant-${member.id}" value="${member.id}">
+                    <label for="participant-${member.i
