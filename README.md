@@ -1,298 +1,416 @@
-# Team Availability System / Takım Müsaitlik Sistemi
+# Team Availability System - Cloud Edition
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Trend25/team-availability-system)
-[![Language Support](https://img.shields.io/badge/languages-TR%20%7C%20EN-green.svg)]()
-[![Browser Support](https://img.shields.io/badge/browser-Chrome%20%7C%20Firefox%20%7C%20Safari%20%7C%20Edge-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/yourusername/team-availability-system)
+[![Cloud](https://img.shields.io/badge/storage-GitHub%20API-181717.svg)](https://docs.github.com/en/rest)
 
-Takım üyelerinin hafta içi müsaitlik durumlarını takip eden ve akıllı toplantı planlama özelliği sunan modern web uygulaması. Sunucu gerektirmeden, tamamen tarayıcı tabanlı çalışır.
+Uluslararası takımlar için bulut tabanlı müsaitlik yönetim sistemi. GitHub API'yi ücretsiz bulut veritabanı olarak kullanır.
 
-A comprehensive team availability management and smart meeting planning system with bilingual support (TR/EN). Works entirely in the browser without requiring a backend server.
-
-## ✨ Özellikler / Features
-
-### 🌍 Çok Dilli Destek / Multi-language Support
-- **Tam Türkçe ve İngilizce arayüz** / Full Turkish and English interface
-- **Dinamik dil değiştirme** / Dynamic language switching
-- **Yerelleştirilmiş tarih formatları** / Localized date formats
-
-### 👥 Takım Yönetimi / Team Management
-- **Benzersiz erişim kodları** ile takım üyelerini ekleyin / Add team members with unique access codes
-- **Güvenli şifre koruması** / Secure password protection
-- **E-posta doğrulaması** / Email validation
-- **Otomatik kod üretimi** / Automatic code generation
-
-### 📅 Müsaitlik Takibi / Availability Tracking
-- **Hafta içi günler için aylık müsaitlik takvimi** / Monthly availability calendar for weekdays
-- **Esnek saat aralığı ayarları** / Flexible time range settings
-- **Toplu tarih seçimi** / Bulk date selection
-- **Gerçek zamanlı güncelleme** / Real-time updates
-
-### 🤖 Akıllı Toplantı Planlayıcı / Smart Meeting Planner
-- **Optimal toplantı zamanları bulma** / Find optimal meeting times based on team availability
-- **Katılımcı uygunluk puanlama sistemi** / Participant availability scoring system
-- **Zaman aralığı tercihleri** (Sabah/Öğleden sonra/Akşam) / Time range preferences (Morning/Afternoon/Evening)
-- **Google Calendar entegrasyonu** / Google Calendar integration
-
-### 🔧 Teknik Özellikler / Technical Features
-- **Sunucu gerektirmez** / No backend required - Pure client-side application
-- **Responsive tasarım** / Responsive design - Works on desktop, tablet, and mobile devices
-- **Modern tarayıcı desteği** / Modern browser support
-- **LocalStorage ile veri saklama** / LocalStorage data persistence
-- **Otomatik kaydetme** / Auto-save functionality
-
-## 🚀 Hızlı Başlangıç / Quick Start
-
-### Yöntem 1: Kurulum Sihirbazı (Önerilen) / Method 1: Setup Wizard (Recommended)
-
-1. **Dosyaları indirin** / Download the files:
-   ```bash
-   git clone https://github.com/Trend25/team-availability-system.git
-   cd team-availability-system
-   ```
-
-2. **Kurulum sihirbazını çalıştırın** / Run the setup wizard:
-   - `setup.html` dosyasını tarayıcınızda açın / Open `setup.html` in your browser
-   - Yönetici şifrenizi belirleyin / Set your admin password
-   - Sistem ayarlarını yapın / Configure system settings
-   - Oluşan `config.js` dosyasını kaydedin / Save the generated `config.js` file
-
-3. **Uygulamayı başlatın** / Launch the application:
-   - `index.html` dosyasını tarayıcınızda açın / Open `index.html` in your browser
-   - Yönetici şifrenizle giriş yapın / Login with your admin password
-
-### Yöntem 2: Manuel Yapılandırma / Method 2: Manual Configuration
-
-1. **Şifre hash'i oluşturun** / Generate password hash:
-   ```javascript
-   // Tarayıcı konsolunda / In browser console
-   async function hashPassword(password) {
-       const msgUint8 = new TextEncoder().encode(password);
-       const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-       const hashArray = Array.from(new Uint8Array(hashBuffer));
-       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-   }
-   
-   // Hash'inizi oluşturun / Generate your hash
-   hashPassword('YourSecurePassword123!').then(console.log);
-   ```
-
-2. **config.js dosyası oluşturun** / Create `config.js` file:
-   ```javascript
-   const APP_CONFIG = {
-       ADMIN_PASSWORD_HASH: 'your-generated-hash-here',
-       DEFAULT_TIMEZONE: 'Europe/Istanbul',
-       DEFAULT_LANGUAGE: 'tr'
-   };
-   ```
-
-## 📱 Kullanım Kılavuzu / Usage Guide
-
-### Yönetici İşlemleri / Admin Operations
-
-1. **Yönetici Paneline Giriş** / Login to Admin Panel
-   - "Yönetici Paneli" sekmesine tıklayın / Click "Admin Panel" tab
-   - Yönetici şifresini girin / Enter admin password
-   - Takım yönetimi özelliklerine erişin / Access team management features
-
-2. **Takım Üyesi Ekleme** / Add Team Members
-   - Ad, email ve pozisyon bilgilerini girin / Enter name, email, and position
-   - Sistem benzersiz 6 karakterli kod üretir / System generates unique 6-character code
-   - Kodu güvenli şekilde takım üyesiyle paylaşın / Share code securely with team member
-
-3. **Takım Takvimini Görüntüleme** / View Team Calendar
-   - "Takvim Görünümü" sekmesine tıklayın / Click "Calendar View" tab
-   - Görüntülenecek ayı seçin / Select month to view
-   - Tüm takım üyelerinin müsaitliğini görün / See all team members' availability
-
-### Takım Üyesi İşlemleri / Team Member Operations
-
-1. **Kodla Giriş** / Login with Code
-   - "Müsaitlik Girişi" sekmesine tıklayın / Click "Availability Entry" tab
-   - 6 karakterli kodunuzu girin / Enter your 6-character code
-   - Müsaitlik takviminize erişin / Access your availability calendar
-
-2. **Müsaitlik Belirleme** / Set Availability
-   - Ay seçin / Select month
-   - Tarihleri seçmek için tıklayın / Click dates to select
-   - Müsaitlik ayarlamak için çift tıklayın / Double-click to set availability
-   - Birden fazla gün için toplu seçim kullanın / Use bulk selection for multiple days
-
-3. **Değişiklikleri Kaydetme** / Save Changes
-   - Girişlerinizi gözden geçirin / Review your entries
-   - "Tüm Müsaitlikleri Kaydet" butonuna tıklayın / Click "Save All Availability" button
-
-### Toplantı Planlama / Meeting Planning
-
-1. **Toplantı Bilgileri** / Meeting Information
-   - "Toplantı Planlama" sekmesine gidin / Go to "Meeting Planning" tab
-   - Toplantı detaylarını ve süresini belirleyin / Set meeting details and duration
-   - Tarih aralığını seçin / Select date range
-
-2. **Katılımcı Seçimi** / Select Participants
-   - Katılımcıları seçin / Select participants
-   - Tercih edilen saat aralığını belirtin / Specify preferred time range
-
-3. **Optimal Zaman Bulma** / Find Optimal Time
-   - "En Uygun Zamanı Bul" butonuna tıklayın / Click "Find Optimal Time"
-   - Sistem en uygun zaman dilimlerini önerir / System suggests optimal time slots
-   - Google Calendar'a doğrudan ekleyebilirsiniz / Add directly to Google Calendar
-
-## 🔒 Güvenlik / Security
-
-### Güvenlik Özellikleri / Security Features
-- **SHA-256 şifre hash'leme** / SHA-256 password hashing
-- **Güvenli rastgele kod üretimi** / Secure random code generation
-- **Yerel veri depolaması** / Local data storage (no server required)
-- **Oturum yönetimi** / Session management
-- **Otomatik oturum kapatma** / Automatic logout
-
-### Güvenlik Önerileri / Security Recommendations
-- İlk kurulumda varsayılan şifreyi değiştirin / Change default password on first setup
-- Güçlü şifreler kullanın (min. 12 karakter) / Use strong passwords (min. 12 characters)
-- `config.js` dosyasını `.gitignore`'a ekleyin / Add `config.js` to `.gitignore`
-- Takım üyesi kodlarını güvenli şekilde paylaşın / Share member codes securely
-
-## 🛠️ Teknical Özellikler / Technical Specifications
-
-### Sistem Gereksinimleri / System Requirements
-- **Teknoloji**: Pure JavaScript, HTML5, CSS3
-- **Tarayıcı Desteği**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Bağımlılıklar**: Yok (bağımsız uygulama) / None (standalone application)
-- **Sunucu**: Gerekmiyor / Not required
-- **Veritabanı**: LocalStorage / LocalStorage
-
-### Proje Yapısı / Project Structure
-```
-team-availability-system/
-├── index.html          # Ana uygulama / Main application
-├── setup.html          # İlk kurulum sihirbazı / Initial setup wizard
-├── config.js           # Yapılandırma dosyası (üretilir) / Configuration file (generated)
-├── tests.html          # Unit test paketi / Unit test suite
-├── README.md           # Dokümantasyon / Documentation
-├── LICENSE             # MIT Lisansı / MIT License
-└── docs/
-    ├── SECURITY.md     # Güvenlik kılavuzu / Security guidelines
-    ├── CONTRIBUTING.md # Katkı kılavuzu / Contribution guide
-    └── API.md          # API dokümantasyonu / API documentation
-```
-
-### Performans Özellikleri / Performance Features
-- **Hafif**: Toplam boyut < 500KB / Lightweight: Total size < 500KB
-- **Hızlı**: İlk yükleme < 2 saniye / Fast: Initial load < 2 seconds
-- **Responsive**: Mobil uyumlu / Mobile responsive
-- **Offline**: İnternet bağlantısı gerektirmez / Works offline
-
-## 🧪 Test Edilmesi / Testing
-
-### Otomatik Testler / Automated Tests
-Test paketini çalıştırın / Run the test suite:
-```bash
-# tests.html dosyasını tarayıcınızda açın
-# Open tests.html in your browser
-```
-
-Test kapsamı / Test coverage includes:
-- ✅ **Üye yönetimi** / Member management
-- ✅ **Kimlik doğrulama** / Authentication  
-- ✅ **Müsaitlik takibi** / Availability tracking
-- ✅ **Dil desteği** / Language support
-- ✅ **Güvenlik özellikleri** / Security features
-- ✅ **Performans ölçümleri** / Performance benchmarks
-
-### Manuel Test Senaryoları / Manual Test Scenarios
-
-1. **Yönetici İş Akışı** / Admin Workflow
-   - [ ] Yönetici girişi / Admin login
-   - [ ] Takım üyesi ekleme / Add team member
-   - [ ] Kod paylaşımı / Code sharing
-   - [ ] Takvim görüntüleme / Calendar viewing
-
-2. **Kullanıcı İş Akışı** / User Workflow  
-   - [ ] Kodla giriş / Login with code
-   - [ ] Müsaitlik girişi / Availability entry
-   - [ ] Toplu işlemler / Bulk operations
-   - [ ] Veri kaydetme / Data saving
-
-3. **Toplantı Planlama** / Meeting Planning
-   - [ ] Katılımcı seçimi / Participant selection
-   - [ ] Optimal zaman bulma / Find optimal times
-   - [ ] Google Calendar entegrasyonu / Google Calendar integration
-
-## 📊 Sürüm Geçmişi / Version History
-
-### v1.0.0 - İlk Yayın / Initial Release
-- ✅ Temel müsaitlik takibi / Basic availability tracking
-- ✅ Takım yönetimi / Team management 
-- ✅ Çok dilli destek / Multi-language support
-- ✅ Toplantı planlama / Meeting planning
-- ✅ Google Calendar entegrasyonu / Google Calendar integration
-
-### Gelecek Özellikler / Upcoming Features
-- 🔄 E-posta bildirimleri / Email notifications
-- 🔄 İstatistik raporları / Statistics reports
-- 🔄 Export/import işlevleri / Export/import functions
-- 🔄 Tekrarlayan toplantı desteği / Recurring meetings support
-- 🔄 Slack entegrasyonu / Slack integration
-
-## 🤝 Katkıda Bulunma / Contributing
-
-Projeye katkıda bulunmak istiyorsanız / To contribute to this project:
-
-1. **Repository'yi fork edin** / Fork the repository
-2. **Feature branch oluşturun** / Create a feature branch
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Değişikliklerinizi commit edin** / Commit your changes
-   ```bash
-   git commit -m 'Add: Harika yeni özellik'
-   ```
-4. **Branch'inizi push edin** / Push your branch
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Pull Request oluşturun** / Create a Pull Request
-
-Detaylar için [CONTRIBUTING.md](docs/CONTRIBUTING.md) dosyasını okuyun.
-Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## 📄 Lisans / License
-
-Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔐 Güvenlik Bildirimi / Security Disclosure
-
-Güvenlik endişeleriniz için [SECURITY.md](docs/SECURITY.md) dosyasını okuyun ve güvenlik açıklarını sorumlu şekilde bildirin.
-For security concerns, please read [SECURITY.md](docs/SECURITY.md) and report vulnerabilities responsibly.
-
-## 📞 İletişim ve Destek / Contact & Support
-
-- **Issues**: [GitHub Issues](https://github.com/Trend25/team-availability-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Trend25/team-availability-system/discussions)
-- **Email**: [info@teamavailability.com](mailto:info@teamavailability.com)
-
-## 🙏 Teşekkürler / Acknowledgments
-
-- **Vanilla JavaScript** ile maksimum uyumluluk için geliştirilmiştir / Built with vanilla JavaScript for maximum compatibility
-- **Modern takım işbirliği ihtiyaçları**ndan ilham alınmıştır / Inspired by modern team collaboration needs
-- **Tüm katkıda bulunanlara** teşekkürler / Thanks to all contributors
-
-## 📈 İstatistikler / Statistics
-
-![GitHub stars](https://img.shields.io/github/stars/Trend25/team-availability-system?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Trend25/team-availability-system?style=social)
-![GitHub issues](https://img.shields.io/github/issues/Trend25/team-availability-system)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/Trend25/team-availability-system)
+[🇹🇷 Türkçe](#türkçe) | [🇬🇧 English](#english)
 
 ---
 
-<div align="center">
+## English
 
-**Daha iyi takım işbirliği için ❤️ ile yapıldı**  
-**Made with ❤️ for better team collaboration**
+### 🌟 Key Features
 
-[🚀 Demo'yu Deneyin](https://trend25.github.io/team-availability-system) • [📚 Dokümantasyon](docs/) • [🐛 Hata Bildir](https://github.com/Trend25/team-availability-system/issues/new)
+- **Cloud-Based Storage**: Uses GitHub repository as free cloud database
+- **Global Team Support**: Team members from different countries access same data
+- **Admin Panel**: Create users, distribute credentials, manage availability
+- **Secure Authentication**: SHA-256 password hashing
+- **Availability Calendar**: Monthly weekday availability tracking
+- **Timezone Support**: Multiple timezone options for international teams
+- **No Backend Required**: Pure HTML/JavaScript application
+- **100% Free**: No hosting or database costs
 
-</div>
+### 🚀 Quick Start (25 minutes setup)
+
+#### Step 1: Create GitHub Data Repository (5 min)
+
+1. Go to [github.com](https://github.com) and login
+2. Click "New repository"
+3. Repository name: `team-availability-data`
+4. Choose "Public" (or "Private" for sensitive data)
+5. Check "Add a README file"
+6. Click "Create repository"
+
+#### Step 2: Generate GitHub Personal Access Token (3 min)
+
+1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token" (classic)
+3. Note: "Team Availability System"
+4. Expiration: "No expiration" or "1 year"
+5. Scopes: Check **"repo"** (full control of private repositories)
+6. Click "Generate token"
+7. **COPY THE TOKEN** - You won't see it again!
+
+#### Step 3: Deploy to Netlify (5 min)
+
+1. Go to [netlify.com](https://netlify.com) and login
+2. Drag & drop your `index.html` file
+3. Get your URL (e.g., `yourapp.netlify.app`)
+
+Alternative: Use any static hosting (GitHub Pages, Vercel, Surge.sh)
+
+#### Step 4: Initial System Setup (5 min)
+
+1. Open your deployed URL
+2. Go to "Setup" tab
+3. Enter:
+   - Your GitHub username
+   - Repository name: `team-availability-data`
+   - Paste your Personal Access Token
+4. Click "Test GitHub Connection"
+5. Create first admin account
+
+#### Step 5: Add Users and Test (7 min)
+
+1. Login with admin credentials
+2. Go to "Admin" tab
+3. Add team members (generates auto-password)
+4. Share credentials securely
+5. Test login in new browser tab
+
+### ⚠️ Important Security Notes
+
+#### GitHub Token Security
+
+**CURRENT LIMITATION**: GitHub token is stored in browser. This is acceptable for:
+- Internal team tools
+- Trusted team members only
+- Non-sensitive data
+
+**NOT RECOMMENDED FOR**:
+- Public-facing applications
+- Untrusted users
+- Highly sensitive data
+
+**Production Solution**: Use Netlify Functions or similar backend to hide token:
+
+```javascript
+// netlify/functions/github-proxy.js
+exports.handler = async (event) => {
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Stored securely
+  // Proxy requests to GitHub API
+}
+```
+
+#### Password Security
+
+Passwords are hashed with SHA-256. For production use, consider:
+- bcrypt or Argon2 for better security
+- Token-based authentication
+- OAuth integration
+
+### 📋 Usage Guide
+
+#### For Administrators
+
+**Adding Team Members:**
+1. Login to admin panel
+2. Enter: Name, Email, Role, Country, Timezone
+3. System generates secure password
+4. Share credentials securely (email, Slack, etc.)
+
+**Managing Users:**
+- View all users and their credentials
+- Reset passwords when needed
+- Delete users (cannot delete admins)
+
+**Viewing Team Availability:**
+- All availability data synced via GitHub
+- Real-time updates when users save changes
+
+#### For Team Members
+
+**First Login:**
+1. Receive email and password from admin
+2. Login via "Login" tab
+3. Go to "Availability" tab
+
+**Setting Availability:**
+1. Select month
+2. Click dates to mark availability
+3. Click "Save" - data syncs to GitHub
+4. Other team members see updates
+
+### 🛠️ Technical Details
+
+**Architecture:**
+```
+User (Turkey)     →  GitHub API  →  team-data.json
+                        ↓
+User (USA)        →  GitHub API  →  team-data.json (reads same data)
+```
+
+**Technology Stack:**
+- Pure JavaScript (ES6+)
+- GitHub REST API v3
+- SHA-256 Web Crypto API
+- Responsive CSS3
+
+**Browser Support:**
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+**GitHub API Limits:**
+- 5,000 requests/hour (authenticated)
+- Recommend caching data for 1-2 minutes
+
+**Data Structure:**
+```json
+{
+  "config": {
+    "company": "Your Company",
+    "initialized": true,
+    "createdAt": "2025-09-29T..."
+  },
+  "users": {
+    "1727625600000": {
+      "name": "John Doe",
+      "email": "john@company.com",
+      "password": "hashed-sha256",
+      "role": "Developer",
+      "country": "US",
+      "timezone": "America/New_York",
+      "isAdmin": false
+    }
+  },
+  "availability": {
+    "user_id": {
+      "2025-10": [1, 2, 5, 8, 9, ...]
+    }
+  }
+}
+```
+
+### 📁 Project Structure
+
+```
+team-availability-system/
+├── index.html              # Main application (3500+ lines)
+├── setup.html             # Initial configuration helper
+├── tests.html             # Test suite
+├── README.md              # This file
+├── LICENSE                # MIT License
+└── .gitignore            # Git ignore rules
+```
+
+### 🔄 Data Flow
+
+1. **User Action** → JavaScript function
+2. **JavaScript** → GitHub API call (PUT/GET)
+3. **GitHub** → Updates `team-data.json` in repository
+4. **Other Users** → Fetch updated data on next load
+
+### 🚦 System Status Indicators
+
+- **Green dot**: Connected to GitHub
+- **Yellow dot**: Loading/Connecting
+- **Red dot**: Connection error
+
+### 📊 Scalability
+
+**Current Capacity:**
+- Users: Unlimited
+- API Calls: 5,000/hour
+- Data Size: GitHub repo limit (recommended < 100MB)
+
+**Recommended Team Size:** 5-50 users
+**For Larger Teams:** Consider dedicated backend solution
+
+### 🔍 Troubleshooting
+
+**"GitHub API Error: 401"**
+- Token expired or invalid
+- Regenerate token with "repo" scope
+
+**"GitHub API Error: 404"**
+- Repository name incorrect
+- Repository doesn't exist
+- Check username/repo spelling
+
+**"Connection failed"**
+- Internet connection issue
+- GitHub API down (rare)
+- Browser blocking requests (check CORS)
+
+**"Rate limit exceeded"**
+- Exceeded 5,000 requests/hour
+- Wait 1 hour or implement caching
+
+### 🎯 Roadmap
+
+**Version 2.1 (Planned)**
+- [ ] Availability calendar visualization
+- [ ] Smart meeting time finder
+- [ ] Timezone converter tool
+- [ ] Email notifications
+- [ ] Export to CSV
+
+**Version 3.0 (Future)**
+- [ ] Backend API (Netlify Functions)
+- [ ] Real-time updates (webhooks)
+- [ ] Mobile app
+- [ ] Google Calendar integration
+- [ ] Slack integration
+
+### 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create feature branch
+3. Make changes
+4. Test thoroughly
+5. Submit pull request
+
+### 📝 License
+
+MIT License - free for personal and commercial use
+
+---
+
+## Türkçe
+
+### 🌟 Temel Özellikler
+
+- **Bulut Tabanlı Depolama**: GitHub repository'sini ücretsiz bulut veritabanı olarak kullanır
+- **Global Takım Desteği**: Farklı ülkelerden takım üyeleri aynı veriye erişir
+- **Yönetici Paneli**: Kullanıcı oluştur, kimlik bilgisi dağıt, müsaitlik yönet
+- **Güvenli Kimlik Doğrulama**: SHA-256 şifre hashleme
+- **Müsaitlik Takvimi**: Aylık hafta içi müsaitlik takibi
+- **Saat Dilimi Desteği**: Uluslararası takımlar için çoklu saat dilimi
+- **Backend Gerektirmez**: Pure HTML/JavaScript uygulaması
+- **%100 Ücretsiz**: Hosting veya veritabanı maliyeti yok
+
+### 🚀 Hızlı Başlangıç (25 dakika kurulum)
+
+#### Adım 1: GitHub Veri Repository Oluştur (5 dk)
+
+1. [github.com](https://github.com) adresine git ve giriş yap
+2. "New repository" butonuna tıkla
+3. Repository adı: `team-availability-data`
+4. "Public" seç (hassas veriler için "Private")
+5. "Add a README file" işaretle
+6. "Create repository" tıkla
+
+#### Adım 2: GitHub Personal Access Token Oluştur (3 dk)
+
+1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. "Generate new token" (classic) tıkla
+3. Note: "Team Availability System"
+4. Expiration: "No expiration" veya "1 year"
+5. Scopes: **"repo"** işaretle (private repository'lere tam kontrol)
+6. "Generate token" tıkla
+7. **TOKEN'I KOPYALA** - Bir daha gösterilmeyecek!
+
+#### Adım 3: Netlify'a Deploy Et (5 dk)
+
+1. [netlify.com](https://netlify.com) adresine git ve giriş yap
+2. `index.html` dosyasını sürükle-bırak
+3. URL'ni al (örn: `yourapp.netlify.app`)
+
+Alternatif: Herhangi bir statik hosting (GitHub Pages, Vercel, Surge.sh)
+
+#### Adım 4: İlk Sistem Kurulumu (5 dk)
+
+1. Deploy ettiğin URL'yi aç
+2. "Kurulum" sekmesine git
+3. Bilgileri gir:
+   - GitHub kullanıcı adın
+   - Repository adı: `team-availability-data`
+   - Personal Access Token'ı yapıştır
+4. "GitHub Bağlantısını Test Et" tıkla
+5. İlk admin hesabını oluştur
+
+#### Adım 5: Kullanıcı Ekle ve Test Et (7 dk)
+
+1. Admin kimlik bilgileriyle giriş yap
+2. "Admin" sekmesine git
+3. Takım üyelerini ekle (otomatik şifre üretilir)
+4. Kimlik bilgilerini güvenli şekilde paylaş
+5. Yeni tarayıcı sekmesinde giriş testi yap
+
+### ⚠️ Önemli Güvenlik Notları
+
+#### GitHub Token Güvenliği
+
+**MEVCUT KISITLAMA**: GitHub token tarayıcıda saklanıyor. Bu kabul edilebilir:
+- Dahili takım araçları için
+- Sadece güvenilir takım üyeleri için
+- Hassas olmayan veriler için
+
+**ÖNERİLMEZ**:
+- Halka açık uygulamalar
+- Güvenilmeyen kullanıcılar
+- Çok hassas veriler
+
+**Production Çözümü**: Token'ı gizlemek için Netlify Functions kullanın
+
+#### Şifre Güvenliği
+
+Şifreler SHA-256 ile hashlenmiş. Production için düşünün:
+- bcrypt veya Argon2 (daha güvenli)
+- Token tabanlı kimlik doğrulama
+- OAuth entegrasyonu
+
+### 🛠️ Teknik Detaylar
+
+**Mimari:**
+```
+Kullanıcı (Türkiye)  →  GitHub API  →  team-data.json
+                            ↓
+Kullanıcı (ABD)      →  GitHub API  →  team-data.json (aynı veriyi okur)
+```
+
+**GitHub API Limitleri:**
+- 5,000 istek/saat (authenticated)
+- 1-2 dakika cache önerilir
+
+### 📊 Ölçeklenebilirlik
+
+**Mevcut Kapasite:**
+- Kullanıcı sayısı: Sınırsız
+- API Çağrıları: 5,000/saat
+- Veri Boyutu: GitHub repo limiti (< 100MB önerilir)
+
+**Önerilen Takım Boyutu:** 5-50 kullanıcı
+
+### 🔍 Sorun Giderme
+
+**"GitHub API Error: 401"**
+- Token süresi dolmuş veya geçersiz
+- "repo" yetkisiyle yeni token oluştur
+
+**"Bağlantı başarısız"**
+- İnternet bağlantısı problemi
+- GitHub API down (nadir)
+- Tarayıcı istekleri engelliyor (CORS kontrol et)
+
+**"Rate limit exceeded"**
+- 5,000 istek/saat limiti aşıldı
+- 1 saat bekle veya cache implement et
+
+### 🎯 Yol Haritası
+
+**Versiyon 2.1 (Planlanıyor)**
+- Müsaitlik takvimi görselleştirme
+- Akıllı toplantı zamanı bulucu
+- Saat dilimi dönüştürücü
+- Email bildirimleri
+
+**Versiyon 3.0 (Gelecek)**
+- Backend API (Netlify Functions)
+- Gerçek zamanlı güncellemeler
+- Mobil uygulama
+- Google Calendar entegrasyonu
+
+### 📝 Lisans
+
+MIT License - kişisel ve ticari kullanım için ücretsiz
+
+---
+
+**Made with ❤️ for global teams | Global takımlar için ❤️ ile yapıldı**
