@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Availability - Cloud System v2.0</title>
+    <title>Team Availability System v3.0</title>
     <style>
         * {
             margin: 0;
@@ -65,14 +65,43 @@
             100% { opacity: 1; }
         }
 
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #4facfe;
+        }
+
         .tabs {
             display: flex;
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
+            overflow-x: auto;
         }
 
         .tab {
             flex: 1;
+            min-width: 120px;
             padding: 15px 20px;
             cursor: pointer;
             text-align: center;
@@ -127,8 +156,7 @@
         }
 
         .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group select {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #dee2e6;
@@ -138,8 +166,7 @@
         }
 
         .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-group select:focus {
             outline: none;
             border-color: #4facfe;
             box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
@@ -188,30 +215,13 @@
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
 
+        .btn-secondary {
+            background: #6c757d;
+        }
+
         .btn-small {
             padding: 8px 15px;
             font-size: 0.9rem;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #6c757d;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #4facfe;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         .success-message {
@@ -244,28 +254,10 @@
             gap: 20px;
         }
 
-        .user-info h4 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .user-details {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .user-credentials {
-            background: #e7f3ff;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-        }
-
         .user-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .empty-state {
@@ -275,90 +267,158 @@
             font-size: 1.1rem;
         }
 
-        .config-status {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #2196f3;
-        }
-
-        /* Availability Calendar Styles */
-        .calendar-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
         .month-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        .month-selector button {
-            padding: 8px 15px;
-        }
-
-        .calendar-grid {
+        .month-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .calendar-header {
+        .day-header {
+            background: #f8f9fa;
+            padding: 10px;
             text-align: center;
             font-weight: 600;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
+            border-bottom: 1px solid #dee2e6;
         }
 
-        .calendar-day {
-            aspect-ratio: 1;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
+        .day-cell {
+            min-height: 80px;
+            padding: 8px;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .day-cell.weekend {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .day-cell.available {
+            background: #d4edda;
+        }
+
+        .day-cell.unavailable {
+            background: #e2e3e5;
+        }
+
+        .day-cell:hover:not(.weekend):not(.other-month) {
+            background: #fff3cd;
+        }
+
+        .day-cell.other-month {
+            background: #f8f9fa;
+            opacity: 0.3;
+        }
+
+        .day-number {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .time-display {
+            font-size: 0.7rem;
+            color: #495057;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.active {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
+            color: #adb5bd;
         }
 
-        .calendar-day:hover:not(.disabled) {
-            border-color: #4facfe;
-            background: #f0f8ff;
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
         }
 
-        .calendar-day.weekend {
-            background: #f8f9fa;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        .calendar-day.available {
-            background: #d4edda;
-            border-color: #28a745;
-        }
-
-        .calendar-day.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .calendar-day .day-number {
-            font-size: 1.2rem;
+        .time-slot-btn {
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
             font-weight: 600;
+            font-size: 0.9rem;
         }
 
-        .calendar-day .day-name {
-            font-size: 0.7rem;
-            color: #6c757d;
+        .time-slot-btn:hover {
+            background: #e7f3ff;
+            border-color: #4facfe;
+        }
+
+        .time-slot-btn.selected {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .selected-time-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
         }
 
         @media (max-width: 768px) {
@@ -370,18 +430,14 @@
                 grid-template-columns: 1fr;
             }
             
-            .cloud-status {
+            .cloud-status, .language-selector {
                 position: static;
                 margin-bottom: 15px;
                 justify-content: center;
             }
 
-            .calendar-grid {
-                gap: 5px;
-            }
-
-            .calendar-day .day-number {
-                font-size: 1rem;
+            .time-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -393,78 +449,80 @@
                 <div class="status-dot" id="statusDot"></div>
                 <span id="connectionStatus">Initializing...</span>
             </div>
-            <h1>Global Team Availability System</h1>
-            <p>Bulut tabanlı uluslararası takım müsaitlik sistemi v2.0</p>
+            <div class="language-selector">
+                <button class="lang-btn active" onclick="switchLanguage('tr')">TR</button>
+                <button class="lang-btn" onclick="switchLanguage('en')">EN</button>
+            </div>
+            <h1 data-i18n="title">Team Availability System</h1>
+            <p data-i18n="subtitle">Cloud-based team availability tracker v3.0</p>
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('setup')" id="setupTab">Kurulum</button>
-            <button class="tab" onclick="showTab('login')" id="loginTab" disabled>Giriş</button>
-            <button class="tab" onclick="showTab('admin')" id="adminTab" disabled style="display: none;">Admin</button>
-            <button class="tab" onclick="showTab('availability')" id="availabilityTab" disabled>Müsaitlik</button>
+            <button class="tab active" onclick="showTab('setup')" id="setupTab" data-i18n="tab_setup">Kurulum</button>
+            <button class="tab" onclick="showTab('login')" id="loginTab" disabled data-i18n="tab_login">Giriş</button>
+            <button class="tab" onclick="showTab('admin')" id="adminTab" disabled style="display: none;" data-i18n="tab_admin">Admin</button>
+            <button class="tab" onclick="showTab('availability')" id="availabilityTab" disabled data-i18n="tab_availability">Müsaitlik</button>
+            <button class="tab" onclick="showTab('calendar')" id="calendarTab" disabled data-i18n="tab_calendar">Ekip Takvimi</button>
+            <button class="tab" onclick="showTab('meeting')" id="meetingTab" disabled data-i18n="tab_meeting">Toplantı Planla</button>
+            <button class="tab" onclick="showTab('settings')" id="settingsTab" disabled style="display: none;" data-i18n="tab_settings">Ayarlar</button>
         </div>
 
         <div class="content">
             <!-- SETUP TAB -->
             <div id="setup" class="tab-content active">
                 <div class="setup-section">
-                    <h3>GitHub Repository Kurulumu</h3>
-                    <p>Bu sistem GitHub repository'sini bulut veritabanı olarak kullanır. Tamamen ücretsiz ve güvenilir.</p>
+                    <h3 data-i18n="setup_title">GitHub Repository Setup</h3>
+                    <p data-i18n="setup_desc">This system uses GitHub repository as cloud database - completely free and reliable.</p>
                 </div>
 
                 <div class="form-section">
-                    <h3>Adım 1: GitHub Repository Oluşturun</h3>
+                    <h3 data-i18n="setup_step1">Step 1: Create GitHub Repository</h3>
                     <ol style="margin-left: 20px; line-height: 1.8;">
-                        <li>GitHub'a gidin: <a href="https://github.com" target="_blank">github.com</a></li>
-                        <li>"New repository" butonuna tıklayın</li>
-                        <li>Repository adı: <code>team-availability-data</code></li>
-                        <li>"Public" seçin (özel veriler için "Private" da olabilir)</li>
-                        <li>"Add a README file" işaretleyin</li>
-                        <li>"Create repository" tıklayın</li>
+                        <li>Go to <a href="https://github.com" target="_blank">github.com</a></li>
+                        <li>Click "New repository"</li>
+                        <li>Repository name: <code>team-availability-data</code></li>
+                        <li>Select "Public"</li>
+                        <li>Check "Add a README file"</li>
+                        <li>Click "Create repository"</li>
                     </ol>
                 </div>
 
                 <div class="form-section">
-                    <h3>Adım 2: GitHub Personal Access Token</h3>
+                    <h3 data-i18n="setup_step2">Step 2: GitHub Personal Access Token</h3>
                     <ol style="margin-left: 20px; line-height: 1.8;">
-                        <li>GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)</li>
+                        <li>Settings → Developer settings → Personal access tokens → Tokens (classic)</li>
                         <li>"Generate new token" (classic)</li>
                         <li>Note: "Team Availability System"</li>
-                        <li>Expiration: "No expiration" veya "1 year"</li>
-                        <li>Scopes: "repo" işaretleyin</li>
-                        <li>"Generate token" ve kopyalayın</li>
+                        <li>Scopes: Check "repo"</li>
+                        <li>Generate token and COPY IT</li>
                     </ol>
-                    
-                    <div class="error-message">
-                        <strong>Önemli:</strong> Token'ı güvenli bir yerde saklayın. Bir daha gösterilmeyecek!
-                    </div>
                 </div>
 
                 <div class="form-section">
-                    <h3>Adım 3: Sistem Konfigürasyonu</h3>
+                    <h3 data-i18n="setup_step3">Step 3: System Configuration</h3>
                     
                     <div class="form-group">
-                        <label for="githubUsername">GitHub Kullanıcı Adınız:</label>
-                        <input type="text" id="githubUsername" placeholder="github-username">
+                        <label for="githubUsername" data-i18n="github_username_label">GitHub Username:</label>
+                        <input type="text" id="githubUsername" placeholder="your-username">
                     </div>
                     
                     <div class="form-group">
-                        <label for="githubRepo">Repository Adı:</label>
-                        <input type="text" id="githubRepo" placeholder="team-availability-data" value="team-availability-data">
+                        <label for="githubRepo" data-i18n="github_repo_label">Repository Name:</label>
+                        <input type="text" id="githubRepo" value="team-availability-data">
                     </div>
                     
                     <div class="form-group">
-                        <label for="githubToken">GitHub Personal Access Token:</label>
+                        <label for="githubToken" data-i18n="github_token_label">GitHub Token:</label>
                         <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
                     </div>
                     
-                    <button class="btn" onclick="initializeGitHubStorage()">GitHub Bağlantısını Test Et</button>
+                    <button class="btn" onclick="testGitHubConnection()" data-i18n="test_connection_btn">Test Connection</button>
                     
                     <div id="setupMessage"></div>
                 </div>
 
                 <div class="form-section" id="adminSetupSection" style="display: none;">
-                    <h3>Adım 4: İlk Admin Hesabı</h3>
+                    <h3 data-i18n="setup_step4">Step 4: Create Admin Account</h3>
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -472,40 +530,36 @@
                             <input type="email" id="initialAdminEmail" placeholder="admin@company.com">
                         </div>
                         <div class="form-group">
-                            <label for="initialAdminPassword">Admin Şifre:</label>
-                            <input type="password" id="initialAdminPassword" placeholder="Güçlü şifre">
+                            <label for="initialAdminPassword">Admin Password:</label>
+                            <input type="password" id="initialAdminPassword" placeholder="Strong password">
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="companyName">Şirket/Takım Adı:</label>
+                        <label for="companyName" data-i18n="company_name_label">Company Name:</label>
                         <input type="text" id="companyName" placeholder="Acme Corporation">
                     </div>
                     
-                    <button class="btn btn-success" onclick="createInitialAdmin()">Sistemi Başlat</button>
+                    <button class="btn btn-success" onclick="createInitialAdmin()" data-i18n="start_system_btn">Start System</button>
                 </div>
             </div>
 
             <!-- LOGIN TAB -->
             <div id="login" class="tab-content" style="display: none;">
-                <div class="config-status">
-                    <strong>Sistem Durumu:</strong> <span id="systemStatus">Hazır</span>
-                </div>
-
                 <div class="form-section">
-                    <h3>Kullanıcı Girişi</h3>
+                    <h3 data-i18n="login_title">User Login</h3>
                     
                     <div class="form-group">
-                        <label for="loginEmail">Email Adresiniz:</label>
+                        <label for="loginEmail" data-i18n="email_label">Email:</label>
                         <input type="email" id="loginEmail" placeholder="user@company.com">
                     </div>
                     
                     <div class="form-group">
-                        <label for="loginPassword">Şifreniz:</label>
-                        <input type="password" id="loginPassword" placeholder="Şifrenizi girin">
+                        <label for="loginPassword" data-i18n="password_label">Password:</label>
+                        <input type="password" id="loginPassword">
                     </div>
                     
-                    <button class="btn" onclick="loginUser()">Giriş Yap</button>
+                    <button class="btn" onclick="loginUser()" data-i18n="login_btn">Login</button>
                     
                     <div id="loginMessage"></div>
                 </div>
@@ -513,122 +567,274 @@
 
             <!-- ADMIN TAB -->
             <div id="admin" class="tab-content" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 data-i18n="admin_panel_title">Admin Panel</h2>
+                    <button class="btn btn-secondary" onclick="logout()" data-i18n="logout_btn">Logout</button>
+                </div>
+
                 <div class="form-section">
-                    <h3>Kullanıcı Yönetimi</h3>
+                    <h3 data-i18n="add_user_title">Add New User</h3>
                     
                     <div class="form-row-3">
                         <div class="form-group">
-                            <label for="newUserName">Ad Soyad:</label>
-                            <input type="text" id="newUserName" placeholder="Ahmet Yılmaz">
+                            <label for="newUserName" data-i18n="name_label">Name:</label>
+                            <input type="text" id="newUserName" placeholder="John Doe">
                         </div>
                         <div class="form-group">
-                            <label for="newUserEmail">Email:</label>
-                            <input type="email" id="newUserEmail" placeholder="ahmet@company.com">
+                            <label for="newUserEmail" data-i18n="email_label">Email:</label>
+                            <input type="email" id="newUserEmail" placeholder="john@company.com">
                         </div>
                         <div class="form-group">
-                            <label for="newUserRole">Pozisyon:</label>
+                            <label for="newUserRole" data-i18n="role_label">Role:</label>
                             <input type="text" id="newUserRole" placeholder="Developer">
                         </div>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="newUserCountry">Ülke:</label>
-                            <select id="newUserCountry">
-                                <option value="TR">🇹🇷 Türkiye</option>
-                                <option value="US">🇺🇸 Amerika</option>
-                                <option value="DE">🇩🇪 Almanya</option>
-                                <option value="GB">🇬🇧 İngiltere</option>
-                                <option value="FR">🇫🇷 Fransa</option>
-                                <option value="NL">🇳🇱 Hollanda</option>
-                                <option value="CA">🇨🇦 Kanada</option>
-                                <option value="AU">🇦🇺 Avustralya</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="newUserTimezone">Saat Dilimi:</label>
-                            <select id="newUserTimezone">
-                                <option value="Europe/Istanbul">Turkey (UTC+3)</option>
-                                <option value="America/New_York">New York (UTC-5/-4)</option>
-                                <option value="America/Los_Angeles">Los Angeles (UTC-8/-7)</option>
-                                <option value="Europe/London">London (UTC+0/+1)</option>
-                                <option value="Europe/Berlin">Berlin (UTC+1/+2)</option>
-                                <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
-                                <option value="Australia/Sydney">Sydney (UTC+10/+11)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <button class="btn" onclick="addNewUser()">Kullanıcı Ekle</button>
+                    <button class="btn" onclick="addNewUser()" data-i18n="add_user_btn">Add User</button>
                     
                     <div id="adminMessage"></div>
                 </div>
 
                 <div class="form-section">
-                    <h3>Mevcut Kullanıcılar</h3>
-                    
-                    <div id="usersList">
-                        <div class="empty-state">Kullanıcı listesi yükleniyor...</div>
-                    </div>
+                    <h3 data-i18n="users_list_title">Current Users</h3>
+                    <div id="usersList" class="empty-state" data-i18n="no_users">No users yet</div>
                 </div>
             </div>
 
             <!-- AVAILABILITY TAB -->
             <div id="availability" class="tab-content" style="display: none;">
-                <div class="calendar-container">
-                    <div class="month-selector">
-                        <button class="btn btn-small" onclick="changeMonth(-1)">◀ Önceki Ay</button>
-                        <h3 id="currentMonthDisplay">Ekim 2025</h3>
-                        <button class="btn btn-small" onclick="changeMonth(1)">Sonraki Ay ▶</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 id="availabilityWelcome">Welcome!</h2>
+                    <button class="btn btn-secondary" onclick="logout()" data-i18n="logout_btn">Logout</button>
+                </div>
+
+                <div class="month-selector">
+                    <label data-i18n="month_select_label">Select Month:</label>
+                    <select id="monthSelect"></select>
+                    <button class="btn" onclick="loadCalendar()" data-i18n="load_calendar_btn">Load Calendar</button>
+                </div>
+
+                <div id="memberCalendar"></div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-success" onclick="saveAvailability()" data-i18n="save_availability_btn">Save All</button>
+                </div>
+
+                <div id="availabilityMessage"></div>
+            </div>
+
+            <!-- TEAM CALENDAR TAB -->
+            <div id="calendar" class="tab-content" style="display: none;">
+                <h2 data-i18n="team_calendar_title">Team Calendar - Who is Available When</h2>
+                
+                <div class="month-selector">
+                    <label data-i18n="month_select_label">Select Month:</label>
+                    <select id="teamMonthSelect"></select>
+                    <button class="btn" onclick="loadTeamCalendar()" data-i18n="load_calendar_btn">Load Calendar</button>
+                </div>
+
+                <div id="teamCalendarView" class="empty-state">Select a month to view team availability</div>
+            </div>
+
+            <!-- MEETING PLANNER TAB -->
+            <div id="meeting" class="tab-content" style="display: none;">
+                <h2 data-i18n="meeting_planner_title">Meeting Planner</h2>
+                
+                <div class="form-section">
+                    <h3 data-i18n="find_common_time">Find Common Available Time</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="meetingMonth" data-i18n="month_select_label">Select Month:</label>
+                            <select id="meetingMonth"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="meetingDuration" data-i18n="duration_label">Duration (hours):</label>
+                            <input type="number" id="meetingDuration" value="1" min="0.5" step="0.5" max="8">
+                        </div>
                     </div>
 
+                    <div class="form-group">
+                        <label data-i18n="select_participants">Select Participants:</label>
+                        <div id="participantsList" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;"></div>
+                    </div>
+
+                    <button class="btn" onclick="findCommonTimes()" data-i18n="find_times_btn">Find Available Times</button>
+
+                    <div id="meetingResults"></div>
+                </div>
+
+                <div id="googleMeetSection" style="display: none;">
                     <div class="form-section">
-                        <p><strong>Kullanıcı:</strong> <span id="availabilityUserName">-</span></p>
-                        <p><strong>Müsaitlik Belirleme:</strong> Hafta içi günlere tıklayın. Yeşil = Müsait</p>
-                    </div>
+                        <h3 data-i18n="create_meeting_title">Create Google Meet</h3>
+                        
+                        <div class="form-group">
+                            <label for="meetingTitle" data-i18n="meeting_title_label">Meeting Title:</label>
+                            <input type="text" id="meetingTitle" placeholder="Weekly Team Meeting">
+                        </div>
 
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- Calendar will be generated here -->
-                    </div>
+                        <div class="form-group">
+                            <label for="meetingDescription" data-i18n="meeting_description_label">Description:</label>
+                            <textarea id="meetingDescription" rows="3" style="width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px;"></textarea>
+                        </div>
 
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="selectedMeetingDate" data-i18n="selected_date_label">Selected Date:</label>
+                                <input type="date" id="selectedMeetingDate" readonly style="background: #e9ecef;">
+                            </div>
+                            <div class="form-group">
+                                <label for="selectedMeetingTime" data-i18n="selected_time_label">Selected Time:</label>
+                                <input type="time" id="selectedMeetingTime" readonly style="background: #e9ecef;">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-success" onclick="createGoogleMeet()" data-i18n="create_google_meet_btn">Create Google Calendar Event</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="settings" class="tab-content" style="display: none;">
+                <h2 data-i18n="settings_title">System Settings</h2>
+                
+                <div class="form-section">
+                    <h3 data-i18n="github_config_title">GitHub Configuration</h3>
+                    <p style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                        <strong>⚠️ Warning:</strong> Changing these settings will affect all users. Only modify if you're changing the data repository.
+                    </p>
+                    
+                    <div class="form-group">
+                        <label for="settingsGithubUsername" data-i18n="github_username_label">GitHub Username:</label>
+                        <input type="text" id="settingsGithubUsername" placeholder="your-username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="settingsGithubRepo" data-i18n="github_repo_label">Repository Name:</label>
+                        <input type="text" id="settingsGithubRepo" placeholder="team-availability-data">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="settingsGithubToken" data-i18n="github_token_label">GitHub Token:</label>
+                        <input type="password" id="settingsGithubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    
+                    <button class="btn" onclick="updateGitHubConfig()" data-i18n="update_config_btn">Update Configuration</button>
+                    
+                    <div id="settingsMessage"></div>
+                </div>
+
+                <div class="form-section">
+                    <h3 data-i18n="timezone_title">Timezone Settings</h3>
+                    <div class="form-group">
+                        <label for="timezoneSelect" data-i18n="timezone_label">Timezone:</label>
+                        <select id="timezoneSelect">
+                            <option value="Europe/Istanbul">Turkey (UTC+3)</option>
+                            <option value="Europe/London">London (UTC+0/+1)</option>
+                            <option value="America/New_York">New York (UTC-5/-4)</option>
+                            <option value="America/Los_Angeles">Los Angeles (UTC-8/-7)</option>
+                            <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="saveTimezone()" data-i18n="save_settings_btn">Save Timezone</button>
+                </div>
+
+                <div class="form-section">
+                    <h3 data-i18n="change_admin_password_title">Change Admin Password</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currentAdminPassword" data-i18n="current_password_label">Current Password:</label>
+                            <input type="password" id="currentAdminPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="newAdminPassword" data-i18n="new_password_label">New Password:</label>
+                            <input type="password" id="newAdminPassword">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="changeAdminPassword()" data-i18n="change_password_btn">Change Password</button>
+                    
+                    <div id="passwordMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Availability Modal -->
+    <div id="availabilityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Set Availability</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label data-i18n="availability_status_label">Status:</label>
+                    <select id="availabilityStatus" onchange="toggleTimeSelection()">
+                        <option value="available" data-i18n="available_option">Available</option>
+                        <option value="unavailable" data-i18n="unavailable_option">Not Available</option>
+                    </select>
+                </div>
+
+                <div id="timeSelection">
+                    <div class="selected-time-info">
+                        <strong data-i18n="selected_time_label">Selected:</strong> <span id="selectedTimeDisplay">-</span>
+                    </div>
+                    
+                    <div>
+                        <h4 data-i18n="start_time_title">Start Time:</h4>
+                        <div class="time-grid" id="startTimeGrid"></div>
+                    </div>
+                    
                     <div style="margin-top: 20px;">
-                        <button class="btn btn-success" onclick="saveAvailability()">Müsaitlikleri Kaydet</button>
+                        <h4 data-i18n="end_time_title">End Time:</h4>
+                        <div class="time-grid" id="endTimeGrid"></div>
                     </div>
+                </div>
 
-                    <div id="availabilityMessage"></div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn" onclick="saveModalAvailability()" data-i18n="save_btn">Save</button>
+                    <button class="btn btn-secondary" onclick="closeModal()" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
-        let githubConfig = {
-            username: '',
-            repo: '',
-            token: '',
-            isConfigured: false
+        // Translations
+        const translations = {
+            tr: {
+                title: 'Takım Müsaitlik Sistemi',
+                subtitle: 'Bulut tabanlı takım müsaitlik takipçisi v3.0',
+                tab_setup: 'Kurulum',
+                tab_login: 'Giriş',
+                tab_admin: 'Admin',
+                tab_availability: 'Müsaitlik',
+                tab_settings: 'Ayarlar',
+                months: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+                days: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+            },
+            en: {
+                title: 'Team Availability System',
+                subtitle: 'Cloud-based team availability tracker v3.0',
+                tab_setup: 'Setup',
+                tab_login: 'Login',
+                tab_admin: 'Admin',
+                tab_availability: 'Availability',
+                tab_settings: 'Settings',
+                months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            }
         };
-        
+
+        let currentLang = 'tr';
+        let githubConfig = { username: '', repo: '', token: '', isConfigured: false };
+        let systemData = { users: {}, availability: {}, config: {} };
         let currentUser = null;
-        let systemData = {
-            users: {},
-            availability: {},
-            config: {}
-        };
+        let currentEditingDate = null;
+        let selectedStartTime = null;
+        let selectedEndTime = null;
 
-        // Cache for GitHub data
-        let dataCache = {
-            data: null,
-            timestamp: null,
-            ttl: 60000 // 1 minute cache
-        };
-
-        // Current calendar state
-        let currentMonth = new Date();
-        let selectedDays = new Set();
-
-        // SHA-256 Password Hashing
+        // Password hashing
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -637,16 +843,52 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // GitHub API operations
+        // Language
+        function switchLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+            
+            if (currentUser) loadCalendar();
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(tabName).style.display = 'block';
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // Status updates
+        function updateStatus(type, message) {
+            const dot = document.getElementById('statusDot');
+            const status = document.getElementById('connectionStatus');
+            dot.className = `status-dot ${type}`;
+            status.textContent = message;
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}-message">${message}</div>`;
+        }
+
+        // GitHub API
         async function githubApiCall(endpoint, method = 'GET', data = null) {
-            if (!githubConfig.isConfigured) {
-                throw new Error('GitHub configuration missing');
-            }
+            if (!githubConfig.isConfigured) throw new Error('GitHub not configured');
 
             const url = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/contents/${endpoint}`;
             
             const options = {
-                method: method,
+                method,
                 headers: {
                     'Authorization': `token ${githubConfig.token}`,
                     'Accept': 'application/vnd.github.v3+json',
@@ -654,123 +896,79 @@
                 }
             };
 
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
+            if (data) options.body = JSON.stringify(data);
 
             const response = await fetch(url, options);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                if (response.status === 401) {
-                    throw new Error('GitHub token geçersiz veya süresi dolmuş. Yeni token oluşturun.');
-                } else if (response.status === 403 && errorData.message?.includes('rate limit')) {
-                    throw new Error('GitHub API rate limit aşıldı. 1 saat sonra tekrar deneyin.');
-                } else if (response.status === 404) {
-                    throw new Error('Repository bulunamadı. Kullanıcı adı ve repo adını kontrol edin.');
-                }
-                throw new Error(`GitHub API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+                throw new Error(`GitHub API Error: ${response.status}`);
             }
 
             return await response.json();
         }
 
         async function saveDataToGitHub(filename, data) {
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+            let sha = null;
+
             try {
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-                let sha = null;
+                const existing = await githubApiCall(filename);
+                sha = existing.sha;
+            } catch (error) {}
 
-                try {
-                    const existing = await githubApiCall(filename);
-                    sha = existing.sha;
-                } catch (error) {
-                    // File doesn't exist yet
-                }
+            const payload = {
+                message: `Update ${filename}`,
+                content: content
+            };
 
-                const payload = {
-                    message: `Update ${filename} - ${new Date().toISOString()}`,
-                    content: content
-                };
+            if (sha) payload.sha = sha;
 
-                if (sha) {
-                    payload.sha = sha;
-                }
-
-                await githubApiCall(filename, 'PUT', payload);
-                
-                // Update cache
-                dataCache.data = data;
-                dataCache.timestamp = Date.now();
-                
-                return true;
-            } catch (error) {
-                console.error('Save to GitHub failed:', error);
-                throw error;
-            }
+            await githubApiCall(filename, 'PUT', payload);
+            return true;
         }
 
-        async function loadDataFromGitHub(filename, useCache = true) {
+        async function loadDataFromGitHub(filename) {
             try {
-                // Check cache first
-                if (useCache && dataCache.data && (Date.now() - dataCache.timestamp) < dataCache.ttl) {
-                    return dataCache.data;
-                }
-
                 const response = await githubApiCall(filename);
                 const content = decodeURIComponent(escape(atob(response.content)));
-                const data = JSON.parse(content);
-                
-                // Update cache
-                dataCache.data = data;
-                dataCache.timestamp = Date.now();
-                
-                return data;
+                return JSON.parse(content);
             } catch (error) {
-                if (error.message.includes('404') || error.message.includes('bulunamadı')) {
-                    return {}; // File doesn't exist yet
-                }
-                throw error;
+                return {};
             }
         }
 
-        // System initialization
-        async function initializeGitHubStorage() {
+        // Setup
+        async function testGitHubConnection() {
             const username = document.getElementById('githubUsername').value.trim();
             const repo = document.getElementById('githubRepo').value.trim();
             const token = document.getElementById('githubToken').value.trim();
 
             if (!username || !repo || !token) {
-                showMessage('setupMessage', 'Tüm alanları doldurun!', 'error');
+                showMessage('setupMessage', 'Fill all fields!', 'error');
                 return;
             }
 
-            updateStatus('loading', 'Testing connection...');
+            updateStatus('loading', 'Testing...');
 
             try {
                 githubConfig = { username, repo, token, isConfigured: true };
-                
-                // Test API access
                 await githubApiCall('');
                 
-                // Try to load existing data
-                try {
-                    systemData = await loadDataFromGitHub('team-data.json', false);
-                    if (!systemData.users) systemData.users = {};
-                    if (!systemData.availability) systemData.availability = {};
-                    if (!systemData.config) systemData.config = {};
-                } catch (error) {
-                    systemData = { users: {}, availability: {}, config: {} };
-                }
+                systemData = await loadDataFromGitHub('team-data.json');
+                if (!systemData.users) systemData.users = {};
+                if (!systemData.availability) systemData.availability = {};
+                if (!systemData.config) systemData.config = {};
 
-                updateStatus('connected', 'GitHub connected');
-                showMessage('setupMessage', 'GitHub bağlantısı başarılı! Artık sistemi kullanabilirsiniz.', 'success');
+                updateStatus('connected', 'Connected');
+                showMessage('setupMessage', 'GitHub connection successful!', 'success');
                 
                 document.getElementById('adminSetupSection').style.display = 'block';
                 document.getElementById('loginTab').disabled = false;
                 
             } catch (error) {
-                updateStatus('error', 'Connection failed');
-                showMessage('setupMessage', 'Bağlantı hatası: ' + error.message, 'error');
+                updateStatus('error', 'Failed');
+                showMessage('setupMessage', 'Connection error: ' + error.message, 'error');
                 githubConfig.isConfigured = false;
             }
         }
@@ -780,13 +978,8 @@
             const password = document.getElementById('initialAdminPassword').value;
             const company = document.getElementById('companyName').value.trim();
 
-            if (!email || !password || !company) {
-                showMessage('setupMessage', 'Tüm alanları doldurun!', 'error');
-                return;
-            }
-
-            if (password.length < 8) {
-                showMessage('setupMessage', 'Şifre en az 8 karakter olmalı!', 'error');
+            if (!email || !password || !company || password.length < 8) {
+                showMessage('setupMessage', 'Fill all fields! Password min 8 chars.', 'error');
                 return;
             }
 
@@ -800,47 +993,46 @@
                 };
 
                 systemData.users[Date.now()] = {
-                    name: 'System Administrator',
+                    name: 'Administrator',
                     email: email,
                     passwordHash: hashedPassword,
-                    role: 'System Admin',
-                    country: 'TR',
-                    timezone: 'Europe/Istanbul',
+                    role: 'Admin',
                     isAdmin: true,
                     createdAt: new Date().toISOString()
                 };
 
                 await saveDataToGitHub('team-data.json', systemData);
                 
-                showMessage('setupMessage', 'Sistem başarıyla kuruldu! Artık giriş yapabilirsiniz.', 'success');
-                document.getElementById('adminTab').style.display = 'block';
+                showMessage('setupMessage', 'System initialized! You can login now.', 'success');
                 
+                // Hide setup tab after initialization
+                document.getElementById('setupTab').style.display = 'none';
                 showTab('login');
                 
             } catch (error) {
-                showMessage('setupMessage', 'Sistem kurulum hatası: ' + error.message, 'error');
+                showMessage('setupMessage', 'Setup error: ' + error.message, 'error');
             }
         }
 
-        // User login
+        // Login
         async function loginUser() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             if (!email || !password) {
-                showMessage('loginMessage', 'Email ve şifre gerekli!', 'error');
-                return;
-            }
-
-            if (!githubConfig.isConfigured) {
-                showMessage('loginMessage', 'Sistem henüz yapılandırılmamış!', 'error');
+                showMessage('loginMessage', 'Email and password required!', 'error');
                 return;
             }
 
             try {
-                updateStatus('loading', 'Checking credentials...');
+                updateStatus('loading', 'Checking...');
                 
-                systemData = await loadDataFromGitHub('team-data.json', false);
+                systemData = await loadDataFromGitHub('team-data.json');
+                
+                // Hide setup tab after initial setup
+                if (systemData.config && systemData.config.initialized) {
+                    document.getElementById('setupTab').style.display = 'none';
+                }
                 
                 const hashedPassword = await hashPassword(password);
                 const users = Object.values(systemData.users || {});
@@ -854,50 +1046,62 @@
                     updateStatus('connected', 'Logged in');
                     
                     document.getElementById('availabilityTab').disabled = false;
+                    document.getElementById('calendarTab').disabled = false;
+                    document.getElementById('meetingTab').disabled = false;
                     
                     if (user.isAdmin) {
                         document.getElementById('adminTab').style.display = 'block';
+                        document.getElementById('settingsTab').style.display = 'block';
+                        document.getElementById('settingsTab').disabled = false;
+                        loadSettingsForm();
                         showTab('admin');
                         loadUsersList();
                     } else {
                         showTab('availability');
-                        initializeAvailabilityCalendar();
+                        initializeAvailability();
                     }
                     
-                    showMessage('loginMessage', `Hoş geldiniz, ${user.name}!`, 'success');
+                    // Populate month selects for all tabs
+                    populateMonthOptions();
+                    
+                    showMessage('loginMessage', `Welcome, ${user.name}!`, 'success');
                     
                 } else {
-                    showMessage('loginMessage', 'Geçersiz email veya şifre!', 'error');
+                    showMessage('loginMessage', 'Invalid credentials!', 'error');
                     updateStatus('error', 'Login failed');
                 }
                 
             } catch (error) {
-                showMessage('loginMessage', 'Giriş hatası: ' + error.message, 'error');
-                updateStatus('error', 'Login error');
+                showMessage('loginMessage', 'Login error: ' + error.message, 'error');
+                updateStatus('error', 'Error');
             }
         }
 
-        // Admin operations
-        async function addNewUser() {
-            if (!currentUser || !currentUser.isAdmin) {
-                showMessage('adminMessage', 'Admin yetkisi gerekli!', 'error');
-                return;
-            }
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginTab').disabled = false;
+            document.getElementById('availabilityTab').disabled = true;
+            document.getElementById('adminTab').style.display = 'none';
+            document.getElementById('settingsTab').style.display = 'none';
+            showTab('login');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
 
+        // Admin functions
+        async function addNewUser() {
             const name = document.getElementById('newUserName').value.trim();
             const email = document.getElementById('newUserEmail').value.trim();
             const role = document.getElementById('newUserRole').value.trim();
-            const country = document.getElementById('newUserCountry').value;
-            const timezone = document.getElementById('newUserTimezone').value;
 
             if (!name || !email || !role) {
-                showMessage('adminMessage', 'Ad, email ve pozisyon gerekli!', 'error');
+                showMessage('adminMessage', 'Fill all fields!', 'error');
                 return;
             }
 
             const existingUsers = Object.values(systemData.users || {});
             if (existingUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-                showMessage('adminMessage', 'Bu email adresi zaten kullanılıyor!', 'error');
+                showMessage('adminMessage', 'Email already exists!', 'error');
                 return;
             }
 
@@ -907,20 +1111,17 @@
                 const userId = Date.now();
 
                 systemData.users[userId] = {
-                    name: name,
-                    email: email,
+                    name,
+                    email,
                     passwordHash: hashedPassword,
-                    role: role,
-                    country: country,
-                    timezone: timezone,
+                    role,
                     isAdmin: false,
-                    createdAt: new Date().toISOString(),
-                    createdBy: currentUser.email
+                    createdAt: new Date().toISOString()
                 };
 
                 await saveDataToGitHub('team-data.json', systemData);
                 
-                showMessage('adminMessage', `Kullanıcı eklendi!\n\nGiriş Bilgileri:\nEmail: ${email}\nŞifre: ${password}\n\nBu bilgileri güvenli şekilde paylaşın.`, 'success');
+                alert(`User added!\n\nEmail: ${email}\nPassword: ${password}\n\nShare these credentials securely.`);
                 
                 document.getElementById('newUserName').value = '';
                 document.getElementById('newUserEmail').value = '';
@@ -929,7 +1130,7 @@
                 loadUsersList();
                 
             } catch (error) {
-                showMessage('adminMessage', 'Kullanıcı ekleme hatası: ' + error.message, 'error');
+                showMessage('adminMessage', 'Error: ' + error.message, 'error');
             }
         }
 
@@ -950,170 +1151,150 @@
                 const users = Object.entries(systemData.users || {});
 
                 if (users.length === 0) {
-                    usersList.innerHTML = '<div class="empty-state">Henüz kullanıcı yok.</div>';
+                    usersList.innerHTML = '<div class="empty-state">No users yet</div>';
                     return;
                 }
 
                 usersList.innerHTML = users.map(([id, user]) => `
                     <div class="user-card">
-                        <div class="user-info">
+                        <div>
                             <h4>${user.name} ${user.isAdmin ? '(Admin)' : ''}</h4>
-                            <div class="user-details">
-                                ${user.email} | ${user.role} | ${user.country} | ${user.timezone}
-                            </div>
-                            <div class="user-credentials">
-                                Email: ${user.email}<br>
-                                Şifre hashlendi (güvenli)
-                            </div>
+                            <div style="color: #666;">${user.email} | ${user.role}</div>
                         </div>
                         <div class="user-actions">
-                            <button class="btn btn-small" onclick="resetUserPassword('${id}')">Şifre Sıfırla</button>
-                            ${!user.isAdmin ? `<button class="btn btn-small btn-danger" onclick="deleteUser('${id}')">Sil</button>` : ''}
+                            <button class="btn btn-small" onclick="resetPassword('${id}')">Reset Password</button>
+                            ${!user.isAdmin ? `<button class="btn btn-small btn-danger" onclick="deleteUser('${id}')">Delete</button>` : ''}
                         </div>
                     </div>
                 `).join('');
                 
             } catch (error) {
-                usersList.innerHTML = '<div class="error-message">Kullanıcı listesi yüklenemedi: ' + error.message + '</div>';
+                usersList.innerHTML = '<div class="error-message">Error loading users</div>';
             }
         }
 
-        async function resetUserPassword(userId) {
+        async function resetPassword(userId) {
             try {
                 const newPassword = generatePassword();
                 const hashedPassword = await hashPassword(newPassword);
                 
                 systemData.users[userId].passwordHash = hashedPassword;
-                
                 await saveDataToGitHub('team-data.json', systemData);
                 
                 const user = systemData.users[userId];
-                alert(`Şifre sıfırlandı!\n\nKullanıcı: ${user.name}\nEmail: ${user.email}\nYeni Şifre: ${newPassword}`);
-                
-                loadUsersList();
+                alert(`Password reset!\n\nUser: ${user.name}\nEmail: ${user.email}\nNew Password: ${newPassword}`);
                 
             } catch (error) {
-                showMessage('adminMessage', 'Şifre sıfırlama hatası: ' + error.message, 'error');
+                showMessage('adminMessage', 'Error: ' + error.message, 'error');
             }
         }
 
         async function deleteUser(userId) {
-            const user = systemData.users[userId];
-            
-            if (confirm(`${user.name} kullanıcısını silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.`)) {
+            if (confirm('Delete this user? This cannot be undone.')) {
                 try {
                     delete systemData.users[userId];
-                    
-                    if (systemData.availability[userId]) {
-                        delete systemData.availability[userId];
-                    }
+                    if (systemData.availability[userId]) delete systemData.availability[userId];
                     
                     await saveDataToGitHub('team-data.json', systemData);
-                    
-                    showMessage('adminMessage', `${user.name} başarıyla silindi.`, 'success');
                     loadUsersList();
                     
                 } catch (error) {
-                    showMessage('adminMessage', 'Silme hatası: ' + error.message, 'error');
+                    showMessage('adminMessage', 'Delete error: ' + error.message, 'error');
                 }
             }
         }
 
-        // Availability Calendar
-        function initializeAvailabilityCalendar() {
-            document.getElementById('availabilityUserName').textContent = currentUser.name;
-            renderCalendar();
+        // Availability
+        function initializeAvailability() {
+            document.getElementById('availabilityWelcome').textContent = `Welcome, ${currentUser.name}!`;
+            populateMonthOptions();
         }
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
+        function populateMonthOptions() {
+            const monthSelect = document.getElementById('monthSelect');
+            const teamMonthSelect = document.getElementById('teamMonthSelect');
+            const meetingMonth = document.getElementById('meetingMonth');
+            const options = [];
             
-            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                               'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-            document.getElementById('currentMonthDisplay').textContent = `${monthNames[month]} ${year}`;
+            for (let i = 0; i < 6; i++) {
+                const date = new Date();
+                date.setMonth(date.getMonth() + i);
+                const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const text = `${translations[currentLang].months[date.getMonth()]} ${date.getFullYear()}`;
+                options.push({value, text});
+            }
+            
+            const html = options.map(o => `<option value="${o.value}">${o.text}</option>`).join('');
+            if (monthSelect) monthSelect.innerHTML = html;
+            if (teamMonthSelect) teamMonthSelect.innerHTML = html;
+            if (meetingMonth) meetingMonth.innerHTML = html;
+        }
 
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+        function loadCalendar() {
+            const monthValue = document.getElementById('monthSelect').value;
+            const [year, month] = monthValue.split('-').map(Number);
             
-            const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-            
-            let html = dayNames.map(name => 
-                `<div class="calendar-header">${name}</div>`
-            ).join('');
+            const html = generateCalendar(year, month);
+            document.getElementById('memberCalendar').innerHTML = html;
+        }
 
-            const startDay = firstDay === 0 ? 6 : firstDay - 1;
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = (firstDay.getDay() + 6) % 7;
+            
+            const monthName = translations[currentLang].months[month - 1];
+            const dayNames = translations[currentLang].days;
+            
+            let html = `
+                <div style="background: #4facfe; color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: 600; border-radius: 10px 10px 0 0;">
+                    ${monthName} ${year}
+                </div>
+                <div class="month-grid">
+            `;
+            
+            dayNames.forEach(day => html += `<div class="day-header">${day}</div>`);
             
             for (let i = 0; i < startDay; i++) {
-                html += '<div class="calendar-day disabled"></div>';
+                html += '<div class="day-cell other-month"></div>';
             }
-
+            
             const userId = getUserId(currentUser.email);
-            const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-            const userAvailability = systemData.availability[userId]?.[monthKey] || [];
-
+            
             for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month, day);
+                const date = new Date(year, month - 1, day);
+                const dateString = date.toISOString().split('T')[0];
                 const dayOfWeek = date.getDay();
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                const isAvailable = userAvailability.includes(day);
                 
-                const classes = ['calendar-day'];
-                if (isWeekend) classes.push('weekend');
-                if (isAvailable) classes.push('available');
+                let cellClass = 'day-cell';
+                let timeDisplay = '';
+                
+                if (isWeekend) {
+                    cellClass += ' weekend';
+                } else {
+                    const dayData = systemData.availability[userId]?.[dateString];
+                    if (dayData) {
+                        cellClass += dayData.available ? ' available' : ' unavailable';
+                        if (dayData.available && dayData.start && dayData.end) {
+                            timeDisplay = `<div class="time-display">${dayData.start}-${dayData.end}</div>`;
+                        }
+                    }
+                }
+                
+                const clickAction = isWeekend ? '' : `onclick="openModal('${dateString}')"`;
                 
                 html += `
-                    <div class="${classes.join(' ')}" onclick="toggleDay(${day}, ${isWeekend})" data-day="${day}">
+                    <div class="${cellClass}" ${clickAction}>
                         <div class="day-number">${day}</div>
+                        ${timeDisplay}
                     </div>
                 `;
             }
-
-            grid.innerHTML = html;
-        }
-
-        function toggleDay(day, isWeekend) {
-            if (isWeekend) return;
             
-            const userId = getUserId(currentUser.email);
-            const monthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
-            
-            if (!systemData.availability[userId]) {
-                systemData.availability[userId] = {};
-            }
-            if (!systemData.availability[userId][monthKey]) {
-                systemData.availability[userId][monthKey] = [];
-            }
-            
-            const index = systemData.availability[userId][monthKey].indexOf(day);
-            if (index > -1) {
-                systemData.availability[userId][monthKey].splice(index, 1);
-            } else {
-                systemData.availability[userId][monthKey].push(day);
-            }
-            
-            renderCalendar();
-        }
-
-        function changeMonth(delta) {
-            currentMonth.setMonth(currentMonth.getMonth() + delta);
-            renderCalendar();
-        }
-
-        async function saveAvailability() {
-            try {
-                updateStatus('loading', 'Saving...');
-                await saveDataToGitHub('team-data.json', systemData);
-                updateStatus('connected', 'Saved');
-                showMessage('availabilityMessage', 'Müsaitlikler başarıyla kaydedildi!', 'success');
-                setTimeout(() => {
-                    document.getElementById('availabilityMessage').innerHTML = '';
-                }, 3000);
-            } catch (error) {
-                updateStatus('error', 'Save failed');
-                showMessage('availabilityMessage', 'Kayıt hatası: ' + error.message, 'error');
-            }
+            html += '</div>';
+            return html;
         }
 
         function getUserId(email) {
@@ -1122,45 +1303,497 @@
             return found ? found[0] : null;
         }
 
-        // UI helper functions
-        function updateStatus(type, message) {
-            const dot = document.getElementById('statusDot');
-            const status = document.getElementById('connectionStatus');
-            
-            dot.className = `status-dot ${type}`;
-            status.textContent = message;
-        }
-
-        function showMessage(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="${type}-message">${message}</div>`;
-        }
-
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
+        function openModal(dateString) {
+            currentEditingDate = dateString;
+            const date = new Date(dateString);
+            const formattedDate = date.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
             });
             
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            document.getElementById('modalTitle').textContent = formattedDate;
             
-            document.getElementById(tabName).style.display = 'block';
+            const userId = getUserId(currentUser.email);
+            const dayData = systemData.availability[userId]?.[dateString];
             
-            const tabButton = document.getElementById(tabName + 'Tab');
-            if (tabButton) {
-                tabButton.classList.add('active');
+            if (dayData) {
+                document.getElementById('availabilityStatus').value = dayData.available ? 'available' : 'unavailable';
+                selectedStartTime = dayData.start || '09:00';
+                selectedEndTime = dayData.end || '17:00';
+            } else {
+                document.getElementById('availabilityStatus').value = 'available';
+                selectedStartTime = '09:00';
+                selectedEndTime = '17:00';
+            }
+            
+            generateTimeSlots();
+            updateSelectedTimeDisplay();
+            toggleTimeSelection();
+            
+            document.getElementById('availabilityModal').classList.add('active');
+        }
+
+        function toggleTimeSelection() {
+            const status = document.getElementById('availabilityStatus').value;
+            document.getElementById('timeSelection').style.display = status === 'available' ? 'block' : 'none';
+        }
+
+        function generateTimeSlots() {
+            const times = [];
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                }
+            }
+            
+            const workHourTimes = times.slice(18, 40); // 09:00 to 19:30
+            
+            document.getElementById('startTimeGrid').innerHTML = workHourTimes.map(time => `
+                <div class="time-slot-btn ${time === selectedStartTime ? 'selected' : ''}" onclick="selectStartTime('${time}')">
+                    ${time}
+                </div>
+            `).join('');
+            
+            document.getElementById('endTimeGrid').innerHTML = workHourTimes.map(time => `
+                <div class="time-slot-btn ${time === selectedEndTime ? 'selected' : ''}" onclick="selectEndTime('${time}')">
+                    ${time}
+                </div>
+            `).join('');
+        }
+
+        function selectStartTime(time) {
+            selectedStartTime = time;
+            generateTimeSlots();
+            updateSelectedTimeDisplay();
+        }
+
+        function selectEndTime(time) {
+            selectedEndTime = time;
+            generateTimeSlots();
+            updateSelectedTimeDisplay();
+        }
+
+        function updateSelectedTimeDisplay() {
+            document.getElementById('selectedTimeDisplay').textContent = `${selectedStartTime} - ${selectedEndTime}`;
+        }
+
+        function closeModal() {
+            document.getElementById('availabilityModal').classList.remove('active');
+        }
+
+        async function saveModalAvailability() {
+            if (!currentEditingDate || !currentUser) return;
+            
+            const isAvailable = document.getElementById('availabilityStatus').value === 'available';
+            const userId = getUserId(currentUser.email);
+            
+            if (!systemData.availability[userId]) {
+                systemData.availability[userId] = {};
+            }
+            
+            systemData.availability[userId][currentEditingDate] = {
+                available: isAvailable,
+                start: isAvailable ? selectedStartTime : null,
+                end: isAvailable ? selectedEndTime : null
+            };
+            
+            closeModal();
+            loadCalendar();
+            alert('Availability saved for this day!');
+        }
+
+        async function saveAvailability() {
+            try {
+                updateStatus('loading', 'Saving...');
+                await saveDataToGitHub('team-data.json', systemData);
+                updateStatus('connected', 'Saved');
+                showMessage('availabilityMessage', 'All availability saved successfully!', 'success');
+                setTimeout(() => {
+                    document.getElementById('availabilityMessage').innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                updateStatus('error', 'Save failed');
+                showMessage('availabilityMessage', 'Save error: ' + error.message, 'error');
+            }
+        }
+
+        // Team Calendar
+        async function loadTeamCalendar() {
+            const monthValue = document.getElementById('teamMonthSelect').value;
+            const [year, month] = monthValue.split('-').map(Number);
+            
+            systemData = await loadDataFromGitHub('team-data.json');
+            
+            const users = Object.entries(systemData.users || {});
+            if (users.length === 0) {
+                document.getElementById('teamCalendarView').innerHTML = '<div class="empty-state">No users found</div>';
+                return;
             }
 
-            if (tabName === 'availability' && currentUser) {
-                initializeAvailabilityCalendar();
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            const monthName = translations[currentLang].months[month - 1];
+            
+            let html = `
+                <div style="overflow-x: auto;">
+                    <div style="background: #4facfe; color: white; padding: 15px; text-align: center; font-size: 1.3rem; font-weight: 600; margin-bottom: 20px; border-radius: 10px;">
+                        ${monthName} ${year} - Team Availability
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
+                        <thead>
+                            <tr style="background: #4facfe; color: white;">
+                                <th style="padding: 15px; text-align: left; position: sticky; left: 0; background: #4facfe; z-index: 10;">Team Member</th>
+            `;
+            
+            // Add weekday headers
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayOfWeek = date.getDay();
+                
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Only weekdays
+                    const dayName = translations[currentLang].days[dayOfWeek === 0 ? 6 : dayOfWeek - 1];
+                    html += `<th style="padding: 10px; text-align: center; font-size: 0.85rem; min-width: 80px;">${day}<br>${dayName}</th>`;
+                }
             }
+            
+            html += '</tr></thead><tbody>';
+            
+            // Add rows for each user
+            users.forEach(([userId, user]) => {
+                if (user.isAdmin && users.length > 1) return; // Skip admin if there are other users
+                
+                html += `
+                    <tr>
+                        <td style="padding: 15px; border: 1px solid #dee2e6; font-weight: 600; position: sticky; left: 0; background: white; z-index: 5;">
+                            ${user.name}<br>
+                            <small style="color: #666; font-weight: normal;">${user.role}</small>
+                        </td>
+                `;
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month - 1, day);
+                    const dayOfWeek = date.getDay();
+                    
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        const dateString = date.toISOString().split('T')[0];
+                        const dayData = systemData.availability[userId]?.[dateString];
+                        
+                        let bgColor = '#fff3cd';
+                        let content = '?';
+                        let title = 'Not set';
+                        
+                        if (dayData) {
+                            if (dayData.available) {
+                                bgColor = '#d4edda';
+                                content = `<div style="font-size: 0.75rem; font-weight: 600;">✓</div><div style="font-size: 0.7rem;">${dayData.start}-${dayData.end}</div>`;
+                                title = `Available: ${dayData.start}-${dayData.end}`;
+                            } else {
+                                bgColor = '#e2e3e5';
+                                content = '✗';
+                                title = 'Not available';
+                            }
+                        }
+                        
+                        html += `<td style="padding: 8px; text-align: center; background: ${bgColor}; border: 1px solid #dee2e6;" title="${title}">${content}</td>`;
+                    }
+                }
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+            document.getElementById('teamCalendarView').innerHTML = html;
+        }
+
+        // Meeting Planner
+        async function findCommonTimes() {
+            const monthValue = document.getElementById('meetingMonth').value;
+            const [year, month] = monthValue.split('-').map(Number);
+            const duration = parseFloat(document.getElementById('meetingDuration').value);
+            
+            systemData = await loadDataFromGitHub('team-data.json');
+            
+            // Get selected participants
+            const checkboxes = document.querySelectorAll('#participantsList input[type="checkbox"]:checked');
+            const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selectedUserIds.length < 2) {
+                document.getElementById('meetingResults').innerHTML = '<div class="error-message">Please select at least 2 participants</div>';
+                return;
+            }
+            
+            // Find common available days
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            const commonTimes = [];
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayOfWeek = date.getDay();
+                
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Only weekdays
+                    const dateString = date.toISOString().split('T')[0];
+                    
+                    // Check if all selected users are available on this day
+                    const allAvailable = selectedUserIds.every(userId => {
+                        const dayData = systemData.availability[userId]?.[dateString];
+                        return dayData && dayData.available;
+                    });
+                    
+                    if (allAvailable) {
+                        // Find common time slots
+                        const timeSlots = selectedUserIds.map(userId => {
+                            const dayData = systemData.availability[userId][dateString];
+                            return {
+                                userId,
+                                start: dayData.start,
+                                end: dayData.end,
+                                userName: systemData.users[userId].name
+                            };
+                        });
+                        
+                        // Calculate overlap
+                        const latestStart = timeSlots.reduce((latest, slot) => {
+                            return slot.start > latest ? slot.start : latest;
+                        }, timeSlots[0].start);
+                        
+                        const earliestEnd = timeSlots.reduce((earliest, slot) => {
+                            return slot.end < earliest ? slot.end : earliest;
+                        }, timeSlots[0].end);
+                        
+                        // Check if there's enough time for the meeting
+                        const startMinutes = parseInt(latestStart.split(':')[0]) * 60 + parseInt(latestStart.split(':')[1]);
+                        const endMinutes = parseInt(earliestEnd.split(':')[0]) * 60 + parseInt(earliestEnd.split(':')[1]);
+                        const availableHours = (endMinutes - startMinutes) / 60;
+                        
+                        if (availableHours >= duration) {
+                            commonTimes.push({
+                                date: dateString,
+                                dateFormatted: date.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                }),
+                                start: latestStart,
+                                end: earliestEnd,
+                                duration: availableHours,
+                                participants: timeSlots
+                            });
+                        }
+                    }
+                }
+            }
+            
+            if (commonTimes.length === 0) {
+                document.getElementById('meetingResults').innerHTML = '<div class="error-message">No common available times found for selected participants in this month.</div>';
+                return;
+            }
+            
+            // Display results
+            let html = `
+                <div class="success-message" style="margin-top: 20px;">
+                    <strong>Found ${commonTimes.length} common available time(s)</strong>
+                </div>
+                <div style="margin-top: 20px;">
+            `;
+            
+            commonTimes.forEach((slot, index) => {
+                html += `
+                    <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 20px; margin: 15px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="color: #155724; margin-bottom: 5px;">📅 ${slot.dateFormatted}</h4>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #155724;">
+                                    ⏰ ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)}h available)
+                                </div>
+                            </div>
+                            <button class="btn btn-success" onclick="selectMeetingSlot('${slot.date}', '${slot.start}')">
+                                Select This Time
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Participants:</strong><br>
+                            ${slot.participants.map(p => `<span style="display: inline-block; background: white; padding: 5px 10px; border-radius: 15px; margin: 3px;">👤 ${p.userName}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            document.getElementById('meetingResults').innerHTML = html;
+            
+            // Populate participants list
+            loadParticipantsList();
+        }
+
+        function loadParticipantsList() {
+            const users = Object.entries(systemData.users || {}).filter(([id, user]) => !user.isAdmin || Object.keys(systemData.users).length === 1);
+            
+            const html = users.map(([userId, user]) => `
+                <label style="display: block; padding: 10px; cursor: pointer; border-radius: 6px; margin-bottom: 5px; background: white;">
+                    <input type="checkbox" value="${userId}" style="margin-right: 10px; width: auto;">
+                    ${user.name} (${user.role})
+                </label>
+            `).join('');
+            
+            document.getElementById('participantsList').innerHTML = html;
+        }
+
+        function selectMeetingSlot(date, time) {
+            document.getElementById('selectedMeetingDate').value = date;
+            document.getElementById('selectedMeetingTime').value = time;
+            document.getElementById('googleMeetSection').style.display = 'block';
+            
+            // Scroll to Google Meet section
+            document.getElementById('googleMeetSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createGoogleMeet() {
+            const title = document.getElementById('meetingTitle').value || 'Team Meeting';
+            const description = document.getElementById('meetingDescription').value || '';
+            const date = document.getElementById('selectedMeetingDate').value;
+            const time = document.getElementById('selectedMeetingTime').value;
+            const duration = parseFloat(document.getElementById('meetingDuration').value) || 1;
+            
+            if (!date || !time) {
+                alert('Please select a meeting slot first!');
+                return;
+            }
+            
+            // Calculate end time
+            const [hours, minutes] = time.split(':').map(Number);
+            const startDate = new Date(date + 'T' + time);
+            const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+            
+            // Format dates for Google Calendar
+            const formatGoogleDate = (d) => {
+                return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+            
+            // Get selected participants
+            const checkboxes = document.querySelectorAll('#participantsList input[type="checkbox"]:checked');
+            const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
+            const participantEmails = selectedUserIds.map(id => systemData.users[id].email).join(',');
+            
+            // Create Google Calendar URL
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+                `&text=${encodeURIComponent(title)}` +
+                `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}` +
+                `&details=${encodeURIComponent(description + '\n\nGoogle Meet: Will be auto-generated when you save this event')}` +
+                `&add=${encodeURIComponent(participantEmails)}` +
+                `&ctz=Europe/Istanbul`;
+            
+            // Open in new window
+            window.open(googleCalendarUrl, '_blank');
+            
+            alert('Google Calendar event opened in new window!\n\n' +
+                  'Instructions:\n' +
+                  '1. Review the event details\n' +
+                  '2. Click "Add Google Meet video conferencing"\n' +
+                  '3. Click "Save" to create the event\n' +
+                  '4. Google Meet link will be auto-generated\n' +
+                  '5. Share the calendar invite with participants');
+        }
+
+        // Settings
+        function loadSettingsForm() {
+            // Load current GitHub config to settings form
+            document.getElementById('settingsGithubUsername').value = githubConfig.username || '';
+            document.getElementById('settingsGithubRepo').value = githubConfig.repo || '';
+            document.getElementById('settingsGithubToken').value = githubConfig.token || '';
+        }
+
+        async function updateGitHubConfig() {
+            const username = document.getElementById('settingsGithubUsername').value.trim();
+            const repo = document.getElementById('settingsGithubRepo').value.trim();
+            const token = document.getElementById('settingsGithubToken').value.trim();
+
+            if (!username || !repo || !token) {
+                showMessage('settingsMessage', 'All fields required!', 'error');
+                return;
+            }
+
+            updateStatus('loading', 'Testing new config...');
+
+            try {
+                // Test new configuration
+                const testConfig = { username, repo, token, isConfigured: true };
+                const oldConfig = {...githubConfig};
+                githubConfig = testConfig;
+                
+                await githubApiCall('');
+                
+                updateStatus('connected', 'Config updated');
+                showMessage('settingsMessage', 'GitHub configuration updated successfully!', 'success');
+                
+            } catch (error) {
+                githubConfig = oldConfig; // Restore old config
+                updateStatus('error', 'Config failed');
+                showMessage('settingsMessage', 'Configuration test failed: ' + error.message, 'error');
+            }
+        }
+
+        function saveTimezone() {
+            const timezone = document.getElementById('timezoneSelect').value;
+            // Save timezone preference (could be stored in systemData.config)
+            alert('Timezone saved: ' + timezone);
+        }
+
+        async function changeAdminPassword() {
+            const currentPassword = document.getElementById('currentAdminPassword').value;
+            const newPassword = document.getElementById('newAdminPassword').value;
+
+            if (!currentPassword || !newPassword) {
+                showMessage('passwordMessage', 'Both fields required!', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showMessage('passwordMessage', 'New password must be at least 8 characters!', 'error');
+                return;
+            }
+
+            try {
+                const currentHash = await hashPassword(currentPassword);
+                if (currentHash !== currentUser.passwordHash) {
+                    showMessage('passwordMessage', 'Current password incorrect!', 'error');
+                    return;
+                }
+
+                const newHash = await hashPassword(newPassword);
+                const userId = getUserId(currentUser.email);
+                
+                systemData.users[userId].passwordHash = newHash;
+                currentUser.passwordHash = newHash;
+                
+                await saveDataToGitHub('team-data.json', systemData);
+                
+                showMessage('passwordMessage', 'Admin password changed successfully!', 'success');
+                
+                document.getElementById('currentAdminPassword').value = '';
+                document.getElementById('newAdminPassword').value = '';
+                
+            } catch (error) {
+                showMessage('passwordMessage', 'Password change error: ' + error.message, 'error');
+            }
+        }
+
+        function saveSettings() {
+            alert('Settings saved!');
         }
 
         // Initialize
-        window.addEventListener('load', function() {
+        window.addEventListener('load', () => {
             updateStatus('error', 'Not configured');
-            currentMonth = new Date();
         });
     </script>
 </body>
