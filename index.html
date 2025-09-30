@@ -557,7 +557,7 @@ async function renderMyCalendar() {
             }
         }
         
-        html += `<div class="${cls}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
+        html += `<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
     }
     
     html += '</div>';
@@ -570,8 +570,9 @@ async function renderMyCalendar() {
 function toggleDaySelection(dateStr, isWeekend) {
     if (isWeekend) return;
     
-    const dayEls = document.querySelectorAll('.cal-day');
-    const dayEl = Array.from(dayEls).find(el => el.textContent.includes(dateStr.split('-')[2]));
+    // FIX: Find day element by data-date attribute instead of text content
+    const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
+    if (!dayEl) return;
     
     if (SELECTED_DAYS.has(dateStr)) {
         SELECTED_DAYS.delete(dateStr);
@@ -585,7 +586,7 @@ function toggleDaySelection(dateStr, isWeekend) {
     
     if (SELECTED_DAYS.size > 0) {
         document.getElementById('time-section').style.display = 'block';
-        generateTimePickers(); // FIX: Render time picker buttons when days selected
+        generateTimePickers();
     } else {
         document.getElementById('time-section').style.display = 'none';
     }
