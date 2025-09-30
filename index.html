@@ -173,7 +173,8 @@
             <h2>Team Calendar</h2>
             <div class="section">
                 <label>Select Month:</label>
-                <select id="team-month" onchange="renderTeamCalendar()"></select>
+                <select id="team-month"></select>
+                <button class="btn" onclick="renderTeamCalendar()">Load Calendar</button>
                 <div id="team-calendar"></div>
             </div>
         </div>
@@ -492,7 +493,8 @@ async function deleteUser(id) {
 // AVAILABILITY FUNCTIONS
 function populateMonthSelects() {
     const months = [];
-    for (let i = 0; i < 6; i++) {
+    // Show 12 months forward instead of 6
+    for (let i = 0; i < 12; i++) {
         const d = new Date();
         d.setMonth(d.getMonth() + i);
         const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -791,6 +793,7 @@ async function findMeetingTimes() {
                 <h4>${slot.formatted}</h4>
                 <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)} hours available)</p>
                 <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
+                <button class="btn" style="margin-top:10px;" onclick="createGoogleMeet('${slot.date}', '${slot.start}', '${slot.end}', '${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
             </div>
         `;
     });
@@ -811,6 +814,36 @@ async function loadParticipants() {
     document.getElementById('participants').innerHTML = users.map(([id, u]) =>
         `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}" style="margin-right:10px;">${u.name} (${u.role || 'N/A'})</label>`
     ).join('');
+}
+
+// GOOGLE MEET INTEGRATION
+function createGoogleMeet(date, startTime, endTime, participantIds) {
+    const participantIdArray = participantIds.split(',');
+    const participantEmails = participantIdArray.map(id => DB.users[id].email).join(',');
+    
+    // Create start and end datetime objects
+    const startDateTime = new Date(`${date}T${startTime}:00`);
+    const endDateTime = new Date(`${date}T${endTime}:00`);
+    
+    // Format for Google Calendar (yyyyMMddTHHmmssZ)
+    const formatGoogleDate = (d) => {
+        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+    
+    const title = 'Team Meeting';
+    const description = 'Meeting scheduled via Team Availability System';
+    
+    // Build Google Calendar URL
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+        `&text=${encodeURIComponent(title)}` +
+        `&dates=${formatGoogleDate(startDateTime)}/${formatGoogleDate(endDateTime)}` +
+        `&details=${encodeURIComponent(description)}` +
+        `&add=${encodeURIComponent(participantEmails)}`;
+    
+    // Open in new window
+    window.open(googleCalendarUrl, '_blank');
+    
+    alert('Google Calendar opened!\n\n1. Click "Add Google Meet" in the event\n2. Save the event\n\nAll participants will be invited automatically.');
 }
 
 // INIT ON PAGE LOAD
