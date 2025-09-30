@@ -3,814 +3,861 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Availability System v5.0</title>
+    <title>Team Availability v6.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 20px;
-        }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;
-            text-align: center; padding: 30px; position: relative; }
-        .cloud-status { position: absolute; top: 10px; left: 20px; background: rgba(255,255,255,0.2);
-            padding: 8px 12px; border-radius: 20px; font-size: .8rem; display: flex; align-items: center; gap: 5px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; animation: pulse 2s infinite; }
-        .status-dot.error { background: #f44336; } .status-dot.loading { background: #ff9800; }
-        @keyframes pulse { 0%{opacity:1} 50%{opacity:.5} 100%{opacity:1} }
-        .tabs { display:flex; background:#f8f9fa; border-bottom:1px solid #dee2e6; overflow-x:auto; }
-        .tab { flex:1; min-width:120px; padding:15px 20px; cursor:pointer; text-align:center; font-weight:600; transition:.3s; background:#f8f9fa; border:none; }
-        .tab.active { background:white; color:#4facfe; border-bottom:3px solid #4facfe; }
-        .tab:disabled { opacity:.5; cursor:not-allowed; }
-        .content { padding:30px; min-height:600px; }
-        .setup-section { background:#fff3cd; border:1px solid #ffeaa7; color:#856404; padding:20px; border-radius:8px; margin-bottom:20px; }
-        .form-section { background:#f8f9fa; padding:25px; border-radius:10px; margin-bottom:20px; border-left:4px solid #4facfe; }
-        .form-group { margin-bottom:20px; }
-        .form-group label { display:block; margin-bottom:8px; font-weight:600; color:#495057; }
-        .form-group input, .form-group select, .form-group textarea {
-            width:100%; padding:12px 15px; border:2px solid #dee2e6; border-radius:8px; font-size:1rem; transition:border-color .3s;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline:none; border-color:#4facfe; box-shadow:0 0 0 3px rgba(79,172,254,.1);
-        }
-        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-        .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; }
-        .btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; padding:12px 25px;
-            border:none; border-radius:8px; cursor:pointer; font-size:1rem; font-weight:600; transition:.2s; }
-        .btn:hover { transform: translateY(-2px); box-shadow:0 8px 25px rgba(79,172,254,.3); }
-        .btn:disabled { background:#6c757d; cursor:not-allowed; transform:none; }
-        .btn-success { background: linear-gradient(135deg,#28a745 0%, #20c997 100%); }
-        .btn-danger { background: linear-gradient(135deg,#dc3545 0%, #c82333 100%); }
-        .btn-secondary { background:#6c757d; }
-        .btn-small { padding:8px 15px; font-size:.9rem; }
-        .success-message { background:#d4edda; color:#155724; padding:15px; border-radius:8px; border:1px solid #c3e6cb; margin:15px 0; }
-        .error-message { background:#f8d7da; color:#721c24; padding:15px; border-radius:8px; border:1px solid #f5c6cb; margin:15px 0; }
-        .user-card { background:white; border:2px solid #e9ecef; border-radius:10px; padding:20px; margin:15px 0; display:grid; grid-template-columns:1fr auto; align-items:center; gap:20px; }
-        .user-actions { display:flex; gap:10px; flex-wrap:wrap; }
-        .empty-state { text-align:center; color:#6c757d; padding:40px; font-size:1.1rem; }
-        .month-selector { background:white; padding:20px; border-radius:10px; margin-bottom:20px; border:2px solid #e9ecef; display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
-        .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-top:20px; }
-        .calendar-day { padding:15px; border:2px solid #dee2e6; border-radius:8px; text-align:center; cursor:pointer; transition:.2s; }
-        .calendar-day.weekend { background:#f8f9fa; opacity:.5; cursor:not-allowed; }
-        .calendar-day.selected { background:#4facfe; color:white; border-color:#4facfe; }
-        .calendar-day:hover:not(.weekend) { border-color:#4facfe; background:#e7f3ff; }
-        .time-selector { background:#f8f9fa; padding:20px; border-radius:10px; margin-top:20px; }
-        .time-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; }
-        .time-btn { padding:10px; border:2px solid #dee2e6; border-radius:6px; background:white; cursor:pointer; transition:.2s; }
-        .time-btn.selected { background:#4facfe; color:white; border-color:#4facfe; }
-        .time-btn:hover { border-color:#4facfe; }
-        @media (max-width:768px){
-            .form-row, .form-row-3{ grid-template-columns:1fr; }
-            .user-card{ grid-template-columns:1fr; }
-        }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; text-align: center; }
+        .status { position: absolute; top: 10px; left: 10px; padding: 5px 10px; background: rgba(255,255,255,0.2); border-radius: 15px; font-size: 0.8rem; }
+        .tabs { display: flex; background: #f5f5f5; border-bottom: 2px solid #ddd; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; border: none; background: #f5f5f5; font-weight: 600; }
+        .tab.active { background: white; border-bottom: 3px solid #4facfe; }
+        .tab:disabled { opacity: 0.5; cursor: not-allowed; }
+        .content { padding: 30px; }
+        .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4facfe; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; }
+        .btn { background: #4facfe; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+        .btn:hover { background: #3a8bd9; }
+        .btn-small { padding: 6px 12px; font-size: 0.9rem; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .msg { padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .msg.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .user-card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 20px; }
+        .cal-day { padding: 10px; border: 2px solid #ddd; border-radius: 5px; text-align: center; cursor: pointer; min-height: 60px; }
+        .cal-day.weekend { background: #f0f0f0; opacity: 0.5; cursor: not-allowed; }
+        .cal-day.selected { background: #4facfe; color: white; border-color: #4facfe; }
+        .cal-day.has-data { background: #d4edda; }
+        .cal-day small { display: block; font-size: 0.75rem; margin-top: 5px; }
+        .time-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+        .time-btn { padding: 8px; border: 2px solid #ddd; border-radius: 5px; background: white; cursor: pointer; text-align: center; }
+        .time-btn.selected { background: #4facfe; color: white; border-color: #4facfe; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        th { background: #4facfe; color: white; }
+        .avail-yes { background: #d4edda; }
+        .avail-no { background: #f8d7da; }
+        .avail-unknown { background: #fff3cd; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <div class="cloud-status">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="connectionStatus">Initializing...</span>
-        </div>
-        <h1>Team Availability System v5.0</h1>
-        <p>Cloud-based availability tracker</p>
+        <div class="status" id="status">Not Connected</div>
+        <h1>Team Availability System v6.0</h1>
+        <p>Simple & Working Edition</p>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('setup')" id="setupTab">Setup</button>
-        <button class="tab" onclick="showTab('login')" id="loginTab" disabled>Login</button>
-        <button class="tab" onclick="showTab('admin')" id="adminTab" disabled style="display:none;">Admin</button>
-        <button class="tab" onclick="showTab('availability')" id="availabilityTab" disabled>Availability</button>
-        <button class="tab" onclick="showTab('calendar')" id="calendarTab" disabled>Team Calendar</button>
-        <button class="tab" onclick="showTab('meeting')" id="meetingTab" disabled>Plan Meeting</button>
+        <button class="tab active" onclick="showTab('setup')" id="tab-setup">Setup</button>
+        <button class="tab" onclick="showTab('login')" id="tab-login" disabled>Login</button>
+        <button class="tab" onclick="showTab('admin')" id="tab-admin" disabled style="display:none;">Admin</button>
+        <button class="tab" onclick="showTab('my-avail')" id="tab-my-avail" disabled>My Availability</button>
+        <button class="tab" onclick="showTab('team')" id="tab-team" disabled>Team Calendar</button>
+        <button class="tab" onclick="showTab('meeting')" id="tab-meeting" disabled>Plan Meeting</button>
     </div>
 
     <div class="content">
-        <!-- SETUP -->
-        <div id="setup" class="tab-content active">
-            <div class="setup-section">
-                <h3>GitHub Setup</h3>
-                <p>Store data in GitHub repository (free & reliable)</p>
+        <div id="setup" class="tab-content">
+            <div class="section">
+                <h3>Step 1: GitHub Configuration</h3>
+                <div class="form-group">
+                    <label>GitHub Username</label>
+                    <input type="text" id="gh-user" placeholder="your-username">
+                </div>
+                <div class="form-group">
+                    <label>Repository Name</label>
+                    <input type="text" id="gh-repo" value="team-availability">
+                </div>
+                <div class="form-group">
+                    <label>GitHub Token (with repo access)</label>
+                    <input type="password" id="gh-token" placeholder="ghp_...">
+                </div>
+                <button class="btn" onclick="connectGitHub()">Connect to GitHub</button>
+                <div id="setup-msg"></div>
             </div>
-            <div class="form-section">
+            <div class="section" id="admin-section" style="display:none;">
+                <h3>Step 2: Create First Admin</h3>
                 <div class="form-group">
-                    <label>GitHub Username:</label>
-                    <input type="text" id="githubUsername" placeholder="your-username">
-                </div>
-                <div class="form-group">
-                    <label>Repository Name:</label>
-                    <input type="text" id="githubRepo" value="team-availability-data">
+                    <label>Admin Email</label>
+                    <input type="email" id="admin-email">
                 </div>
                 <div class="form-group">
-                    <label>GitHub Token:</label>
-                    <input type="password" id="githubToken" placeholder="ghp_...">
+                    <label>Admin Password (min 6 chars)</label>
+                    <input type="password" id="admin-pwd">
                 </div>
-                <button class="btn" onclick="testConnection()">Test Connection</button>
-                <div id="setupMessage"></div>
-            </div>
-            <div class="form-section" id="adminSetup" style="display:none;">
-                <h3>Create Admin Account</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email:</label>
-                        <input type="email" id="adminEmail">
-                    </div>
-                    <div class="form-group">
-                        <label>Password:</label>
-                        <input type="password" id="adminPassword">
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="createAdmin()">Create Admin</button>
+                <button class="btn" onclick="createFirstAdmin()">Create Admin & Start</button>
             </div>
         </div>
 
-        <!-- LOGIN -->
         <div id="login" class="tab-content" style="display:none;">
-            <div class="form-section">
+            <div class="section">
                 <h3>Login</h3>
                 <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" id="loginEmail">
+                    <label>Email</label>
+                    <input type="email" id="login-email">
                 </div>
                 <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="loginPassword">
+                    <label>Password</label>
+                    <input type="password" id="login-pwd">
                 </div>
-                <button class="btn" onclick="login()">Login</button>
-                <div id="loginMessage"></div>
+                <button class="btn" onclick="doLogin()">Login</button>
+                <div id="login-msg"></div>
             </div>
         </div>
 
-        <!-- ADMIN -->
         <div id="admin" class="tab-content" style="display:none;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-                <h2>Admin Panel</h2>
-                <button class="btn btn-secondary" onclick="logout()">Logout</button>
-            </div>
-            <div class="form-section">
-                <h3>Add User</h3>
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label>Name:</label>
-                        <input type="text" id="newUserName">
-                    </div>
-                    <div class="form-group">
-                        <label>Email:</label>
-                        <input type="email" id="newUserEmail">
-                    </div>
-                    <div class="form-group">
-                        <label>Role:</label>
-                        <input type="text" id="newUserRole">
-                    </div>
+            <h2>Admin Panel</h2>
+            <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
+            <div class="section">
+                <h3>Add New User</h3>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="new-name">
                 </div>
-                <button class="btn" onclick="addUser()">Add User</button>
-                <div id="adminMessage"></div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="new-email">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="new-role" placeholder="Developer, Designer, etc.">
+                </div>
+                <button class="btn" onclick="addNewUser()">Add User</button>
+                <div id="admin-msg"></div>
             </div>
-            <div class="form-section">
-                <h3>Users</h3>
-                <div id="usersList"></div>
+            <div class="section">
+                <h3>All Users</h3>
+                <div id="users-list"></div>
             </div>
         </div>
 
-        <!-- AVAILABILITY -->
-        <div id="availability" class="tab-content" style="display:none;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-                <h2 id="availWelcome">Set Your Availability</h2>
-                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        <div id="my-avail" class="tab-content" style="display:none;">
+            <h2 id="avail-welcome">My Availability</h2>
+            <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
+            <div class="section">
+                <label>Select Month:</label>
+                <select id="avail-month" onchange="renderMyCalendar()"></select>
+                <div id="my-calendar"></div>
             </div>
-            <div class="month-selector">
-                <label>Month:</label>
-                <select id="availMonth"></select>
-                <button class="btn" onclick="loadAvailabilityCalendar()">Load</button>
-            </div>
-            <div id="availCalendar"></div>
-            <div class="time-selector" id="timeSelector" style="display:none;">
-                <h3>Set Time for Selected Days</h3>
-                <div class="form-row">
+            <div class="section" id="time-section" style="display:none;">
+                <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="avail-status" onchange="toggleTimeInputs()">
+                        <option value="yes">Available</option>
+                        <option value="no">Not Available</option>
+                    </select>
+                </div>
+                <div id="time-inputs">
                     <div class="form-group">
-                        <label>Status:</label>
-                        <select id="availStatus">
-                            <option value="available">Available</option>
-                            <option value="unavailable">Not Available</option>
-                        </select>
+                        <label>Start Time</label>
+                        <div class="time-picker" id="start-times"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <div class="time-picker" id="end-times"></div>
                     </div>
                 </div>
-                <div id="timeSelection">
-                    <h4>Start Time:</h4>
-                    <div class="time-grid" id="startTimeGrid"></div>
-                    <h4 style="margin-top:20px;">End Time:</h4>
-                    <div class="time-grid" id="endTimeGrid"></div>
-                </div>
-                <button class="btn btn-success" onclick="saveAvailability()" style="margin-top:20px;">Save Selected Days</button>
+                <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
+                <div id="avail-msg"></div>
             </div>
         </div>
 
-        <!-- TEAM CALENDAR -->
-        <div id="calendar" class="tab-content" style="display:none;">
+        <div id="team" class="tab-content" style="display:none;">
             <h2>Team Calendar</h2>
-            <div class="month-selector">
-                <label>Month:</label>
-                <select id="teamMonth"></select>
-                <button class="btn" onclick="loadTeamCalendar()">Load</button>
+            <div class="section">
+                <label>Select Month:</label>
+                <select id="team-month" onchange="renderTeamCalendar()"></select>
+                <div id="team-calendar"></div>
             </div>
-            <div id="teamCalendarView"></div>
         </div>
 
-        <!-- MEETING PLANNER -->
         <div id="meeting" class="tab-content" style="display:none;">
             <h2>Plan Meeting</h2>
-            <div class="form-section">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Month:</label>
-                        <select id="meetMonth"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Duration (hours):</label>
-                        <input type="number" id="meetDuration" value="1" min="0.5" step="0.5">
-                    </div>
+            <div class="section">
+                <div class="form-group">
+                    <label>Select Month</label>
+                    <select id="meeting-month"></select>
                 </div>
                 <div class="form-group">
-                    <label>Participants:</label>
-                    <div id="participantsList"></div>
+                    <label>Meeting Duration (hours)</label>
+                    <input type="number" id="meeting-duration" value="1" min="0.5" step="0.5">
                 </div>
-                <button class="btn" onclick="findCommonTimes()">Find Available Times</button>
-                <div id="meetingResults"></div>
+                <div class="form-group">
+                    <label>Select Participants (excluding admins)</label>
+                    <div id="participants"></div>
+                </div>
+                <button class="btn" onclick="findMeetingTimes()">Find Available Times</button>
+                <div id="meeting-results"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-let config = {user:'',repo:'',token:'',ok:false};
-let data = {users:{},avail:{}};
-let user = null;
-let selectedDays = new Set();
-let startTime = '09:00';
-let endTime = '17:00';
+// GLOBAL STATE
+let GH = { user: '', repo: '', token: '', connected: false };
+let DB = { users: {}, availability: {} };
+let ME = null;
+let SELECTED_DAYS = new Set();
+let START_TIME = '09:00';
+let END_TIME = '17:00';
 
-// Utils
-function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
-function load(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
-function clear(k){try{localStorage.removeItem(k);}catch(e){}}
-
-async function hash(pwd){
-    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pwd));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+// UTILITY FUNCTIONS
+function log(msg) { console.log('[DEBUG]', msg); }
+function setStatus(txt, color = '#4CAF50') {
+    const el = document.getElementById('status');
+    el.textContent = txt;
+    el.style.background = color;
+}
+function showMsg(id, txt, type) {
+    document.getElementById(id).innerHTML = `<div class="msg ${type}">${txt}</div>`;
+    setTimeout(() => document.getElementById(id).innerHTML = '', 5000);
+}
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(name).style.display = 'block';
+    document.getElementById('tab-' + name).classList.add('active');
 }
 
-function genPwd(){
-    const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];
-    return p;
+// GITHUB FUNCTIONS
+async function ghAPI(path, method = 'GET', data = null) {
+    if (!GH.connected) throw new Error('GitHub not connected');
+    const url = `https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${path}`;
+    const opts = {
+        method,
+        headers: {
+            'Authorization': `token ${GH.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    };
+    if (data) opts.body = JSON.stringify(data);
+    log(`GitHub API: ${method} ${path}`);
+    const res = await fetch(url, opts);
+    if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
+    return res.json();
 }
 
-function status(t,m){
-    document.getElementById('statusDot').className='status-dot '+t;
-    document.getElementById('connectionStatus').textContent=m;
-}
-
-function msg(id,txt,type){
-    const el=document.getElementById(id);
-    el.innerHTML=`<div class="${type}-message">${txt}</div>`;
-    setTimeout(()=>el.innerHTML='',5000);
-}
-
-function showTab(name){
-    document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.getElementById(name).style.display='block';
-    document.getElementById(name+'Tab').classList.add('active');
-    if(name==='meeting')loadParticipants();
-}
-
-// GitHub API
-async function api(path,method='GET',body=null){
-    if(!config.ok)throw new Error('Not configured');
-    const url=`https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
-    const opts={method,headers:{
-        'Authorization':`token ${config.token}`,
-        'Accept':'application/vnd.github.v3+json'
-    }};
-    if(body)opts.body=JSON.stringify(body);
-    const res=await fetch(url,opts);
-    if(!res.ok)throw new Error('GitHub error: '+res.status);
-    return await res.json();
-}
-
-async function saveData(){
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-    let sha=null;
-    try{const ex=await api('data.json');sha=ex.sha;}catch(e){}
-    await api('data.json','PUT',{message:'Update',content,sha});
-}
-
-async function loadData(){
-    try{
-        const res=await api('data.json');
-        const txt=decodeURIComponent(escape(atob(res.content)));
-        data=JSON.parse(txt);
-        if(!data.users)data.users={};
-        if(!data.avail)data.avail={};
-    }catch(e){
-        data={users:{},avail:{}};
+async function loadDB() {
+    log('Loading database from GitHub...');
+    try {
+        const res = await ghAPI('data.json');
+        const json = decodeURIComponent(escape(atob(res.content)));
+        DB = JSON.parse(json);
+        log('Database loaded: ' + Object.keys(DB.users).length + ' users');
+        if (!DB.availability) DB.availability = {};
+        return true;
+    } catch (e) {
+        log('No existing database, starting fresh');
+        DB = { users: {}, availability: {} };
+        return false;
     }
 }
 
-// Setup
-async function testConnection(){
-    const u=document.getElementById('githubUsername').value.trim();
-    const r=document.getElementById('githubRepo').value.trim();
-    const t=document.getElementById('githubToken').value.trim();
-    if(!u||!r||!t){msg('setupMessage','Fill all fields','error');return;}
-    status('loading','Testing...');
-    try{
-        config={user:u,repo:r,token:t,ok:true};
-        await api('');
-        await loadData();
-        store('config',config);
-        status('connected','Connected');
-        msg('setupMessage','Connected!','success');
+async function saveDB() {
+    log('Saving database to GitHub...');
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
+    let sha = null;
+    try {
+        const existing = await ghAPI('data.json');
+        sha = existing.sha;
+    } catch (e) { }
+    await ghAPI('data.json', 'PUT', {
+        message: 'Update availability data',
+        content,
+        sha
+    });
+    log('Database saved successfully');
+}
+
+// PASSWORD HASHING
+async function hashPwd(pwd) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function genPwd() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let pwd = '';
+    for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    return pwd;
+}
+
+// SETUP & LOGIN
+async function connectGitHub() {
+    const user = document.getElementById('gh-user').value.trim();
+    const repo = document.getElementById('gh-repo').value.trim();
+    const token = document.getElementById('gh-token').value.trim();
+    
+    if (!user || !repo || !token) {
+        showMsg('setup-msg', 'Fill all fields', 'error');
+        return;
+    }
+    
+    setStatus('Connecting...', '#ff9800');
+    GH = { user, repo, token, connected: true };
+    
+    try {
+        await ghAPI('');
+        const hasData = await loadDB();
         
-        // Check if users exist
-        if(Object.keys(data.users).length>0){
-            document.getElementById('setupTab').style.display='none';
-            document.getElementById('loginTab').disabled=false;
+        localStorage.setItem('gh-config', JSON.stringify(GH));
+        setStatus('Connected', '#4CAF50');
+        showMsg('setup-msg', 'Connected to GitHub!', 'success');
+        
+        if (hasData && Object.keys(DB.users).length > 0) {
+            document.getElementById('tab-login').disabled = false;
             showTab('login');
-        }else{
-            document.getElementById('adminSetup').style.display='block';
+        } else {
+            document.getElementById('admin-section').style.display = 'block';
         }
-    }catch(e){
-        status('error','Failed');
-        msg('setupMessage','Error: '+e.message,'error');
-        config.ok=false;
+    } catch (e) {
+        setStatus('Connection Failed', '#f44336');
+        showMsg('setup-msg', 'Error: ' + e.message, 'error');
+        GH.connected = false;
     }
 }
 
-async function createAdmin(){
-    const email=document.getElementById('adminEmail').value.trim().toLowerCase();
-    const pwd=document.getElementById('adminPassword').value;
-    if(!email||!pwd||pwd.length<6){msg('setupMessage','Fill fields, min 6 chars','error');return;}
+async function createFirstAdmin() {
+    const email = document.getElementById('admin-email').value.trim().toLowerCase();
+    const pwd = document.getElementById('admin-pwd').value;
     
-    try{
-        const hashed=await hash(pwd);
-        const id='admin_'+Date.now();
-        data.users[id]={name:'Admin',email,pwd:hashed,admin:true};
-        await saveData();
-        msg('setupMessage','Admin created! Login now.','success');
-        document.getElementById('setupTab').style.display='none';
-        document.getElementById('loginTab').disabled=false;
-        showTab('login');
-    }catch(e){
-        msg('setupMessage','Error: '+e.message,'error');
+    if (!email || pwd.length < 6) {
+        showMsg('setup-msg', 'Fill all fields (password min 6 chars)', 'error');
+        return;
     }
-}
-
-// Login
-async function login(){
-    const email=document.getElementById('loginEmail').value.trim().toLowerCase();
-    const pwd=document.getElementById('loginPassword').value;
-    if(!email||!pwd){msg('loginMessage','Fill fields','error');return;}
     
-    try{
-        status('loading','Checking...');
-        await loadData();
-        const hashed=await hash(pwd);
-        const found=Object.entries(data.users).find(([id,u])=>u.email===email&&u.pwd===hashed);
+    try {
+        const hash = await hashPwd(pwd);
+        const id = 'admin_' + Date.now();
+        DB.users[id] = { name: 'Admin', email, pwd: hash, admin: true };
+        await saveDB();
         
-        if(found){
-            user={id:found[0],...found[1]};
-            store('user',user);
-            status('connected','Logged in');
-            document.getElementById('loginEmail').value='';
-            document.getElementById('loginPassword').value='';
-            
-            document.getElementById('availabilityTab').disabled=false;
-            document.getElementById('calendarTab').disabled=false;
-            document.getElementById('meetingTab').disabled=false;
-            
-            if(user.admin){
-                document.getElementById('adminTab').style.display='block';
-                document.getElementById('adminTab').disabled=false;
-                showTab('admin');
-                loadUsers();
-            }else{
-                showTab('availability');
-                initAvail();
-            }
-            populateMonths();
-            msg('loginMessage','Welcome '+user.name,'success');
-        }else{
-            msg('loginMessage','Invalid credentials','error');
-            status('error','Failed');
-        }
-    }catch(e){
-        msg('loginMessage','Error: '+e.message,'error');
+        showMsg('setup-msg', 'Admin created! Now login.', 'success');
+        document.getElementById('tab-login').disabled = false;
+        showTab('login');
+    } catch (e) {
+        showMsg('setup-msg', 'Error: ' + e.message, 'error');
     }
 }
 
-function logout(){
-    clear('user');
-    user=null;
-    document.getElementById('availabilityTab').disabled=true;
-    document.getElementById('calendarTab').disabled=true;
-    document.getElementById('meetingTab').disabled=true;
-    document.getElementById('adminTab').style.display='none';
+async function doLogin() {
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pwd = document.getElementById('login-pwd').value;
+    
+    if (!email || !pwd) {
+        showMsg('login-msg', 'Fill both fields', 'error');
+        return;
+    }
+    
+    setStatus('Logging in...', '#ff9800');
+    
+    try {
+        await loadDB();
+        const hash = await hashPwd(pwd);
+        const found = Object.entries(DB.users).find(([id, u]) => u.email === email && u.pwd === hash);
+        
+        if (!found) {
+            showMsg('login-msg', 'Invalid email or password', 'error');
+            setStatus('Login Failed', '#f44336');
+            return;
+        }
+        
+        ME = { id: found[0], ...found[1] };
+        localStorage.setItem('current-user', JSON.stringify(ME));
+        
+        setStatus('Logged in as ' + ME.name, '#4CAF50');
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-pwd').value = '';
+        
+        document.getElementById('tab-my-avail').disabled = false;
+        document.getElementById('tab-team').disabled = false;
+        document.getElementById('tab-meeting').disabled = false;
+        
+        if (ME.admin) {
+            document.getElementById('tab-admin').style.display = 'block';
+            document.getElementById('tab-admin').disabled = false;
+            showTab('admin');
+            refreshUsersList();
+        } else {
+            showTab('my-avail');
+            setupAvailabilityTab();
+        }
+        
+        populateMonthSelects();
+    } catch (e) {
+        showMsg('login-msg', 'Error: ' + e.message, 'error');
+        setStatus('Error', '#f44336');
+    }
+}
+
+function doLogout() {
+    localStorage.removeItem('current-user');
+    ME = null;
+    document.getElementById('tab-my-avail').disabled = true;
+    document.getElementById('tab-team').disabled = true;
+    document.getElementById('tab-meeting').disabled = true;
+    document.getElementById('tab-admin').style.display = 'none';
+    setStatus('Logged out', '#ff9800');
     showTab('login');
 }
 
-// Admin
-async function addUser(){
-    const name=document.getElementById('newUserName').value.trim();
-    const email=document.getElementById('newUserEmail').value.trim().toLowerCase();
-    const role=document.getElementById('newUserRole').value.trim();
-    if(!name||!email||!role){msg('adminMessage','Fill all fields','error');return;}
+// ADMIN FUNCTIONS
+async function addNewUser() {
+    const name = document.getElementById('new-name').value.trim();
+    const email = document.getElementById('new-email').value.trim().toLowerCase();
+    const role = document.getElementById('new-role').value.trim();
     
-    await loadData();
-    if(Object.values(data.users).some(u=>u.email===email)){
-        msg('adminMessage','Email exists','error');return;
+    if (!name || !email || !role) {
+        showMsg('admin-msg', 'Fill all fields', 'error');
+        return;
     }
     
-    try{
-        const pwd=genPwd();
-        const hashed=await hash(pwd);
-        const id='user_'+Date.now();
-        data.users[id]={name,email,role,pwd:hashed,admin:false};
-        await saveData();
-        alert(`User added:\n\nEmail: ${email}\nPassword: ${pwd}\n\nShare securely!`);
-        document.getElementById('newUserName').value='';
-        document.getElementById('newUserEmail').value='';
-        document.getElementById('newUserRole').value='';
-        loadUsers();
-    }catch(e){
-        msg('adminMessage','Error: '+e.message,'error');
+    await loadDB();
+    
+    if (Object.values(DB.users).some(u => u.email === email)) {
+        showMsg('admin-msg', 'Email already exists', 'error');
+        return;
+    }
+    
+    try {
+        const pwd = genPwd();
+        const hash = await hashPwd(pwd);
+        const id = 'user_' + Date.now();
+        
+        DB.users[id] = { name, email, role, pwd: hash, admin: false };
+        await saveDB();
+        
+        alert(`User Created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${pwd}\n\nShare this password securely!`);
+        
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-email').value = '';
+        document.getElementById('new-role').value = '';
+        
+        refreshUsersList();
+        showMsg('admin-msg', 'User added successfully', 'success');
+    } catch (e) {
+        showMsg('admin-msg', 'Error: ' + e.message, 'error');
     }
 }
 
-async function loadUsers(){
-    await loadData();
-    const list=Object.entries(data.users);
-    if(list.length===0){
-        document.getElementById('usersList').innerHTML='<div class="empty-state">No users</div>';
+async function refreshUsersList() {
+    await loadDB();
+    const list = Object.entries(DB.users);
+    
+    if (list.length === 0) {
+        document.getElementById('users-list').innerHTML = '<p>No users yet</p>';
         return;
     }
-    document.getElementById('usersList').innerHTML=list.map(([id,u])=>`
+    
+    document.getElementById('users-list').innerHTML = list.map(([id, u]) => `
         <div class="user-card">
             <div>
-                <h4>${u.name} ${u.admin?'(Admin)':''}</h4>
-                <div style="color:#666;">${u.email} | ${u.role||'N/A'}</div>
+                <strong>${u.name}</strong> ${u.admin ? '(Admin)' : ''}<br>
+                <small>${u.email} | ${u.role || 'N/A'}</small>
             </div>
-            <div class="user-actions">
-                <button class="btn btn-small" onclick="resetPwd('${id}')">Reset Password</button>
+            <div>
+                <button class="btn btn-small" onclick="resetUserPwd('${id}')">Reset Password</button>
                 <button class="btn btn-small btn-danger" onclick="deleteUser('${id}')">Delete</button>
             </div>
         </div>
     `).join('');
 }
 
-async function resetPwd(id){
-    await loadData();
-    const pwd=genPwd();
-    const hashed=await hash(pwd);
-    data.users[id].pwd=hashed;
-    await saveData();
-    alert(`Password reset:\n\nEmail: ${data.users[id].email}\nNew Password: ${pwd}`);
+async function resetUserPwd(id) {
+    await loadDB();
+    const pwd = genPwd();
+    const hash = await hashPwd(pwd);
+    DB.users[id].pwd = hash;
+    await saveDB();
+    alert(`Password Reset!\n\nUser: ${DB.users[id].name}\nEmail: ${DB.users[id].email}\nNew Password: ${pwd}`);
 }
 
-async function deleteUser(id){
-    if(!confirm('Delete user?'))return;
-    await loadData();
-    delete data.users[id];
-    if(data.avail[id])delete data.avail[id];
-    await saveData();
-    loadUsers();
+async function deleteUser(id) {
+    if (!confirm('Delete this user permanently?')) return;
+    await loadDB();
+    delete DB.users[id];
+    if (DB.availability[id]) delete DB.availability[id];
+    await saveDB();
+    refreshUsersList();
 }
 
-// Availability
-function initAvail(){
-    document.getElementById('availWelcome').textContent=`Welcome ${user.name}`;
-    populateMonths();
-}
-
-function populateMonths(){
-    const opts=[];
-    for(let i=0;i<6;i++){
-        const d=new Date();
-        d.setMonth(d.getMonth()+i);
-        const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        const txt=`${d.toLocaleString('default',{month:'long'})} ${d.getFullYear()}`;
-        opts.push(`<option value="${val}">${txt}</option>`);
+// AVAILABILITY FUNCTIONS
+function populateMonthSelects() {
+    const months = [];
+    for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + i);
+        const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const txt = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        months.push(`<option value="${val}">${txt}</option>`);
     }
-    const html=opts.join('');
-    document.getElementById('availMonth').innerHTML=html;
-    document.getElementById('teamMonth').innerHTML=html;
-    document.getElementById('meetMonth').innerHTML=html;
+    const html = months.join('');
+    document.getElementById('avail-month').innerHTML = html;
+    document.getElementById('team-month').innerHTML = html;
+    document.getElementById('meeting-month').innerHTML = html;
 }
 
-async function loadAvailabilityCalendar(){
-    await loadData();
-    const val=document.getElementById('availMonth').value;
-    const[year,month]=val.split('-').map(Number);
-    const first=new Date(year,month-1,1);
-    const last=new Date(year,month,0);
-    const days=last.getDate();
+function setupAvailabilityTab() {
+    document.getElementById('avail-welcome').textContent = `Welcome ${ME.name} - Set Your Availability`;
+    populateMonthSelects();
+    renderMyCalendar();
+    generateTimePickers();
+}
+
+async function renderMyCalendar() {
+    await loadDB();
     
-    let html='<h3>Select Days (click to select/deselect)</h3><div class="calendar-grid">';
+    const val = document.getElementById('avail-month').value;
+    const [year, month] = val.split('-').map(Number);
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDow = (firstDay.getDay() + 6) % 7;
     
-    for(let d=1;d<=days;d++){
-        const date=new Date(year,month-1,d);
-        const dow=date.getDay();
-        const dateStr=date.toISOString().split('T')[0];
-        const isWeekend=dow===0||dow===6;
+    let html = '<div class="cal-grid">';
+    
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+        html += `<div style="font-weight:bold;padding:10px;text-align:center;">${day}</div>`;
+    });
+    
+    for (let i = 0; i < startDow; i++) {
+        html += '<div></div>';
+    }
+    
+    const myAvail = DB.availability[ME.id] || {};
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month - 1, d);
+        const dateStr = date.toISOString().split('T')[0];
+        const dow = date.getDay();
+        const isWeekend = dow === 0 || dow === 6;
         
-        let cls='calendar-day';
-        if(isWeekend)cls+=' weekend';
+        let cls = 'cal-day';
+        let extra = '';
         
-        const userAvail=data.avail[user.id]?.[dateStr];
-        let label=d;
-        if(userAvail){
-            if(userAvail.avail){
-                label=`${d}<br><small>${userAvail.start}-${userAvail.end}</small>`;
-            }else{
-                label=`${d}<br><small>Not Available</small>`;
+        if (isWeekend) {
+            cls += ' weekend';
+        } else {
+            if (myAvail[dateStr]) {
+                cls += ' has-data';
+                const av = myAvail[dateStr];
+                if (av.status === 'yes') {
+                    extra = `<small>${av.start}-${av.end}</small>`;
+                } else {
+                    extra = '<small>Not Available</small>';
+                }
             }
         }
         
-        html+=`<div class="${cls}" onclick="toggleDay('${dateStr}',this,${isWeekend})">${label}</div>`;
+        html += `<div class="${cls}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
     }
     
-    html+='</div>';
-    document.getElementById('availCalendar').innerHTML=html;
-    selectedDays.clear();
-    document.getElementById('timeSelector').style.display='none';
+    html += '</div>';
+    document.getElementById('my-calendar').innerHTML = html;
+    
+    SELECTED_DAYS.clear();
+    document.getElementById('time-section').style.display = 'none';
 }
 
-function toggleDay(dateStr,el,isWeekend){
-    if(isWeekend)return;
-    if(selectedDays.has(dateStr)){
-        selectedDays.delete(dateStr);
-        el.classList.remove('selected');
-    }else{
-        selectedDays.add(dateStr);
-        el.classList.add('selected');
+function toggleDaySelection(dateStr, isWeekend) {
+    if (isWeekend) return;
+    
+    const dayEls = document.querySelectorAll('.cal-day');
+    const dayEl = Array.from(dayEls).find(el => el.textContent.includes(dateStr.split('-')[2]));
+    
+    if (SELECTED_DAYS.has(dateStr)) {
+        SELECTED_DAYS.delete(dateStr);
+        dayEl.classList.remove('selected');
+    } else {
+        SELECTED_DAYS.add(dateStr);
+        dayEl.classList.add('selected');
     }
     
-    if(selectedDays.size>0){
-        document.getElementById('timeSelector').style.display='block';
-        generateTimePickers();
-    }else{
-        document.getElementById('timeSelector').style.display='none';
+    document.getElementById('selected-count').textContent = SELECTED_DAYS.size;
+    
+    if (SELECTED_DAYS.size > 0) {
+        document.getElementById('time-section').style.display = 'block';
+    } else {
+        document.getElementById('time-section').style.display = 'none';
     }
 }
 
-function generateTimePickers(){
-    const times=[];
-    for(let h=0;h<24;h++){
-        for(let m=0;m<60;m+=30){
-            times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+function generateTimePickers() {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+            times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
         }
     }
-    const work=times.slice(18,40);
+    const workTimes = times.slice(18, 40);
     
-    document.getElementById('startTimeGrid').innerHTML=work.map(t=>
-        `<div class="time-btn ${t===startTime?'selected':''}" onclick="setStart('${t}')">${t}</div>`
+    document.getElementById('start-times').innerHTML = workTimes.map(t =>
+        `<div class="time-btn ${t === START_TIME ? 'selected' : ''}" onclick="selectStartTime('${t}')">${t}</div>`
     ).join('');
     
-    document.getElementById('endTimeGrid').innerHTML=work.map(t=>
-        `<div class="time-btn ${t===endTime?'selected':''}" onclick="setEnd('${t}')">${t}</div>`
+    document.getElementById('end-times').innerHTML = workTimes.map(t =>
+        `<div class="time-btn ${t === END_TIME ? 'selected' : ''}" onclick="selectEndTime('${t}')">${t}</div>`
     ).join('');
-    
-    document.getElementById('availStatus').onchange=()=>{
-        document.getElementById('timeSelection').style.display=
-            document.getElementById('availStatus').value==='available'?'block':'none';
-    };
 }
 
-function setStart(t){
-    startTime=t;
+function selectStartTime(t) {
+    START_TIME = t;
     generateTimePickers();
 }
 
-function setEnd(t){
-    endTime=t;
+function selectEndTime(t) {
+    END_TIME = t;
     generateTimePickers();
 }
 
-async function saveAvailability(){
-    if(selectedDays.size===0){
-        alert('Select days first');
+function toggleTimeInputs() {
+    const status = document.getElementById('avail-status').value;
+    document.getElementById('time-inputs').style.display = status === 'yes' ? 'block' : 'none';
+}
+
+async function saveMyAvailability() {
+    if (SELECTED_DAYS.size === 0) {
+        showMsg('avail-msg', 'Select at least one day first', 'error');
         return;
     }
     
-    await loadData();
-    const isAvail=document.getElementById('availStatus').value==='available';
+    await loadDB();
     
-    if(!data.avail[user.id])data.avail[user.id]={};
+    const status = document.getElementById('avail-status').value;
     
-    selectedDays.forEach(dateStr=>{
-        data.avail[user.id][dateStr]={
-            avail:isAvail,
-            start:isAvail?startTime:null,
-            end:isAvail?endTime:null
+    if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
+    
+    SELECTED_DAYS.forEach(dateStr => {
+        DB.availability[ME.id][dateStr] = {
+            status: status,
+            start: status === 'yes' ? START_TIME : null,
+            end: status === 'yes' ? END_TIME : null
         };
     });
     
-    try{
-        status('loading','Saving...');
-        await saveData();
-        status('connected','Saved');
-        alert('Availability saved for '+selectedDays.size+' days!');
-        loadAvailabilityCalendar();
-    }catch(e){
-        status('error','Failed');
-        alert('Error: '+e.message);
+    try {
+        setStatus('Saving...', '#ff9800');
+        await saveDB();
+        setStatus('Saved!', '#4CAF50');
+        showMsg('avail-msg', `Saved availability for ${SELECTED_DAYS.size} days!`, 'success');
+        renderMyCalendar();
+    } catch (e) {
+        showMsg('avail-msg', 'Error: ' + e.message, 'error');
+        setStatus('Save Failed', '#f44336');
     }
 }
 
-// Team Calendar
-async function loadTeamCalendar(){
-    await loadData();
-    const val=document.getElementById('teamMonth').value;
-    const[year,month]=val.split('-').map(Number);
-    const last=new Date(year,month,0);
-    const days=last.getDate();
+// TEAM CALENDAR
+async function renderTeamCalendar() {
+    await loadDB();
     
-    const users=Object.entries(data.users).filter(([id,u])=>!u.admin);
-    if(users.length===0){
-        document.getElementById('teamCalendarView').innerHTML='<div class="empty-state">No users</div>';
+    const val = document.getElementById('team-month').value;
+    const [year, month] = val.split('-').map(Number);
+    const lastDay = new Date(year, month, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
+    
+    if (users.length === 0) {
+        document.getElementById('team-calendar').innerHTML = '<p>No non-admin users found</p>';
         return;
     }
     
-    let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">';
-    html+='<thead><tr style="background:#4facfe;color:white;"><th style="padding:15px;">User</th>';
+    let html = '<table><thead><tr><th>User</th>';
     
-    for(let d=1;d<=days;d++){
-        const date=new Date(year,month-1,d);
-        const dow=date.getDay();
-        if(dow>=1&&dow<=5){
-            html+=`<th style="padding:10px;">${d}</th>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month - 1, d);
+        const dow = date.getDay();
+        if (dow >= 1 && dow <= 5) {
+            html += `<th>${d}</th>`;
         }
     }
-    html+='</tr></thead><tbody>';
+    html += '</tr></thead><tbody>';
     
-    users.forEach(([uid,u])=>{
-        html+=`<tr><td style="padding:15px;border:1px solid #ddd;"><strong>${u.name}</strong><br><small>${u.role||''}</small></td>`;
+    users.forEach(([uid, u]) => {
+        html += `<tr><td><strong>${u.name}</strong><br><small>${u.role || ''}</small></td>`;
         
-        for(let d=1;d<=days;d++){
-            const date=new Date(year,month-1,d);
-            const dow=date.getDay();
-            if(dow>=1&&dow<=5){
-                const dateStr=date.toISOString().split('T')[0];
-                const av=data.avail[uid]?.[dateStr];
-                let bg='#fff3cd',txt='?';
-                if(av){
-                    if(av.avail){
-                        bg='#d4edda';
-                        txt=`✓<br><small>${av.start}-${av.end}</small>`;
-                    }else{
-                        bg='#e2e3e5';
-                        txt='✗';
+        const userAvail = DB.availability[uid] || {};
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(year, month - 1, d);
+            const dow = date.getDay();
+            if (dow >= 1 && dow <= 5) {
+                const dateStr = date.toISOString().split('T')[0];
+                const av = userAvail[dateStr];
+                
+                let cls = 'avail-unknown';
+                let txt = '?';
+                
+                if (av) {
+                    if (av.status === 'yes') {
+                        cls = 'avail-yes';
+                        txt = `✓<br><small>${av.start}-${av.end}</small>`;
+                    } else {
+                        cls = 'avail-no';
+                        txt = '✗';
                     }
                 }
-                html+=`<td style="padding:10px;border:1px solid #ddd;background:${bg};text-align:center;">${txt}</td>`;
+                
+                html += `<td class="${cls}">${txt}</td>`;
             }
         }
-        html+='</tr>';
+        html += '</tr>';
     });
     
-    html+='</tbody></table></div>';
-    document.getElementById('teamCalendarView').innerHTML=html;
+    html += '</tbody></table>';
+    document.getElementById('team-calendar').innerHTML = html;
 }
 
-// Meeting Planner
-async function loadParticipants(){
-    await loadData();
-    const users=Object.entries(data.users).filter(([id,u])=>!u.admin);
-    if(users.length===0){
-        document.getElementById('participantsList').innerHTML='<div class="empty-state">No users</div>';
-        return;
-    }
-    document.getElementById('participantsList').innerHTML=users.map(([id,u])=>
-        `<label style="display:block;padding:8px;"><input type="checkbox" value="${id}" style="width:auto;margin-right:10px;">${u.name} (${u.role||'N/A'})</label>`
-    ).join('');
-}
-
-async function findCommonTimes(){
-    await loadData();
-    const val=document.getElementById('meetMonth').value;
-    const[year,month]=val.split('-').map(Number);
-    const duration=parseFloat(document.getElementById('meetDuration').value);
+// MEETING PLANNER
+async function findMeetingTimes() {
+    await loadDB();
     
-    const checked=Array.from(document.querySelectorAll('#participantsList input:checked'));
-    const ids=checked.map(c=>c.value);
+    const val = document.getElementById('meeting-month').value;
+    const [year, month] = val.split('-').map(Number);
+    const duration = parseFloat(document.getElementById('meeting-duration').value);
     
-    if(ids.length<2){
-        msg('meetingResults','Select at least 2 participants','error');
+    const checkboxes = document.querySelectorAll('#participants input:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedIds.length < 2) {
+        showMsg('meeting-results', 'Select at least 2 participants', 'error');
         return;
     }
     
-    const last=new Date(year,month,0);
-    const days=last.getDate();
-    const common=[];
+    const lastDay = new Date(year, month, 0);
+    const daysInMonth = lastDay.getDate();
+    const commonSlots = [];
     
-    for(let d=1;d<=days;d++){
-        const date=new Date(year,month-1,d);
-        const dow=date.getDay();
-        if(dow>=1&&dow<=5){
-            const dateStr=date.toISOString().split('T')[0];
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month - 1, d);
+        const dow = date.getDay();
+        
+        if (dow >= 1 && dow <= 5) {
+            const dateStr = date.toISOString().split('T')[0];
             
-            const allAvail=ids.every(id=>{
-                const av=data.avail[id]?.[dateStr];
-                return av&&av.avail;
+            const allAvail = selectedIds.every(id => {
+                const av = DB.availability[id]?.[dateStr];
+                return av && av.status === 'yes';
             });
             
-            if(allAvail){
-                const slots=ids.map(id=>{
-                    const av=data.avail[id][dateStr];
-                    return{id,start:av.start,end:av.end,name:data.users[id].name};
+            if (allAvail) {
+                const slots = selectedIds.map(id => {
+                    const av = DB.availability[id][dateStr];
+                    return { id, start: av.start, end: av.end, name: DB.users[id].name };
                 });
                 
-                const latestStart=slots.reduce((max,s)=>s.start>max?s.start:max,slots[0].start);
-                const earliestEnd=slots.reduce((min,s)=>s.end<min?s.end:min,slots[0].end);
+                const latestStart = slots.reduce((max, s) => s.start > max ? s.start : max, slots[0].start);
+                const earliestEnd = slots.reduce((min, s) => s.end < min ? s.end : min, slots[0].end);
                 
-                const startMin=parseInt(latestStart.split(':')[0])*60+parseInt(latestStart.split(':')[1]);
-                const endMin=parseInt(earliestEnd.split(':')[0])*60+parseInt(earliestEnd.split(':')[1]);
-                const avail=(endMin-startMin)/60;
+                const startMin = parseInt(latestStart.split(':')[0]) * 60 + parseInt(latestStart.split(':')[1]);
+                const endMin = parseInt(earliestEnd.split(':')[0]) * 60 + parseInt(earliestEnd.split(':')[1]);
+                const availHours = (endMin - startMin) / 60;
                 
-                if(avail>=duration){
-                    common.push({
-                        date:dateStr,
-                        formatted:date.toLocaleDateString('default',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
-                        start:latestStart,
-                        end:earliestEnd,
-                        duration:avail,
-                        participants:slots
+                if (availHours >= duration) {
+                    commonSlots.push({
+                        date: dateStr,
+                        formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+                        start: latestStart,
+                        end: earliestEnd,
+                        duration: availHours,
+                        participants: slots
                     });
                 }
             }
         }
     }
     
-    if(common.length===0){
-        document.getElementById('meetingResults').innerHTML='<div class="error-message">No common times found</div>';
+    if (commonSlots.length === 0) {
+        document.getElementById('meeting-results').innerHTML = '<div class="msg error">No common available times found for selected participants</div>';
         return;
     }
     
-    let html='<div class="success-message">Found '+common.length+' available time(s)</div>';
-    common.forEach(slot=>{
-        html+=`<div style="background:#d4edda;border:2px solid #28a745;border-radius:10px;padding:20px;margin:15px 0;">
-            <h4>${slot.formatted}</h4>
-            <p style="font-size:1.1rem;"><strong>${slot.start} - ${slot.end}</strong> (${slot.duration.toFixed(1)}h available)</p>
-            <p><strong>Participants:</strong> ${slot.participants.map(p=>p.name).join(', ')}</p>
-        </div>`;
+    let html = `<div class="msg success">Found ${commonSlots.length} available time slot(s)</div>`;
+    
+    commonSlots.forEach(slot => {
+        html += `
+            <div class="section" style="background:#d4edda;border-color:#28a745;">
+                <h4>${slot.formatted}</h4>
+                <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)} hours available)</p>
+                <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
+            </div>
+        `;
     });
     
-    document.getElementById('meetingResults').innerHTML=html;
+    document.getElementById('meeting-results').innerHTML = html;
 }
 
-// Init
-window.addEventListener('DOMContentLoaded',async()=>{
-    const saved=load('config');
-    if(saved&&saved.ok){
-        config=saved;
-        try{
-            await loadData();
-            status('connected','Configured');
-            if(Object.keys(data.users).length>0){
-                document.getElementById('setupTab').style.display='none';
-                document.getElementById('loginTab').disabled=false;
+// LOAD PARTICIPANTS
+async function loadParticipants() {
+    await loadDB();
+    const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
+    
+    if (users.length === 0) {
+        document.getElementById('participants').innerHTML = '<p>No users available</p>';
+        return;
+    }
+    
+    document.getElementById('participants').innerHTML = users.map(([id, u]) =>
+        `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}" style="margin-right:10px;">${u.name} (${u.role || 'N/A'})</label>`
+    ).join('');
+}
+
+// INIT ON PAGE LOAD
+window.addEventListener('DOMContentLoaded', async () => {
+    const savedConfig = localStorage.getItem('gh-config');
+    const savedUser = localStorage.getItem('current-user');
+    
+    if (savedConfig) {
+        GH = JSON.parse(savedConfig);
+        if (GH.connected) {
+            try {
+                await loadDB();
+                setStatus('Connected', '#4CAF50');
                 
-                const savedUser=load('user');
-                if(savedUser&&data.users[savedUser.id]){
-                    user=savedUser;
-                    status('connected','Logged in');
-                    document.getElementById('availabilityTab').disabled=false;
-                    document.getElementById('calendarTab').disabled=false;
-                    document.getElementById('meetingTab').disabled=false;
+                if (Object.keys(DB.users).length > 0) {
+                    document.getElementById('tab-login').disabled = false;
                     
-                    if(user.admin){
-                        document.getElementById('adminTab').style.display='block';
-                        document.getElementById('adminTab').disabled=false;
-                        showTab('admin');
-                        loadUsers();
-                    }else{
-                        showTab('availability');
-                        initAvail();
+                    if (savedUser) {
+                        ME = JSON.parse(savedUser);
+                        
+                        if (DB.users[ME.id]) {
+                            setStatus('Logged in as ' + ME.name, '#4CAF50');
+                            document.getElementById('tab-my-avail').disabled = false;
+                            document.getElementById('tab-team').disabled = false;
+                            document.getElementById('tab-meeting').disabled = false;
+                            
+                            if (ME.admin) {
+                                document.getElementById('tab-admin').style.display = 'block';
+                                document.getElementById('tab-admin').disabled = false;
+                                showTab('admin');
+                                refreshUsersList();
+                            } else {
+                                showTab('my-avail');
+                                setupAvailabilityTab();
+                            }
+                            
+                            populateMonthSelects();
+                            loadParticipants();
+                        }
+                    } else {
+                        showTab('login');
                     }
-                    populateMonths();
-                }else{
-                    showTab('login');
+                } else {
+                    document.getElementById('admin-section').style.display = 'block';
                 }
-            }else{
-                document.getElementById('adminSetup').style.display='block';
+            } catch (e) {
+                setStatus('Connection Error', '#f44336');
             }
-        }catch(e){
-            status('error','Load error');
         }
-    }else{
-        status('error','Not configured');
     }
 });
 </script>
