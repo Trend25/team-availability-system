@@ -585,6 +585,7 @@ function toggleDaySelection(dateStr, isWeekend) {
     
     if (SELECTED_DAYS.size > 0) {
         document.getElementById('time-section').style.display = 'block';
+        generateTimePickers(); // FIX: Render time picker buttons when days selected
     } else {
         document.getElementById('time-section').style.display = 'none';
     }
