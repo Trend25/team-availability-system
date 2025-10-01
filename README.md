@@ -1,416 +1,313 @@
-# Team Availability System - Cloud Edition
+# Team Availability System v7.0 - Secure Cloud Edition
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/yourusername/team-availability-system)
-[![Cloud](https://img.shields.io/badge/storage-GitHub%20API-181717.svg)](https://docs.github.com/en/rest)
+Uluslararası takımlar için bulut tabanlı müsaitlik yönetim sistemi. GitHub API'yi ücretsiz bulut veritabanı olarak kullanır. **Token güvenliği için Netlify Functions kullanır.**
 
-Uluslararası takımlar için bulut tabanlı müsaitlik yönetim sistemi. GitHub API'yi ücretsiz bulut veritabanı olarak kullanır.
+## Özellikler
 
-[🇹🇷 Türkçe](#türkçe) | [🇬🇧 English](#english)
+- **Güvenli Token Yönetimi**: Token server-side'da saklanır (Netlify Environment Variables)
+- **Cloud-Based Storage**: GitHub repository ücretsiz veritabanı
+- **Global Team Support**: Farklı ülkelerden kullanıcılar aynı veriye erişir
+- **Admin Panel**: Kullanıcı yönetimi, şifre sıfırlama
+- **Availability Calendar**: Aylık müsaitlik takvimi
+- **Meeting Planner**: Ortak müsait zamanları otomatik bulur
+- **Google Calendar Integration**: Bulunan slotları direkt Google Meet'e aktar
+- **No Setup Screen**: Kullanıcılar direkt login ekranına gelir
+- **100% Free**: Netlify + GitHub kombinasyonu tamamen ücretsiz
 
----
+## Teknoloji Stack
 
-## English
+- Frontend: Pure HTML/JavaScript (ES6+)
+- Backend: Netlify Serverless Functions
+- Database: GitHub REST API v3
+- Hosting: Netlify (veya Vercel)
+- Auth: SHA-256 hashed passwords
 
-### 🌟 Key Features
+## Hızlı Kurulum (30 dakika)
 
-- **Cloud-Based Storage**: Uses GitHub repository as free cloud database
-- **Global Team Support**: Team members from different countries access same data
-- **Admin Panel**: Create users, distribute credentials, manage availability
-- **Secure Authentication**: SHA-256 password hashing
-- **Availability Calendar**: Monthly weekday availability tracking
-- **Timezone Support**: Multiple timezone options for international teams
-- **No Backend Required**: Pure HTML/JavaScript application
-- **100% Free**: No hosting or database costs
+### Adım 1: GitHub Repository Oluştur
 
-### 🚀 Quick Start (25 minutes setup)
+1. [github.com](https://github.com) → New repository
+2. Repository adı: `team-availability-data`
+3. Visibility: **Public** veya Private
+4. Initialize with README: Evet
+5. Create repository
 
-#### Step 1: Create GitHub Data Repository (5 min)
+### Adım 2: GitHub Personal Access Token Oluştur
 
-1. Go to [github.com](https://github.com) and login
-2. Click "New repository"
-3. Repository name: `team-availability-data`
-4. Choose "Public" (or "Private" for sensitive data)
-5. Check "Add a README file"
-6. Click "Create repository"
+**ÖNEMLİ: Fine-grained token kullanın (daha güvenli)**
 
-#### Step 2: Generate GitHub Personal Access Token (3 min)
+1. GitHub Settings → Developer settings → Personal access tokens → **Fine-grained tokens**
+2. Generate new token
+3. Token name: `Team Availability System`
+4. Expiration: 1 year (veya Custom)
+5. Repository access: **Only select repositories** → `team-availability-data` seçin
+6. Permissions:
+   - **Contents**: Read and write
+7. Generate token
+8. **TOKEN'I KOPYALAYIN** - bir daha gösterilmeyecek
 
-1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Click "Generate new token" (classic)
-3. Note: "Team Availability System"
-4. Expiration: "No expiration" or "1 year"
-5. Scopes: Check **"repo"** (full control of private repositories)
-6. Click "Generate token"
-7. **COPY THE TOKEN** - You won't see it again!
+### Adım 3: Netlify'a Deploy
 
-#### Step 3: Deploy to Netlify (5 min)
+#### 3.1. Dosya Yapısını Hazırla
 
-1. Go to [netlify.com](https://netlify.com) and login
-2. Drag & drop your `index.html` file
-3. Get your URL (e.g., `yourapp.netlify.app`)
+```
+team-availability/
+├── index.html
+├── netlify/
+│   └── functions/
+│       └── github-proxy.js
+└── netlify.toml (opsiyonel)
+```
 
-Alternative: Use any static hosting (GitHub Pages, Vercel, Surge.sh)
+#### 3.2. Netlify'a Yükle
 
-#### Step 4: Initial System Setup (5 min)
+**Seçenek A: GitHub üzerinden (önerilen)**
+1. Projeyi GitHub'a push et
+2. [netlify.com](https://netlify.com) → New site from Git
+3. GitHub repository'yi seç
+4. Deploy settings default bırak → Deploy
 
-1. Open your deployed URL
-2. Go to "Setup" tab
-3. Enter:
-   - Your GitHub username
-   - Repository name: `team-availability-data`
-   - Paste your Personal Access Token
-4. Click "Test GitHub Connection"
-5. Create first admin account
+**Seçenek B: Manuel deploy**
+1. Netlify → Sites → Deploy manually
+2. Klasörü sürükle-bırak
 
-#### Step 5: Add Users and Test (7 min)
+#### 3.3. Environment Variables Ekle
 
-1. Login with admin credentials
-2. Go to "Admin" tab
-3. Add team members (generates auto-password)
-4. Share credentials securely
-5. Test login in new browser tab
+Netlify Dashboard'da:
+1. Site settings → Environment variables → Add a variable
+2. Şu 3 değişkeni ekle:
 
-### ⚠️ Important Security Notes
+```
+GITHUB_TOKEN = ghp_XXXXXXXXXXXXXXXX  (token'ınız)
+GITHUB_USER = your-github-username
+GITHUB_REPO = team-availability-data
+```
 
-#### GitHub Token Security
+3. **ÖNEMLİ**: Redeploy et (Deploys → Trigger deploy → Deploy site)
 
-**CURRENT LIMITATION**: GitHub token is stored in browser. This is acceptable for:
-- Internal team tools
-- Trusted team members only
-- Non-sensitive data
+### Adım 4: İlk Admin Kullanıcısını Manuel Oluştur
 
-**NOT RECOMMENDED FOR**:
-- Public-facing applications
-- Untrusted users
-- Highly sensitive data
+Site deploy olduktan sonra hiç kullanıcı yok, login yapamıyorsunuz. İlk admin'i GitHub'da manuel oluşturmalısınız:
 
-**Production Solution**: Use Netlify Functions or similar backend to hide token:
+#### 4.1. Admin Şifresini Hash'le
+
+Browser console'da (siteyi açıp F12):
 
 ```javascript
-// netlify/functions/github-proxy.js
-exports.handler = async (event) => {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Stored securely
-  // Proxy requests to GitHub API
+async function hashPassword(pwd) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Örnek: "admin123" şifresini hash'le
+hashPassword('admin123').then(hash => console.log(hash));
+```
+
+Çıktı: `240be5...` (64 karakterlik hash)
+
+#### 4.2. GitHub'da data.json Oluştur
+
+`team-availability-data` repository'nize gidin:
+
+1. Add file → Create new file
+2. Dosya adı: `data.json`
+3. İçerik:
+
+```json
+{
+  "users": {
+    "admin_1727625600000": {
+      "name": "Admin",
+      "email": "admin@yourcompany.com",
+      "pwd": "BURAYA_HASH_KOYUN",
+      "role": "Administrator",
+      "admin": true
+    }
+  },
+  "availability": {}
 }
 ```
 
-#### Password Security
+4. `pwd` kısmına yukarıda hash'lediğiniz şifreyi yapıştırın
+5. Commit changes
 
-Passwords are hashed with SHA-256. For production use, consider:
-- bcrypt or Argon2 for better security
-- Token-based authentication
-- OAuth integration
+#### 4.3. İlk Login
 
-### 📋 Usage Guide
+Sitenize girin:
+- Email: `admin@yourcompany.com`
+- Password: `admin123` (veya seçtiğiniz şifre)
 
-#### For Administrators
+Başarılı! Artık admin panelinden kullanıcı ekleyebilirsiniz.
 
-**Adding Team Members:**
-1. Login to admin panel
-2. Enter: Name, Email, Role, Country, Timezone
-3. System generates secure password
-4. Share credentials securely (email, Slack, etc.)
+## Kullanım
 
-**Managing Users:**
-- View all users and their credentials
-- Reset passwords when needed
-- Delete users (cannot delete admins)
+### Admin Kullanımı
 
-**Viewing Team Availability:**
-- All availability data synced via GitHub
-- Real-time updates when users save changes
+**Kullanıcı Ekle:**
+1. Admin Panel → Add New User
+2. Name, Email, Role gir
+3. Sistem otomatik şifre üretir
+4. Pop-up'taki şifreyi kopyala ve güvenli paylaş
 
-#### For Team Members
+**Kullanıcı Yönetimi:**
+- Reset Password: Yeni şifre üretir
+- Delete: Kullanıcıyı ve verilerini siler (admin dahil)
 
-**First Login:**
-1. Receive email and password from admin
-2. Login via "Login" tab
-3. Go to "Availability" tab
+**Takım Takvimi:**
+1. Team Calendar sekmesi
+2. Ay seç → Load Calendar
+3. Tüm kullanıcıların müsaitliğini gör
 
-**Setting Availability:**
-1. Select month
-2. Click dates to mark availability
-3. Click "Save" - data syncs to GitHub
-4. Other team members see updates
+### Normal Kullanıcı Kullanımı
 
-### 🛠️ Technical Details
+**Müsaitlik Girişi:**
+1. My Availability sekmesi
+2. Ay seç, takvim yüklenir
+3. Günlere tıkla (mavi = seçili)
+4. Saat aralığı belirle
+5. Save for Selected Days
 
-**Architecture:**
+**Toplantı Planla:**
+1. Plan Meeting sekmesi
+2. Ay ve süre seç
+3. Katılımcıları işaretle (min 2 kişi)
+4. Find Available Times
+5. Uygun slotlarda "Create Google Meet" butonuna bas
+
+## Güvenlik
+
+### Token Güvenliği
+
+**v7.0'da Token Güvenli:**
+- Token Netlify environment variable'da
+- Frontend'den erişilemez
+- Netlify Function proxy ile korunur
+
+**GitHub Token İzinleri:**
+- Sadece `team-availability-data` repo'su
+- Sadece Contents: Read/Write
+- Diğer repolara erişim YOK
+
+### Şifre Güvenliği
+
+**Mevcut:** SHA-256 hashing
+
+**Production için öneriler:**
+- bcrypt veya Argon2 kullanın
+- 2FA ekleyin
+- OAuth entegrasyonu düşünün
+
+## Mimari
+
 ```
-User (Turkey)     →  GitHub API  →  team-data.json
-                        ↓
-User (USA)        →  GitHub API  →  team-data.json (reads same data)
+Browser (Istanbul)  →  Netlify Function  →  GitHub API  →  data.json
+                            ↓
+Browser (New York)  →  Netlify Function  →  GitHub API  →  data.json
 ```
 
-**Technology Stack:**
-- Pure JavaScript (ES6+)
-- GitHub REST API v3
-- SHA-256 Web Crypto API
-- Responsive CSS3
+Token her zaman Netlify'de kalır, browser'a gönderilmez.
 
-**Browser Support:**
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+## Veri Yapısı
 
-**GitHub API Limits:**
-- 5,000 requests/hour (authenticated)
-- Recommend caching data for 1-2 minutes
-
-**Data Structure:**
 ```json
 {
-  "config": {
-    "company": "Your Company",
-    "initialized": true,
-    "createdAt": "2025-09-29T..."
-  },
   "users": {
-    "1727625600000": {
+    "user_1727625600000": {
       "name": "John Doe",
       "email": "john@company.com",
-      "password": "hashed-sha256",
+      "pwd": "sha256-hashed-password",
       "role": "Developer",
-      "country": "US",
-      "timezone": "America/New_York",
-      "isAdmin": false
+      "admin": false
     }
   },
   "availability": {
-    "user_id": {
-      "2025-10": [1, 2, 5, 8, 9, ...]
+    "user_1727625600000": {
+      "2025-10-15": {
+        "status": "yes",
+        "start": "09:00",
+        "end": "17:00"
+      }
     }
   }
 }
 ```
 
-### 📁 Project Structure
-
-```
-team-availability-system/
-├── index.html              # Main application (3500+ lines)
-├── setup.html             # Initial configuration helper
-├── tests.html             # Test suite
-├── README.md              # This file
-├── LICENSE                # MIT License
-└── .gitignore            # Git ignore rules
-```
-
-### 🔄 Data Flow
-
-1. **User Action** → JavaScript function
-2. **JavaScript** → GitHub API call (PUT/GET)
-3. **GitHub** → Updates `team-data.json` in repository
-4. **Other Users** → Fetch updated data on next load
-
-### 🚦 System Status Indicators
-
-- **Green dot**: Connected to GitHub
-- **Yellow dot**: Loading/Connecting
-- **Red dot**: Connection error
-
-### 📊 Scalability
-
-**Current Capacity:**
-- Users: Unlimited
-- API Calls: 5,000/hour
-- Data Size: GitHub repo limit (recommended < 100MB)
-
-**Recommended Team Size:** 5-50 users
-**For Larger Teams:** Consider dedicated backend solution
-
-### 🔍 Troubleshooting
-
-**"GitHub API Error: 401"**
-- Token expired or invalid
-- Regenerate token with "repo" scope
-
-**"GitHub API Error: 404"**
-- Repository name incorrect
-- Repository doesn't exist
-- Check username/repo spelling
-
-**"Connection failed"**
-- Internet connection issue
-- GitHub API down (rare)
-- Browser blocking requests (check CORS)
-
-**"Rate limit exceeded"**
-- Exceeded 5,000 requests/hour
-- Wait 1 hour or implement caching
-
-### 🎯 Roadmap
-
-**Version 2.1 (Planned)**
-- [ ] Availability calendar visualization
-- [ ] Smart meeting time finder
-- [ ] Timezone converter tool
-- [ ] Email notifications
-- [ ] Export to CSV
-
-**Version 3.0 (Future)**
-- [ ] Backend API (Netlify Functions)
-- [ ] Real-time updates (webhooks)
-- [ ] Mobile app
-- [ ] Google Calendar integration
-- [ ] Slack integration
-
-### 🤝 Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
-
-### 📝 License
-
-MIT License - free for personal and commercial use
-
----
-
-## Türkçe
-
-### 🌟 Temel Özellikler
-
-- **Bulut Tabanlı Depolama**: GitHub repository'sini ücretsiz bulut veritabanı olarak kullanır
-- **Global Takım Desteği**: Farklı ülkelerden takım üyeleri aynı veriye erişir
-- **Yönetici Paneli**: Kullanıcı oluştur, kimlik bilgisi dağıt, müsaitlik yönet
-- **Güvenli Kimlik Doğrulama**: SHA-256 şifre hashleme
-- **Müsaitlik Takvimi**: Aylık hafta içi müsaitlik takibi
-- **Saat Dilimi Desteği**: Uluslararası takımlar için çoklu saat dilimi
-- **Backend Gerektirmez**: Pure HTML/JavaScript uygulaması
-- **%100 Ücretsiz**: Hosting veya veritabanı maliyeti yok
-
-### 🚀 Hızlı Başlangıç (25 dakika kurulum)
-
-#### Adım 1: GitHub Veri Repository Oluştur (5 dk)
-
-1. [github.com](https://github.com) adresine git ve giriş yap
-2. "New repository" butonuna tıkla
-3. Repository adı: `team-availability-data`
-4. "Public" seç (hassas veriler için "Private")
-5. "Add a README file" işaretle
-6. "Create repository" tıkla
-
-#### Adım 2: GitHub Personal Access Token Oluştur (3 dk)
-
-1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. "Generate new token" (classic) tıkla
-3. Note: "Team Availability System"
-4. Expiration: "No expiration" veya "1 year"
-5. Scopes: **"repo"** işaretle (private repository'lere tam kontrol)
-6. "Generate token" tıkla
-7. **TOKEN'I KOPYALA** - Bir daha gösterilmeyecek!
-
-#### Adım 3: Netlify'a Deploy Et (5 dk)
-
-1. [netlify.com](https://netlify.com) adresine git ve giriş yap
-2. `index.html` dosyasını sürükle-bırak
-3. URL'ni al (örn: `yourapp.netlify.app`)
-
-Alternatif: Herhangi bir statik hosting (GitHub Pages, Vercel, Surge.sh)
-
-#### Adım 4: İlk Sistem Kurulumu (5 dk)
-
-1. Deploy ettiğin URL'yi aç
-2. "Kurulum" sekmesine git
-3. Bilgileri gir:
-   - GitHub kullanıcı adın
-   - Repository adı: `team-availability-data`
-   - Personal Access Token'ı yapıştır
-4. "GitHub Bağlantısını Test Et" tıkla
-5. İlk admin hesabını oluştur
-
-#### Adım 5: Kullanıcı Ekle ve Test Et (7 dk)
-
-1. Admin kimlik bilgileriyle giriş yap
-2. "Admin" sekmesine git
-3. Takım üyelerini ekle (otomatik şifre üretilir)
-4. Kimlik bilgilerini güvenli şekilde paylaş
-5. Yeni tarayıcı sekmesinde giriş testi yap
-
-### ⚠️ Önemli Güvenlik Notları
-
-#### GitHub Token Güvenliği
-
-**MEVCUT KISITLAMA**: GitHub token tarayıcıda saklanıyor. Bu kabul edilebilir:
-- Dahili takım araçları için
-- Sadece güvenilir takım üyeleri için
-- Hassas olmayan veriler için
-
-**ÖNERİLMEZ**:
-- Halka açık uygulamalar
-- Güvenilmeyen kullanıcılar
-- Çok hassas veriler
-
-**Production Çözümü**: Token'ı gizlemek için Netlify Functions kullanın
-
-#### Şifre Güvenliği
-
-Şifreler SHA-256 ile hashlenmiş. Production için düşünün:
-- bcrypt veya Argon2 (daha güvenli)
-- Token tabanlı kimlik doğrulama
-- OAuth entegrasyonu
-
-### 🛠️ Teknik Detaylar
-
-**Mimari:**
-```
-Kullanıcı (Türkiye)  →  GitHub API  →  team-data.json
-                            ↓
-Kullanıcı (ABD)      →  GitHub API  →  team-data.json (aynı veriyi okur)
-```
+## Sınırlamalar ve Ölçeklenebilirlik
 
 **GitHub API Limitleri:**
 - 5,000 istek/saat (authenticated)
-- 1-2 dakika cache önerilir
+- Rate limit aşılırsa 1 saat bekle
 
-### 📊 Ölçeklenebilirlik
+**Önerilen Takım Boyutu:**
+- 5-50 kullanıcı: Mükemmel
+- 50-100 kullanıcı: İyi (caching ekleyin)
+- 100+ kullanıcı: Özel backend düşünün
 
-**Mevcut Kapasite:**
-- Kullanıcı sayısı: Sınırsız
-- API Çağrıları: 5,000/saat
-- Veri Boyutu: GitHub repo limiti (< 100MB önerilir)
+**Data.json Boyutu:**
+- GitHub max dosya boyutu: 100MB
+- Önerilen max: 10MB
+- 100 kullanıcı × 12 ay = ~1MB
 
-**Önerilen Takım Boyutu:** 5-50 kullanıcı
+## Sorun Giderme
 
-### 🔍 Sorun Giderme
+**"Connection Error" / Status: Red**
+- Netlify environment variables kontrol et
+- Token'ın expire olmadığını kontrol et
+- Netlify Functions çalışıyor mu kontrol et: `yoursite.netlify.app/.netlify/functions/github-proxy`
 
-**"GitHub API Error: 401"**
-- Token süresi dolmuş veya geçersiz
-- "repo" yetkisiyle yeni token oluştur
+**Katılımcılar görünmüyor**
+- Meeting sekmesine geçince otomatik yüklenir
+- Manuel yükle: console'da `loadParticipants()` çalıştır
 
-**"Bağlantı başarısız"**
-- İnternet bağlantısı problemi
-- GitHub API down (nadir)
-- Tarayıcı istekleri engelliyor (CORS kontrol et)
+**Google Meet açılmıyor**
+- Pop-up blocker kapalı mı kontrol et
+- Chrome/Firefox kullanın
 
 **"Rate limit exceeded"**
-- 5,000 istek/saat limiti aşıldı
-- 1 saat bekle veya cache implement et
+- 1 saat bekleyin
+- Caching implementasyonu yapın
 
-### 🎯 Yol Haritası
+## Netlify Function Debugging
 
-**Versiyon 2.1 (Planlanıyor)**
-- Müsaitlik takvimi görselleştirme
-- Akıllı toplantı zamanı bulucu
-- Saat dilimi dönüştürücü
-- Email bildirimleri
+Function loglarını görmek için:
 
-**Versiyon 3.0 (Gelecek)**
-- Backend API (Netlify Functions)
-- Gerçek zamanlı güncellemeler
-- Mobil uygulama
-- Google Calendar entegrasyonu
+```bash
+netlify dev  # Local test
+```
 
-### 📝 Lisans
+Veya Netlify Dashboard → Functions → Logs
 
-MIT License - kişisel ve ticari kullanım için ücretsiz
+## Yol Haritası
+
+**v7.1 (Planlanan)**
+- [ ] Email notifications (SendGrid)
+- [ ] Slack integration
+- [ ] CSV export
+- [ ] Dark mode
+
+**v8.0 (Gelecek)**
+- [ ] Real-time updates (Pusher)
+- [ ] Mobile responsive improvements
+- [ ] Advanced timezone handling
+- [ ] Recurring availability patterns
+
+## Lisans
+
+MIT License - ücretsiz kullanım
+
+## Katkıda Bulunma
+
+1. Fork et
+2. Feature branch oluştur
+3. Test et
+4. Pull request aç
+
+## Destek
+
+Sorunlar için GitHub Issues kullanın.
 
 ---
 
-**Made with ❤️ for global teams | Global takımlar için ❤️ ile yapıldı**
+**Yapımcı:** Uluslararası takımlar için pratik çözümler
+**Versiyon:** 7.0
+**Son Güncelleme:** 2025-01-02
