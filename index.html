@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Availability v6.0</title>
+    <title>Team Availability System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; text-align: center; }
+        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; text-align: center; position: relative; }
         .status { position: absolute; top: 10px; left: 10px; padding: 5px 10px; background: rgba(255,255,255,0.2); border-radius: 15px; font-size: 0.8rem; }
         .tabs { display: flex; background: #f5f5f5; border-bottom: 2px solid #ddd; }
         .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; border: none; background: #f5f5f5; font-weight: 600; }
@@ -43,19 +43,19 @@
         .avail-yes { background: #d4edda; }
         .avail-no { background: #f8d7da; }
         .avail-unknown { background: #fff3cd; }
+        .loading { text-align: center; padding: 40px; color: #666; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <div class="status" id="status">Not Connected</div>
-        <h1>Team Availability System v6.0</h1>
-        <p>Simple & Working Edition</p>
+        <div class="status" id="status">Connecting...</div>
+        <h1>Team Availability System</h1>
+        <p>Powered by GitHub + Netlify</p>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('setup')" id="tab-setup">Setup</button>
-        <button class="tab" onclick="showTab('login')" id="tab-login" disabled>Login</button>
+        <button class="tab active" onclick="showTab('login')" id="tab-login">Login</button>
         <button class="tab" onclick="showTab('admin')" id="tab-admin" disabled style="display:none;">Admin</button>
         <button class="tab" onclick="showTab('my-avail')" id="tab-my-avail" disabled>My Availability</button>
         <button class="tab" onclick="showTab('team')" id="tab-team" disabled>Team Calendar</button>
@@ -63,39 +63,7 @@
     </div>
 
     <div class="content">
-        <div id="setup" class="tab-content">
-            <div class="section">
-                <h3>Step 1: GitHub Configuration</h3>
-                <div class="form-group">
-                    <label>GitHub Username</label>
-                    <input type="text" id="gh-user" placeholder="your-username">
-                </div>
-                <div class="form-group">
-                    <label>Repository Name</label>
-                    <input type="text" id="gh-repo" value="team-availability">
-                </div>
-                <div class="form-group">
-                    <label>GitHub Token (with repo access)</label>
-                    <input type="password" id="gh-token" placeholder="ghp_...">
-                </div>
-                <button class="btn" onclick="connectGitHub()">Connect to GitHub</button>
-                <div id="setup-msg"></div>
-            </div>
-            <div class="section" id="admin-section" style="display:none;">
-                <h3>Step 2: Create First Admin</h3>
-                <div class="form-group">
-                    <label>Admin Email</label>
-                    <input type="email" id="admin-email">
-                </div>
-                <div class="form-group">
-                    <label>Admin Password (min 6 chars)</label>
-                    <input type="password" id="admin-pwd">
-                </div>
-                <button class="btn" onclick="createFirstAdmin()">Create Admin & Start</button>
-            </div>
-        </div>
-
-        <div id="login" class="tab-content" style="display:none;">
+        <div id="login" class="tab-content">
             <div class="section">
                 <h3>Login</h3>
                 <div class="form-group">
@@ -203,19 +171,20 @@
 
 <script>
 // GLOBAL STATE
-let GH = { user: '', repo: '', token: '', connected: false };
 let DB = { users: {}, availability: {} };
 let ME = null;
 let SELECTED_DAYS = new Set();
 let START_TIME = '09:00';
 let END_TIME = '17:00';
 
+// NETLIFY FUNCTION ENDPOINT
+const API_URL = '/.netlify/functions/github-proxy';
+
 // UTILITY FUNCTIONS
 function log(msg) { console.log('[DEBUG]', msg); }
 function setStatus(txt, color = '#4CAF50') {
-    const el = document.getElementById('status');
-    el.textContent = txt;
-    el.style.background = color;
+    document.getElementById('status').textContent = txt;
+    document.getElementById('status').style.background = color;
 }
 function showMsg(id, txt, type) {
     document.getElementById(id).innerHTML = `<div class="msg ${type}">${txt}</div>`;
@@ -226,61 +195,56 @@ function showTab(name) {
     document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
     document.getElementById(name).style.display = 'block';
     document.getElementById('tab-' + name).classList.add('active');
-    
-    // Load participants when switching to meeting tab
-    if (name === 'meeting') {
-        loadParticipants();
-    }
+    if (name === 'meeting') loadParticipants();
 }
 
-// GITHUB FUNCTIONS
-async function ghAPI(path, method = 'GET', data = null) {
-    if (!GH.connected) throw new Error('GitHub not connected');
-    const url = `https://api.github.com/repos/${GH.user}/${GH.repo}/contents/${path}`;
-    const opts = {
-        method,
-        headers: {
-            'Authorization': `token ${GH.token}`,
-            'Accept': 'application/vnd.github.v3+json'
-        }
-    };
-    if (data) opts.body = JSON.stringify(data);
-    log(`GitHub API: ${method} ${path}`);
-    const res = await fetch(url, opts);
-    if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
-    return res.json();
+// GITHUB API VIA NETLIFY FUNCTION
+async function apiCall(path, method = 'GET', data = null) {
+    log(`API Call: ${method} ${path}`);
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, method, data })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'API request failed');
+    }
+    
+    return await response.json();
 }
 
 async function loadDB() {
-    log('Loading database from GitHub...');
+    log('Loading database...');
     try {
-        const res = await ghAPI('data.json');
+        const res = await apiCall('data.json');
         const json = decodeURIComponent(escape(atob(res.content)));
         DB = JSON.parse(json);
         log('Database loaded: ' + Object.keys(DB.users).length + ' users');
         if (!DB.availability) DB.availability = {};
         return true;
     } catch (e) {
-        log('No existing database, starting fresh');
+        log('Database not found or error: ' + e.message);
         DB = { users: {}, availability: {} };
         return false;
     }
 }
 
 async function saveDB() {
-    log('Saving database to GitHub...');
+    log('Saving database...');
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
     let sha = null;
     try {
-        const existing = await ghAPI('data.json');
+        const existing = await apiCall('data.json');
         sha = existing.sha;
-    } catch (e) { }
-    await ghAPI('data.json', 'PUT', {
+    } catch (e) {}
+    await apiCall('data.json', 'PUT', {
         message: 'Update availability data',
         content,
         sha
     });
-    log('Database saved successfully');
+    log('Database saved');
 }
 
 // PASSWORD HASHING
@@ -296,64 +260,7 @@ function genPwd() {
     return pwd;
 }
 
-// SETUP & LOGIN
-async function connectGitHub() {
-    const user = document.getElementById('gh-user').value.trim();
-    const repo = document.getElementById('gh-repo').value.trim();
-    const token = document.getElementById('gh-token').value.trim();
-    
-    if (!user || !repo || !token) {
-        showMsg('setup-msg', 'Fill all fields', 'error');
-        return;
-    }
-    
-    setStatus('Connecting...', '#ff9800');
-    GH = { user, repo, token, connected: true };
-    
-    try {
-        await ghAPI('');
-        const hasData = await loadDB();
-        
-        localStorage.setItem('gh-config', JSON.stringify(GH));
-        setStatus('Connected', '#4CAF50');
-        showMsg('setup-msg', 'Connected to GitHub!', 'success');
-        
-        if (hasData && Object.keys(DB.users).length > 0) {
-            document.getElementById('tab-login').disabled = false;
-            showTab('login');
-        } else {
-            document.getElementById('admin-section').style.display = 'block';
-        }
-    } catch (e) {
-        setStatus('Connection Failed', '#f44336');
-        showMsg('setup-msg', 'Error: ' + e.message, 'error');
-        GH.connected = false;
-    }
-}
-
-async function createFirstAdmin() {
-    const email = document.getElementById('admin-email').value.trim().toLowerCase();
-    const pwd = document.getElementById('admin-pwd').value;
-    
-    if (!email || pwd.length < 6) {
-        showMsg('setup-msg', 'Fill all fields (password min 6 chars)', 'error');
-        return;
-    }
-    
-    try {
-        const hash = await hashPwd(pwd);
-        const id = 'admin_' + Date.now();
-        DB.users[id] = { name: 'Admin', email, pwd: hash, admin: true };
-        await saveDB();
-        
-        showMsg('setup-msg', 'Admin created! Now login.', 'success');
-        document.getElementById('tab-login').disabled = false;
-        showTab('login');
-    } catch (e) {
-        showMsg('setup-msg', 'Error: ' + e.message, 'error');
-    }
-}
-
+// LOGIN
 async function doLogin() {
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const pwd = document.getElementById('login-pwd').value;
@@ -495,10 +402,9 @@ async function deleteUser(id) {
     refreshUsersList();
 }
 
-// AVAILABILITY FUNCTIONS
+// AVAILABILITY
 function populateMonthSelects() {
     const months = [];
-    // Show 12 months forward
     for (let i = 0; i < 12; i++) {
         const d = new Date();
         d.setMonth(d.getMonth() + i);
@@ -513,7 +419,7 @@ function populateMonthSelects() {
 }
 
 function setupAvailabilityTab() {
-    document.getElementById('avail-welcome').textContent = `Welcome ${ME.name} - Set Your Availability`;
+    document.getElementById('avail-welcome').textContent = `Welcome ${ME.name}`;
     populateMonthSelects();
     renderMyCalendar();
     generateTimePickers();
@@ -530,14 +436,11 @@ async function renderMyCalendar() {
     const startDow = (firstDay.getDay() + 6) % 7;
     
     let html = '<div class="cal-grid">';
-    
     ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
         html += `<div style="font-weight:bold;padding:10px;text-align:center;">${day}</div>`;
     });
     
-    for (let i = 0; i < startDow; i++) {
-        html += '<div></div>';
-    }
+    for (let i = 0; i < startDow; i++) html += '<div></div>';
     
     const myAvail = DB.availability[ME.id] || {};
     
@@ -556,11 +459,7 @@ async function renderMyCalendar() {
             if (myAvail[dateStr]) {
                 cls += ' has-data';
                 const av = myAvail[dateStr];
-                if (av.status === 'yes') {
-                    extra = `<small>${av.start}-${av.end}</small>`;
-                } else {
-                    extra = '<small>Not Available</small>';
-                }
+                extra = av.status === 'yes' ? `<small>${av.start}-${av.end}</small>` : '<small>Not Available</small>';
             }
         }
         
@@ -569,15 +468,12 @@ async function renderMyCalendar() {
     
     html += '</div>';
     document.getElementById('my-calendar').innerHTML = html;
-    
     SELECTED_DAYS.clear();
     document.getElementById('time-section').style.display = 'none';
 }
 
 function toggleDaySelection(dateStr, isWeekend) {
     if (isWeekend) return;
-    
-    // Find day element by data-date attribute
     const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
     if (!dayEl) return;
     
@@ -617,31 +513,21 @@ function generateTimePickers() {
     ).join('');
 }
 
-function selectStartTime(t) {
-    START_TIME = t;
-    generateTimePickers();
-}
-
-function selectEndTime(t) {
-    END_TIME = t;
-    generateTimePickers();
-}
-
+function selectStartTime(t) { START_TIME = t; generateTimePickers(); }
+function selectEndTime(t) { END_TIME = t; generateTimePickers(); }
 function toggleTimeInputs() {
-    const status = document.getElementById('avail-status').value;
-    document.getElementById('time-inputs').style.display = status === 'yes' ? 'block' : 'none';
+    document.getElementById('time-inputs').style.display = 
+        document.getElementById('avail-status').value === 'yes' ? 'block' : 'none';
 }
 
 async function saveMyAvailability() {
     if (SELECTED_DAYS.size === 0) {
-        showMsg('avail-msg', 'Select at least one day first', 'error');
+        showMsg('avail-msg', 'Select at least one day', 'error');
         return;
     }
     
     await loadDB();
-    
     const status = document.getElementById('avail-status').value;
-    
     if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
     
     SELECTED_DAYS.forEach(dateStr => {
@@ -656,7 +542,7 @@ async function saveMyAvailability() {
         setStatus('Saving...', '#ff9800');
         await saveDB();
         setStatus('Saved!', '#4CAF50');
-        showMsg('avail-msg', `Saved availability for ${SELECTED_DAYS.size} days!`, 'success');
+        showMsg('avail-msg', `Saved ${SELECTED_DAYS.size} days!`, 'success');
         renderMyCalendar();
     } catch (e) {
         showMsg('avail-msg', 'Error: ' + e.message, 'error');
@@ -667,55 +553,38 @@ async function saveMyAvailability() {
 // TEAM CALENDAR
 async function renderTeamCalendar() {
     await loadDB();
-    
     const val = document.getElementById('team-month').value;
     const [year, month] = val.split('-').map(Number);
     const lastDay = new Date(year, month, 0);
     const daysInMonth = lastDay.getDate();
     
     const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
-    
     if (users.length === 0) {
-        document.getElementById('team-calendar').innerHTML = '<p>No non-admin users found</p>';
+        document.getElementById('team-calendar').innerHTML = '<p>No users found</p>';
         return;
     }
     
     let html = '<table><thead><tr><th>User</th>';
-    
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month - 1, d);
-        const dow = date.getDay();
-        if (dow >= 1 && dow <= 5) {
-            html += `<th>${d}</th>`;
-        }
+        if (date.getDay() >= 1 && date.getDay() <= 5) html += `<th>${d}</th>`;
     }
     html += '</tr></thead><tbody>';
     
     users.forEach(([uid, u]) => {
         html += `<tr><td><strong>${u.name}</strong><br><small>${u.role || ''}</small></td>`;
-        
         const userAvail = DB.availability[uid] || {};
         
         for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(year, month - 1, d);
-            const dow = date.getDay();
-            if (dow >= 1 && dow <= 5) {
+            if (date.getDay() >= 1 && date.getDay() <= 5) {
                 const dateStr = date.toISOString().split('T')[0];
                 const av = userAvail[dateStr];
-                
-                let cls = 'avail-unknown';
-                let txt = '-';
-                
+                let cls = 'avail-unknown', txt = '-';
                 if (av) {
-                    if (av.status === 'yes') {
-                        cls = 'avail-yes';
-                        txt = `✓<br><small>${av.start}-${av.end}</small>`;
-                    } else {
-                        cls = 'avail-no';
-                        txt = '✗';
-                    }
+                    cls = av.status === 'yes' ? 'avail-yes' : 'avail-no';
+                    txt = av.status === 'yes' ? `✓<br><small>${av.start}-${av.end}</small>` : '✗';
                 }
-                
                 html += `<td class="${cls}">${txt}</td>`;
             }
         }
@@ -730,47 +599,35 @@ async function renderTeamCalendar() {
 async function loadParticipants() {
     await loadDB();
     const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
-    
     if (users.length === 0) {
-        document.getElementById('participants').innerHTML = '<p>No users available</p>';
+        document.getElementById('participants').innerHTML = '<p>No users</p>';
         return;
     }
-    
     document.getElementById('participants').innerHTML = users.map(([id, u]) =>
-        `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}" style="margin-right:10px;">${u.name} (${u.role || 'N/A'})</label>`
+        `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role || 'N/A'})</label>`
     ).join('');
 }
 
 async function findMeetingTimes() {
     await loadDB();
-    
     const val = document.getElementById('meeting-month').value;
     const [year, month] = val.split('-').map(Number);
     const duration = parseFloat(document.getElementById('meeting-duration').value);
     
-    const checkboxes = document.querySelectorAll('#participants input:checked');
-    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
-    
+    const selectedIds = Array.from(document.querySelectorAll('#participants input:checked')).map(cb => cb.value);
     if (selectedIds.length < 2) {
         showMsg('meeting-results', 'Select at least 2 participants', 'error');
         return;
     }
     
     const lastDay = new Date(year, month, 0);
-    const daysInMonth = lastDay.getDate();
     const commonSlots = [];
     
-    for (let d = 1; d <= daysInMonth; d++) {
+    for (let d = 1; d <= lastDay.getDate(); d++) {
         const date = new Date(year, month - 1, d);
-        const dow = date.getDay();
-        
-        if (dow >= 1 && dow <= 5) {
+        if (date.getDay() >= 1 && date.getDay() <= 5) {
             const dateStr = date.toISOString().split('T')[0];
-            
-            const allAvail = selectedIds.every(id => {
-                const av = DB.availability[id]?.[dateStr];
-                return av && av.status === 'yes';
-            });
+            const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr]?.status === 'yes');
             
             if (allAvail) {
                 const slots = selectedIds.map(id => {
@@ -780,7 +637,6 @@ async function findMeetingTimes() {
                 
                 const latestStart = slots.reduce((max, s) => s.start > max ? s.start : max, slots[0].start);
                 const earliestEnd = slots.reduce((min, s) => s.end < min ? s.end : min, slots[0].end);
-                
                 const startMin = parseInt(latestStart.split(':')[0]) * 60 + parseInt(latestStart.split(':')[1]);
                 const endMin = parseInt(earliestEnd.split(':')[0]) * 60 + parseInt(earliestEnd.split(':')[1]);
                 const availHours = (endMin - startMin) / 60;
@@ -788,7 +644,7 @@ async function findMeetingTimes() {
                 if (availHours >= duration) {
                     commonSlots.push({
                         date: dateStr,
-                        formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+                        formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
                         start: latestStart,
                         end: earliestEnd,
                         duration: availHours,
@@ -800,99 +656,72 @@ async function findMeetingTimes() {
     }
     
     if (commonSlots.length === 0) {
-        document.getElementById('meeting-results').innerHTML = '<div class="msg error">No common available times found for selected participants</div>';
+        document.getElementById('meeting-results').innerHTML = '<div class="msg error">No common times found</div>';
         return;
     }
     
-    let html = `<div class="msg success">Found ${commonSlots.length} available time slot(s)</div>`;
-    
+    let html = `<div class="msg success">Found ${commonSlots.length} slot(s)</div>`;
     commonSlots.forEach(slot => {
-        html += `
-            <div class="section" style="background:#d4edda;border-color:#28a745;">
-                <h4>${slot.formatted}</h4>
-                <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)} hours available)</p>
-                <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
-                <button class="btn" style="margin-top:10px;" onclick="createGoogleMeet('${slot.date}', '${slot.start}', '${slot.end}', '${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
-            </div>
-        `;
+        html += `<div class="section" style="background:#d4edda;border-color:#28a745;">
+            <h4>${slot.formatted}</h4>
+            <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)}h)</p>
+            <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
+            <button class="btn" onclick="createGoogleMeet('${slot.date}','${slot.start}','${slot.end}','${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
+        </div>`;
     });
-    
     document.getElementById('meeting-results').innerHTML = html;
 }
 
-// GOOGLE MEET INTEGRATION
 function createGoogleMeet(date, startTime, endTime, participantIds) {
-    const participantIdArray = participantIds.split(',');
-    const participantEmails = participantIdArray.map(id => DB.users[id].email).join(',');
-    
+    const participantEmails = participantIds.split(',').map(id => DB.users[id].email).join(',');
     const startDateTime = new Date(`${date}T${startTime}:00`);
     const endDateTime = new Date(`${date}T${endTime}:00`);
+    const formatGoogleDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     
-    const formatGoogleDate = (d) => {
-        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    };
-    
-    const title = 'Team Meeting';
-    const description = 'Meeting scheduled via Team Availability System';
-    
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-        `&text=${encodeURIComponent(title)}` +
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+        `&text=${encodeURIComponent('Team Meeting')}` +
         `&dates=${formatGoogleDate(startDateTime)}/${formatGoogleDate(endDateTime)}` +
-        `&details=${encodeURIComponent(description)}` +
+        `&details=${encodeURIComponent('Scheduled via Team Availability System')}` +
         `&add=${encodeURIComponent(participantEmails)}`;
     
-    window.open(googleCalendarUrl, '_blank');
-    
-    alert('Google Calendar opened!\n\n1. Click "Add Google Meet" in the event\n2. Save the event\n\nAll participants will be invited automatically.');
+    window.open(url, '_blank');
+    alert('Google Calendar opened!\n\n1. Click "Add Google Meet"\n2. Save event');
 }
 
-// INIT ON PAGE LOAD
+// INIT
 window.addEventListener('DOMContentLoaded', async () => {
-    const savedConfig = localStorage.getItem('gh-config');
-    const savedUser = localStorage.getItem('current-user');
-    
-    if (savedConfig) {
-        GH = JSON.parse(savedConfig);
-        if (GH.connected) {
-            try {
-                await loadDB();
-                setStatus('Connected', '#4CAF50');
+    try {
+        setStatus('Loading...', '#ff9800');
+        await loadDB();
+        setStatus('Ready', '#4CAF50');
+        
+        const savedUser = localStorage.getItem('current-user');
+        if (savedUser) {
+            ME = JSON.parse(savedUser);
+            if (DB.users[ME.id]) {
+                setStatus('Logged in as ' + ME.name, '#4CAF50');
+                document.getElementById('tab-my-avail').disabled = false;
+                document.getElementById('tab-team').disabled = false;
+                document.getElementById('tab-meeting').disabled = false;
                 
-                if (Object.keys(DB.users).length > 0) {
-                    document.getElementById('tab-login').disabled = false;
-                    
-                    if (savedUser) {
-                        ME = JSON.parse(savedUser);
-                        
-                        if (DB.users[ME.id]) {
-                            setStatus('Logged in as ' + ME.name, '#4CAF50');
-                            document.getElementById('tab-my-avail').disabled = false;
-                            document.getElementById('tab-team').disabled = false;
-                            document.getElementById('tab-meeting').disabled = false;
-                            
-                            if (ME.admin) {
-                                document.getElementById('tab-admin').style.display = 'block';
-                                document.getElementById('tab-admin').disabled = false;
-                                showTab('admin');
-                                refreshUsersList();
-                            } else {
-                                showTab('my-avail');
-                                setupAvailabilityTab();
-                            }
-                            
-                            populateMonthSelects();
-                            loadParticipants();
-                        }
-                    } else {
-                        showTab('login');
-                    }
+                if (ME.admin) {
+                    document.getElementById('tab-admin').style.display = 'block';
+                    document.getElementById('tab-admin').disabled = false;
+                    showTab('admin');
+                    refreshUsersList();
                 } else {
-                    document.getElementById('admin-section').style.display = 'block';
+                    showTab('my-avail');
+                    setupAvailabilityTab();
                 }
-            } catch (e) {
-                setStatus('Connection Error', '#f44336');
+                populateMonthSelects();
+                loadParticipants();
+            } else {
+                localStorage.removeItem('current-user');
             }
         }
+    } catch (e) {
+        setStatus('Connection Error', '#f44336');
+        console.error('Init error:', e);
     }
 });
 </script>
