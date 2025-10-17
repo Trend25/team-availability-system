@@ -120,6 +120,7 @@
                     <select id="avail-status" onchange="toggleTimeInputs()">
                         <option value="yes">Available</option>
                         <option value="no">Not Available</option>
+                <option value="clear">Clear (remove)</option>
                     </select>
                 </div>
                 <div id="time-inputs">
@@ -170,6 +171,14 @@
 </div>
 
 <script>
+/* --- Local date helper (prevents UTC shift) --- */
+function localDateStr(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const d = String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`; // always LOCAL YYYY-MM-DD
+}
+
 // GLOBAL STATE
 let DB = { users: {}, availability: {} };
 let ME = null;
@@ -544,7 +553,16 @@ async function saveMyAvailability() {
     if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
     
     SELECTED_DAYS.forEach(dateStrLocal => {
-        const startLocal = new Date(`${dateStrLocal}T${START_TIME}:00`);
+        
+        if (status === 'clear') {
+            if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
+            const __kLocal = dateStrLocal;
+            const __kUTC = (typeof toUTCDateKeyFromLocalStr==='function') ? toUTCDateKeyFromLocalStr(dateStrLocal) : dateStrLocal;
+            delete DB.availability[ME.id][__kLocal];
+            delete DB.availability[ME.id][__kUTC];
+            return;
+        }
+const startLocal = new Date(`${dateStrLocal}T${START_TIME}:00`);
         const endLocal   = new Date(`${dateStrLocal}T${END_TIME}:00`);
         const dateKeyUTC = toUTCDateKeyFromLocalStr(dateStrLocal);
         if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
