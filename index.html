@@ -176,6 +176,16 @@ let ME = null;
 let SELECTED_DAYS = new Set();
 let START_TIME = '09:00';
 let END_TIME = '17:00';
+// TIMEZONE HELPERS (injected)
+const VIEWER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function toUTCDateKeyFromLocalStr(s){ return new Date(`${s}T00:00:00`).toISOString().split('T')[0]; }
+function toUTCDateKey(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const d = String(date.getDate()).padStart(2,'0');
+  return new Date(`${y}-${m}-${d}T00:00:00`).toISOString().split('T')[0];
+}
+
 
 // NETLIFY FUNCTION ENDPOINT
 const API_URL = '/.netlify/functions/github-proxy';
@@ -446,7 +456,8 @@ async function renderMyCalendar() {
     
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month - 1, d);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStrLocal = date.toISOString().split('T')[0];
+        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
         const dow = date.getDay();
         const isWeekend = dow === 0 || dow === 6;
         
@@ -459,7 +470,9 @@ async function renderMyCalendar() {
             if (myAvail[dateStr]) {
                 cls += ' has-data';
                 const av = myAvail[dateStr];
-                extra = av.status === 'yes' ? `<small>${av.start}-${av.end}</small>` : '<small>Not Available</small>';
+                const startLabel = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : (av.start || '');
+                const endLabel = av.endUTC ? new Date(av.endUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : (av.end || '');
+                extra = av.status === 'yes' ? `<small>${startLabel}-${endLabel}</small>` : '<small>Not Available</small>';
             }
         }
         
@@ -530,14 +543,22 @@ async function saveMyAvailability() {
     const status = document.getElementById('avail-status').value;
     if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
     
-    SELECTED_DAYS.forEach(dateStr => {
-        DB.availability[ME.id][dateStr] = {
+    SELECTED_DAYS.forEach(dateStrLocal => {
+        const startLocal = new Date(`${dateStrLocal}T${START_TIME}:00`);
+        const endLocal   = new Date(`${dateStrLocal}T${END_TIME}:00`);
+        const dateKeyUTC = toUTCDateKeyFromLocalStr(dateStrLocal);
+        if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
+        DB.availability[ME.id][dateKeyUTC] = {
             status: status,
+            // legacy fields
             start: status === 'yes' ? START_TIME : null,
-            end: status === 'yes' ? END_TIME : null
+            end:   status === 'yes' ? END_TIME   : null,
+            // canonical UTC fields
+            startUTC: status === 'yes' ? startLocal.toISOString() : null,
+            endUTC:   status === 'yes' ? endLocal.toISOString()   : null,
+            tz: VIEWER_TZ
         };
     });
-    
     try {
         setStatus('Saving...', '#ff9800');
         await saveDB();
@@ -578,12 +599,15 @@ async function renderTeamCalendar() {
         for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(year, month - 1, d);
             if (date.getDay() >= 1 && date.getDay() <= 5) {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStrLocal = date.toISOString().split('T')[0];
+        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
                 const av = userAvail[dateStr];
                 let cls = 'avail-unknown', txt = '-';
                 if (av) {
                     cls = av.status === 'yes' ? 'avail-yes' : 'avail-no';
-                    txt = av.status === 'yes' ? `✓<br><small>${av.start}-${av.end}</small>` : '✗';
+                    const startLabel = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : (av.start || '');
+                    const endLabel = av.endUTC ? new Date(av.endUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : (av.end || '');
+                    txt = av.status === 'yes' ? `✓<br><small>${startLabel}-${endLabel}</small>` : '✗';
                 }
                 html += `<td class="${cls}">${txt}</td>`;
             }
@@ -626,27 +650,33 @@ async function findMeetingTimes() {
     for (let d = 1; d <= lastDay.getDate(); d++) {
         const date = new Date(year, month - 1, d);
         if (date.getDay() >= 1 && date.getDay() <= 5) {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStrLocal = date.toISOString().split('T')[0];
+        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
             const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr]?.status === 'yes');
             
             if (allAvail) {
                 const slots = selectedIds.map(id => {
                     const av = DB.availability[id][dateStr];
-                    return { id, start: av.start, end: av.end, name: DB.users[id].name };
+                    return { id,
+                    startISO: av.startUTC || (av.start ? new Date(`${dateStr}T${av.start}:00`).toISOString() : null),
+                    endISO:   av.endUTC   || (av.end   ? new Date(`${dateStr}T${av.end}:00`).toISOString()   : null),
+                    name: DB.users[id].name };
                 });
                 
-                const latestStart = slots.reduce((max, s) => s.start > max ? s.start : max, slots[0].start);
-                const earliestEnd = slots.reduce((min, s) => s.end < min ? s.end : min, slots[0].end);
-                const startMin = parseInt(latestStart.split(':')[0]) * 60 + parseInt(latestStart.split(':')[1]);
-                const endMin = parseInt(earliestEnd.split(':')[0]) * 60 + parseInt(earliestEnd.split(':')[1]);
-                const availHours = (endMin - startMin) / 60;
+                const latestStartISO = slots.reduce((max, s) => (!max || (s.startISO && s.startISO > max)) ? s.startISO : max, null);
+                const earliestEndISO = slots.reduce((min, s) => (!min || (s.endISO && s.endISO < min)) ? s.endISO : min, null);
+                const startMs = Date.parse(latestStartISO);
+                const endMs = Date.parse(earliestEndISO);
+                const availHours = (endMs - startMs) / 3600000;
                 
                 if (availHours >= duration) {
                     commonSlots.push({
                         date: dateStr,
                         formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-                        start: latestStart,
-                        end: earliestEnd,
+                        startISO: latestStartISO,
+                        start: new Date(latestStartISO).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                        endISO: earliestEndISO,
+                        end: new Date(earliestEndISO).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
                         duration: availHours,
                         participants: slots
                     });
@@ -672,15 +702,12 @@ async function findMeetingTimes() {
     document.getElementById('meeting-results').innerHTML = html;
 }
 
-function createGoogleMeet(date, startTime, endTime, participantIds) {
+function createGoogleMeetISO(startISO, endISO, participantIds) {
     const participantEmails = participantIds.split(',').map(id => DB.users[id].email).join(',');
-    const startDateTime = new Date(`${date}T${startTime}:00`);
-    const endDateTime = new Date(`${date}T${endTime}:00`);
-    const formatGoogleDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
+    const fmt = (iso) => iso.replace(/[-:]/g, '').split('.')[0] + 'Z';
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
         `&text=${encodeURIComponent('Team Meeting')}` +
-        `&dates=${formatGoogleDate(startDateTime)}/${formatGoogleDate(endDateTime)}` +
+        `&dates=${fmt(startISO)}/${fmt(endISO)}` +
         `&details=${encodeURIComponent('Scheduled via Team Availability System')}` +
         `&add=${encodeURIComponent(participantEmails)}`;
     
