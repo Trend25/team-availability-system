@@ -466,7 +466,7 @@ async function renderMyCalendar() {
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month - 1, d);
         const dateStrLocal = date.toISOString().split('T')[0];
-        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
+        const dateStr = dateStrLocal; const dateStrLegacy = toUTCDateKeyFromLocalStr(dateStrLocal);
         const dow = date.getDay();
         const isWeekend = dow === 0 || dow === 6;
         
@@ -556,17 +556,14 @@ async function saveMyAvailability() {
         
         if (status === 'clear') {
             if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
-            const __kLocal = dateStrLocal;
-            const __kUTC = (typeof toUTCDateKeyFromLocalStr==='function') ? toUTCDateKeyFromLocalStr(dateStrLocal) : dateStrLocal;
-            delete DB.availability[ME.id][__kLocal];
-            delete DB.availability[ME.id][__kUTC];
+            const dateKey = dateStr;
+            delete DB.availability[ME.id][dateKey];
             return;
         }
 const startLocal = new Date(`${dateStrLocal}T${START_TIME}:00`);
         const endLocal   = new Date(`${dateStrLocal}T${END_TIME}:00`);
-        const dateKeyUTC = toUTCDateKeyFromLocalStr(dateStrLocal);
-        if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
-        DB.availability[ME.id][dateKeyUTC] = {
+        const dateKey = dateStr; if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
+        DB.availability[ME.id][dateKey] = {
             status: status,
             // legacy fields
             start: status === 'yes' ? START_TIME : null,
@@ -618,7 +615,7 @@ async function renderTeamCalendar() {
             const date = new Date(year, month - 1, d);
             if (date.getDay() >= 1 && date.getDay() <= 5) {
                 const dateStrLocal = date.toISOString().split('T')[0];
-        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
+        const dateStr = dateStrLocal; const dateStrLegacy = toUTCDateKeyFromLocalStr(dateStrLocal);
                 const av = userAvail[dateStr];
                 let cls = 'avail-unknown', txt = '-';
                 if (av) {
@@ -669,8 +666,8 @@ async function findMeetingTimes() {
         const date = new Date(year, month - 1, d);
         if (date.getDay() >= 1 && date.getDay() <= 5) {
             const dateStrLocal = date.toISOString().split('T')[0];
-        const dateStr = toUTCDateKeyFromLocalStr(dateStrLocal);
-            const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr]?.status === 'yes');
+        const dateStr = dateStrLocal; const dateStrLegacy = toUTCDateKeyFromLocalStr(dateStrLocal);
+            const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr] || DB.availability[id]?.[dateStrLegacy]?.status === 'yes');
             
             if (allAvail) {
                 const slots = selectedIds.map(id => {
