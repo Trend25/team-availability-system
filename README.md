@@ -1,54 +1,324 @@
-# Team Availability System v7.0 - Secure Cloud Edition
+harika — README’yi **İngilizce ve Türkçe** olarak güncelledim.
+Yeni eklenenler: **Nomad Timezone Auto-Update**, UTC tabanlı hesaplama açıklaması, `startUTC` / `endUTC` / `tz` alanları, hızlı sorun giderme notları.
+Aşağıyı doğrudan `README.md` olarak kaydedebilirsin.
 
-Uluslararası takımlar için bulut tabanlı müsaitlik yönetim sistemi. GitHub API'yi ücretsiz bulut veritabanı olarak kullanır. **Token güvenliği için Netlify Functions kullanır.**
+---
 
-## Özellikler
+# Team Availability System v7.0 – Secure Cloud Edition
 
-- **Güvenli Token Yönetimi**: Token server-side'da saklanır (Netlify Environment Variables)
-- **Cloud-Based Storage**: GitHub repository ücretsiz veritabanı
-- **Global Team Support**: Farklı ülkelerden kullanıcılar aynı veriye erişir
-- **Admin Panel**: Kullanıcı yönetimi, şifre sıfırlama
-- **Availability Calendar**: Aylık müsaitlik takvimi
-- **Meeting Planner**: Ortak müsait zamanları otomatik bulur
-- **Google Calendar Integration**: Bulunan slotları direkt Google Meet'e aktar
-- **No Setup Screen**: Kullanıcılar direkt login ekranına gelir
-- **100% Free**: Netlify + GitHub kombinasyonu tamamen ücretsiz
+**(EN) English** · **(TR) Türkçe** aşağıda
 
-## Teknoloji Stack
+---
 
-- Frontend: Pure HTML/JavaScript (ES6+)
-- Backend: Netlify Serverless Functions
-- Database: GitHub REST API v3
-- Hosting: Netlify (veya Vercel)
-- Auth: SHA-256 hashed passwords
+## 🇬🇧 English
 
-## Hızlı Kurulum (30 dakika)
+### What is it?
 
-### Adım 1: GitHub Repository Oluştur
+A cloud-based availability planner for global teams. Uses the GitHub API as a zero-cost cloud database and **Netlify Functions** to keep the token secure.
 
-1. [github.com](https://github.com) → New repository
-2. Repository adı: `team-availability-data`
-3. Visibility: **Public** veya Private
-4. Initialize with README: Evet
-5. Create repository
+### Key Features
 
-### Adım 2: GitHub Personal Access Token Oluştur
+* **Secure Token Management**: Token lives server-side (Netlify Environment Variables).
+* **Cloud-Based Storage**: GitHub repository as a free database.
+* **Global Team Support**: Everyone accesses the same data from any country.
+* **Admin Panel**: Add users, reset passwords, delete users.
+* **Availability Calendar**: Monthly availability input and display.
+* **Meeting Planner**: Finds common availability automatically.
+* **Google Calendar Integration**: One-click create Google Calendar event (Meet).
+* **No Setup Screen**: Users land directly on Login.
+* **100% Free**: Netlify + GitHub combo.
+* **NEW: Nomad Timezone Auto-Update**
+  When a user changes country, their timezone (`tz`) auto-updates on login/focus; calendars re-label times accordingly.
+* **NEW: Robust DST Handling**
+  Availability is calculated via **UTC ISO** (`startUTC`/`endUTC`), eliminating daylight-saving shifts.
 
-**ÖNEMLİ: Fine-grained token kullanın (daha güvenli)**
+### Tech Stack
 
-1. GitHub Settings → Developer settings → Personal access tokens → **Fine-grained tokens**
-2. Generate new token
-3. Token name: `Team Availability System`
-4. Expiration: 1 year (veya Custom)
-5. Repository access: **Only select repositories** → `team-availability-data` seçin
-6. Permissions:
-   - **Contents**: Read and write
-7. Generate token
-8. **TOKEN'I KOPYALAYIN** - bir daha gösterilmeyecek
+* Frontend: Plain HTML + ES6 JavaScript
+* Backend: Netlify Serverless Functions
+* Database: GitHub REST API v3
+* Hosting: Netlify (or Vercel)
+* Auth: SHA-256 hashed passwords
 
-### Adım 3: Netlify'a Deploy
+---
 
-#### 3.1. Dosya Yapısını Hazırla
+## Quick Setup (≈30 min)
+
+### 1) Create GitHub Repository
+
+1. Go to GitHub → New repository
+2. Name: `team-availability-data`
+3. Visibility: Public or Private
+4. Initialize with README: Yes
+5. Create
+
+### 2) Create a Fine-grained Personal Access Token
+
+1. GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens**
+2. Generate new
+3. Name: `Team Availability System`
+4. Expiration: 1 year (or custom)
+5. Repository access: **Only select repositories** → select `team-availability-data`
+6. Permissions: **Contents: Read and write**
+7. Generate and **copy the token once**
+
+### 3) Deploy to Netlify
+
+**A) From Git (recommended)**
+
+* Push your project to GitHub
+* Netlify → New site from Git → choose repo → default settings → Deploy
+
+**B) Manual deploy**
+
+* Netlify → Sites → Deploy manually → drag & drop folder
+
+**Environment Variables** (Netlify → Site settings → Environment variables)
+
+```
+GITHUB_TOKEN = ghp_XXXXXXXXXXXXXXXX
+GITHUB_USER  = your-github-username
+GITHUB_REPO  = team-availability-data
+```
+
+Redeploy after setting variables.
+
+**File layout**
+
+```
+team-availability/
+├── index.html
+├── netlify/
+│   └── functions/
+│       └── github-proxy.js
+└── netlify.toml (optional)
+```
+
+### 4) Create First Admin Manually
+
+**Hash a password in Browser Console**
+
+```js
+async function hashPassword(pwd){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+hashPassword('admin123').then(console.log); // paste result below
+```
+
+**Create `data.json` in the repo**
+
+```json
+{
+  "users": {
+    "admin_1727625600000": {
+      "name": "Admin",
+      "email": "admin@yourcompany.com",
+      "pwd": "PASTE_HASH_HERE",
+      "role": "Administrator",
+      "admin": true
+    }
+  },
+  "availability": {}
+}
+```
+
+Login with that email+password, then add users from Admin.
+
+---
+
+## How It Works (Timezone & Meetings)
+
+### Availability Storage
+
+* Users select local hours (`start`, `end` stay as text for display).
+* System also stores **UTC** equivalents: `startUTC`, `endUTC`.
+* User profile stores `tz` (IANA like `Europe/Istanbul`).
+
+**Why?**
+
+* Team view labels each person’s times in **their** timezone.
+* Meeting Planner computes overlap using **UTC ISO** only → **no DST drift**.
+* Google Calendar links are created with **UTC ISO** → everyone sees correct local times.
+
+### Nomad Timezone Auto-Update
+
+* On **login**, and whenever the tab **gains focus** (plus a 15-min interval), we read:
+
+  ```js
+  Intl.DateTimeFormat().resolvedOptions().timeZone // e.g. "America/Toronto"
+  ```
+* If different from `DB.users[ME.id].tz`, we update it and refresh calendars.
+
+---
+
+## Data Model
+
+### Users
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@company.com",
+  "pwd": "sha256-hash",
+  "role": "Developer",
+  "admin": false,
+  "tz": "Europe/Amsterdam"   // NEW (auto on login/focus)
+}
+```
+
+### Availability
+
+```json
+{
+  "2025-11-04": {
+    "status": "yes",
+    "start": "09:00",
+    "end":   "17:00",
+    "startUTC": "2025-11-04T08:00:00.000Z",  // NEW
+    "endUTC":   "2025-11-04T16:00:00.000Z",  // NEW
+    "tz": "Europe/Amsterdam"                 // NEW (who created this entry)
+  }
+}
+```
+
+> Day keys (e.g., `2025-11-04`) stay as before.
+
+---
+
+## Security
+
+**Token Security**
+
+* Lives in Netlify env variables, never exposed to the browser.
+* Access limited to one repo with contents read/write.
+
+**Password Security**
+
+* SHA-256 hashing in this version.
+* Production tip: consider bcrypt/Argon2, 2FA/OAuth.
+
+---
+
+## Limitations & Scale
+
+* GitHub API rate: 5,000 requests/hour (authenticated).
+* Recommended team size: 5–50 (great), 50–100 (add caching), 100+ (consider a custom backend).
+* Keep `data.json` well under 10 MB (GitHub hard limit 100 MB).
+
+---
+
+## Troubleshooting
+
+* **“Connection Error / Status: Red”**
+  Check Netlify env vars, token expiration, and function logs.
+* **Participants not visible**
+  Open Meeting tab (auto loads) or run `loadParticipants()` in Console.
+* **Google Meet window blocked**
+  Disable popup blocker for the site.
+* **Timezone looks wrong for a user**
+  Ask them to log in (or refocus the tab) to auto-update; admin can also edit `tz` directly in `data.json`.
+* **No available slots found**
+  Ensure Meeting month matches the day keys and duration ≤ overlap.
+
+---
+
+## Roadmap
+
+**v7.1 (Planned)**
+
+* Email notifications (SendGrid)
+* Slack integration
+* CSV export
+* Dark mode
+
+**v8.0 (Future)**
+
+* Real-time updates
+* Mobile improvements
+* Advanced recurring availability
+* Admin-editable tz picker
+
+---
+
+## License
+
+MIT
+
+## Contributing
+
+1. Fork
+2. Create feature branch
+3. Test
+4. PR
+
+## Support
+
+Use GitHub Issues.
+
+**Author:** Practical tools for global teams
+**Version:** 7.0
+**Last Updated:** 2025-10-18
+
+---
+
+## 🇹🇷 Türkçe
+
+### Nedir?
+
+Uluslararası ekipler için bulut tabanlı müsaitlik planlayıcı. GitHub API **ücretsiz veritabanı**, **Netlify Functions** ise token güvenliği sağlar.
+
+### Öne Çıkan Özellikler
+
+* **Güvenli Token Yönetimi**: Token Netlify ortam değişkenlerinde (server-side).
+* **Bulut Depolama**: GitHub repository ücretsiz DB gibi çalışır.
+* **Global Takım Desteği**: Herkes aynı veriye ülkeden bağımsız erişir.
+* **Admin Panel**: Kullanıcı ekleme, şifre sıfırlama, silme.
+* **Müsaitlik Takvimi**: Aylık giriş ve görüntüleme.
+* **Toplantı Planlayıcı**: Ortak zamanları otomatik bulur.
+* **Google Calendar Entegrasyonu**: Tek tıkla Meet etkinliği.
+* **Kurulum Ekranı Yok**: Kullanıcılar direkt login’e gelir.
+* **%100 Ücretsiz**: Netlify + GitHub.
+* **YENİ: Nomad Timezone Auto-Update**
+  Kullanıcı ülke değiştirirse, login/odak anında `tz` otomatik güncellenir; takvim etiketleri yeni TZ’ye göre görünür.
+* **YENİ: Sağlam DST Yönetimi**
+  Hesaplamalar **UTC ISO** ile yapılır; yaz/kış saati kaymaları yaşanmaz.
+
+### Teknoloji
+
+* Frontend: Düz HTML + ES6 JavaScript
+* Backend: Netlify Serverless Functions
+* Veritabanı: GitHub REST API v3
+* Hosting: Netlify (veya Vercel)
+* Kimlik Doğrulama: SHA-256 hash’li şifreler
+
+---
+
+## Hızlı Kurulum (≈30 dk)
+
+### 1) GitHub Repo
+
+* Yeni repo: `team-availability-data`
+* Public/Private → README ile başlat → Create
+
+### 2) İnce Ayarlı (Fine-grained) Token
+
+* Yalnızca bu repo için yetki ver → **Contents: Read/Write** → Token’ı **kopyala**.
+
+### 3) Netlify Deploy
+
+* Git’ten bağla **veya** manuel sürükle-bırak.
+* Ortam değişkenleri:
+
+```
+GITHUB_TOKEN = ghp_XXXXXXXXXXXXXXXX
+GITHUB_USER  = github-kullanici-adiniz
+GITHUB_REPO  = team-availability-data
+```
+
+* Değişkenleri ekledikten sonra redeploy et.
+
+**Dosya yapısı**
 
 ```
 team-availability/
@@ -59,59 +329,19 @@ team-availability/
 └── netlify.toml (opsiyonel)
 ```
 
-#### 3.2. Netlify'a Yükle
+### 4) İlk Admin’i Elle Oluştur
 
-**Seçenek A: GitHub üzerinden (önerilen)**
-1. Projeyi GitHub'a push et
-2. [netlify.com](https://netlify.com) → New site from Git
-3. GitHub repository'yi seç
-4. Deploy settings default bırak → Deploy
+**Şifre hash’le (Browser Console)**
 
-**Seçenek B: Manuel deploy**
-1. Netlify → Sites → Deploy manually
-2. Klasörü sürükle-bırak
-
-#### 3.3. Environment Variables Ekle
-
-Netlify Dashboard'da:
-1. Site settings → Environment variables → Add a variable
-2. Şu 3 değişkeni ekle:
-
-```
-GITHUB_TOKEN = ghp_XXXXXXXXXXXXXXXX  (token'ınız)
-GITHUB_USER = your-github-username
-GITHUB_REPO = team-availability-data
-```
-
-3. **ÖNEMLİ**: Redeploy et (Deploys → Trigger deploy → Deploy site)
-
-### Adım 4: İlk Admin Kullanıcısını Manuel Oluştur
-
-Site deploy olduktan sonra hiç kullanıcı yok, login yapamıyorsunuz. İlk admin'i GitHub'da manuel oluşturmalısınız:
-
-#### 4.1. Admin Şifresini Hash'le
-
-Browser console'da (siteyi açıp F12):
-
-```javascript
-async function hashPassword(pwd) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+```js
+async function hashPassword(pwd){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-
-// Örnek: "admin123" şifresini hash'le
-hashPassword('admin123').then(hash => console.log(hash));
+hashPassword('admin123').then(console.log);
 ```
 
-Çıktı: `240be5...` (64 karakterlik hash)
-
-#### 4.2. GitHub'da data.json Oluştur
-
-`team-availability-data` repository'nize gidin:
-
-1. Add file → Create new file
-2. Dosya adı: `data.json`
-3. İçerik:
+**Repo’da `data.json` oluştur**
 
 ```json
 {
@@ -119,7 +349,7 @@ hashPassword('admin123').then(hash => console.log(hash));
     "admin_1727625600000": {
       "name": "Admin",
       "email": "admin@yourcompany.com",
-      "pwd": "BURAYA_HASH_KOYUN",
+      "pwd": "BURAYA_HASH",
       "role": "Administrator",
       "admin": true
     }
@@ -128,186 +358,123 @@ hashPassword('admin123').then(hash => console.log(hash));
 }
 ```
 
-4. `pwd` kısmına yukarıda hash'lediğiniz şifreyi yapıştırın
-5. Commit changes
+Sonra siteye girip Admin ile kullanıcı ekleyebilirsin.
 
-#### 4.3. İlk Login
+---
 
-Sitenize girin:
-- Email: `admin@yourcompany.com`
-- Password: `admin123` (veya seçtiğiniz şifre)
+## Nasıl Çalışır (Zaman Dilimi & Toplantılar)
 
-Başarılı! Artık admin panelinden kullanıcı ekleyebilirsiniz.
+### Müsaitlik Kaydı
 
-## Kullanım
+* Kullanıcı yerel saatle (`start`, `end`) giriş yapar.
+* Sistem ayrıca **UTC** karşılıklarını da saklar: `startUTC`, `endUTC`.
+* Kullanıcı profiline `tz` (ör. `Europe/Istanbul`) yazılır.
 
-### Admin Kullanımı
+**Neden?**
 
-**Kullanıcı Ekle:**
-1. Admin Panel → Add New User
-2. Name, Email, Role gir
-3. Sistem otomatik şifre üretir
-4. Pop-up'taki şifreyi kopyala ve güvenli paylaş
+* Team ekranında herkesin saatleri **kendi TZ’sine göre** etiketlenir.
+* Meeting Planner **yalnız UTC ISO** ile kesişim alır → **DST kayması yok**.
+* Google Calendar linkleri **UTC ISO** ile oluşturulur → herkes doğru yerel saati görür.
 
-**Kullanıcı Yönetimi:**
-- Reset Password: Yeni şifre üretir
-- Delete: Kullanıcıyı ve verilerini siler (admin dahil)
+### Nomad Timezone Auto-Update
 
-**Takım Takvimi:**
-1. Team Calendar sekmesi
-2. Ay seç → Load Calendar
-3. Tüm kullanıcıların müsaitliğini gör
+* **Login** anında ve sekme **odağa geldiğinde** (artı 15 dk’da bir) şu değer okunur:
 
-### Normal Kullanıcı Kullanımı
+  ```js
+  Intl.DateTimeFormat().resolvedOptions().timeZone
+  ```
+* `DB.users[ME.id].tz` farklıysa güncellenir, takvimler yenilenir.
 
-**Müsaitlik Girişi:**
-1. My Availability sekmesi
-2. Ay seç, takvim yüklenir
-3. Günlere tıkla (mavi = seçili)
-4. Saat aralığı belirle
-5. Save for Selected Days
+---
 
-**Toplantı Planla:**
-1. Plan Meeting sekmesi
-2. Ay ve süre seç
-3. Katılımcıları işaretle (min 2 kişi)
-4. Find Available Times
-5. Uygun slotlarda "Create Google Meet" butonuna bas
+## Veri Modeli
 
-## Güvenlik
-
-### Token Güvenliği
-
-**v7.0'da Token Güvenli:**
-- Token Netlify environment variable'da
-- Frontend'den erişilemez
-- Netlify Function proxy ile korunur
-
-**GitHub Token İzinleri:**
-- Sadece `team-availability-data` repo'su
-- Sadece Contents: Read/Write
-- Diğer repolara erişim YOK
-
-### Şifre Güvenliği
-
-**Mevcut:** SHA-256 hashing
-
-**Production için öneriler:**
-- bcrypt veya Argon2 kullanın
-- 2FA ekleyin
-- OAuth entegrasyonu düşünün
-
-## Mimari
-
-```
-Browser (Istanbul)  →  Netlify Function  →  GitHub API  →  data.json
-                            ↓
-Browser (New York)  →  Netlify Function  →  GitHub API  →  data.json
-```
-
-Token her zaman Netlify'de kalır, browser'a gönderilmez.
-
-## Veri Yapısı
+### Kullanıcı
 
 ```json
 {
-  "users": {
-    "user_1727625600000": {
-      "name": "John Doe",
-      "email": "john@company.com",
-      "pwd": "sha256-hashed-password",
-      "role": "Developer",
-      "admin": false
-    }
-  },
-  "availability": {
-    "user_1727625600000": {
-      "2025-10-15": {
-        "status": "yes",
-        "start": "09:00",
-        "end": "17:00"
-      }
-    }
+  "name": "John Doe",
+  "email": "john@company.com",
+  "pwd": "sha256-hash",
+  "role": "Developer",
+  "admin": false,
+  "tz": "Europe/Istanbul"   // YENİ (login/odak ile otomatik)
+}
+```
+
+### Müsaitlik
+
+```json
+{
+  "2025-11-04": {
+    "status": "yes",
+    "start": "09:00",
+    "end":   "17:00",
+    "startUTC": "2025-11-04T06:00:00.000Z",  // YENİ
+    "endUTC":   "2025-11-04T14:00:00.000Z",  // YENİ
+    "tz": "Europe/Istanbul"                  // YENİ (kaydı girenin TZ bilgisi)
   }
 }
 ```
 
-## Sınırlamalar ve Ölçeklenebilirlik
-
-**GitHub API Limitleri:**
-- 5,000 istek/saat (authenticated)
-- Rate limit aşılırsa 1 saat bekle
-
-**Önerilen Takım Boyutu:**
-- 5-50 kullanıcı: Mükemmel
-- 50-100 kullanıcı: İyi (caching ekleyin)
-- 100+ kullanıcı: Özel backend düşünün
-
-**Data.json Boyutu:**
-- GitHub max dosya boyutu: 100MB
-- Önerilen max: 10MB
-- 100 kullanıcı × 12 ay = ~1MB
-
-## Sorun Giderme
-
-**"Connection Error" / Status: Red**
-- Netlify environment variables kontrol et
-- Token'ın expire olmadığını kontrol et
-- Netlify Functions çalışıyor mu kontrol et: `yoursite.netlify.app/.netlify/functions/github-proxy`
-
-**Katılımcılar görünmüyor**
-- Meeting sekmesine geçince otomatik yüklenir
-- Manuel yükle: console'da `loadParticipants()` çalıştır
-
-**Google Meet açılmıyor**
-- Pop-up blocker kapalı mı kontrol et
-- Chrome/Firefox kullanın
-
-**"Rate limit exceeded"**
-- 1 saat bekleyin
-- Caching implementasyonu yapın
-
-## Netlify Function Debugging
-
-Function loglarını görmek için:
-
-```bash
-netlify dev  # Local test
-```
-
-Veya Netlify Dashboard → Functions → Logs
-
-## Yol Haritası
-
-**v7.1 (Planlanan)**
-- [ ] Email notifications (SendGrid)
-- [ ] Slack integration
-- [ ] CSV export
-- [ ] Dark mode
-
-**v8.0 (Gelecek)**
-- [ ] Real-time updates (Pusher)
-- [ ] Mobile responsive improvements
-- [ ] Advanced timezone handling
-- [ ] Recurring availability patterns
-
-## Lisans
-
-MIT License - ücretsiz kullanım
-
-## Katkıda Bulunma
-
-1. Fork et
-2. Feature branch oluştur
-3. Test et
-4. Pull request aç
-
-## Destek
-
-Sorunlar için GitHub Issues kullanın.
+> Gün anahtarları (örn. `2025-11-04`) eskisi gibi kalır.
 
 ---
 
-**Yapımcı:** Uluslararası takımlar için pratik çözümler
-**Versiyon:** 7.0
-**Son Güncelleme:** 2025-01-02
+## Güvenlik
+
+**Token**
+
+* Netlify ortamında saklanır, frontend’e çıkmaz.
+* Sadece tek repo yetkisi, Contents Read/Write.
+
+**Şifre**
+
+* Bu sürümde SHA-256.
+* Canlı ortamda bcrypt/Argon2 + 2FA/OAuth önerilir.
+
+---
+
+## Sınırlar & Ölçek
+
+* GitHub API limiti: 5.000 istek/saat.
+* Önerilen ekip boyutu: 5–50 (mükemmel), 50–100 (cache ekleyin), 100+ (özel backend düşünün).
+* `data.json` mümkünse 10 MB altında.
+
+---
+
+## Sorun Giderme
+
+* **“Connection Error / Status: Red”** → Netlify env değişkenleri, token süresi, function logları.
+* **Katılımcılar görünmüyor** → Meeting sekmesine geç; olmadı `loadParticipants()` çağır.
+* **Google Meet açılmıyor** → Pop-up engelleyiciyi kapat.
+* **Zaman dilimi yanlış** → Kullanıcı login/odak yapsın; admin gerekirse `tz`’yi elle düzeltebilir.
+* **Uygun slot bulunamadı** → Ay seçimi/gün anahtarları ve süreyi kontrol et.
+
+---
+
+## Yol Haritası
+
+**v7.1 (Planlanan)**: E-posta bildirimleri, Slack entegrasyonu, CSV dışa aktarım, Karanlık tema
+**v8.0 (Gelecek)**: Gerçek zamanlı güncellemeler, mobil iyileştirmeler, yinelenen kalıplar, admin TZ seçici
+
+---
+
+## Lisans
+
+MIT
+
+## Katkı
+
+1. Fork
+2. Branch
+3. Test
+4. PR
+
+## Destek
+
+GitHub Issues.
+
+**Yapımcı / Author:** Uluslararası ekipler için pratik çözümler
+**Sürüm / Version:** 7.0
+**Son Güncelleme / Last Updated:** 2025-10-18
