@@ -626,6 +626,29 @@ function createGoogleMeetISO(startISO, endISO, participantIds) {
     alert('Google Calendar opened!\n\n1. Click "Add Google Meet"\n2. Save event');
 }
 
+/* ===== NOMAD TZ AUTO-UPDATE (for moving users) ===== */
+async function ensureUserTZ() {
+  try {
+    const current = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    if (ME && current && DB && DB.users && DB.users[ME.id] && DB.users[ME.id].tz !== current) {
+      await loadDB();                     // veriyi tazele
+      DB.users[ME.id].tz = current;       // yeni TZ'yi yaz
+      await saveDB();                     // kalıcı kaydet
+      // varsa görünümleri yenile
+      if (typeof renderTeamCalendar === 'function') renderTeamCalendar();
+      if (typeof renderMyCalendar === 'function') renderMyCalendar();
+      setStatus(`Timezone updated: ${current}`, '#4CAF50');
+      console.log(`🌍 Timezone auto-updated for ${ME.name}: ${current}`);
+    }
+  } catch (err) {
+    console.warn('ensureUserTZ error:', err);
+  }
+}
+// odağa gelince kontrol et (nomad hareketini yakalamak için)
+window.addEventListener('focus', ensureUserTZ);
+// periyodik kontrol (15 dakikada bir)
+setInterval(ensureUserTZ, 15 * 60 * 1000);
+
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -653,6 +676,9 @@ window.addEventListener('DOMContentLoaded', async () => {
                 }
                 populateMonthSelects();
                 loadParticipants();
+
+                // sayfa ilk yüklenirken de TZ değişimini kontrol et
+                ensureUserTZ();
             } else {
                 localStorage.removeItem('current-user');
             }
