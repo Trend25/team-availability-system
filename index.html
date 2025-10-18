@@ -63,6 +63,7 @@
     </div>
 
     <div class="content">
+        <!-- LOGIN -->
         <div id="login" class="tab-content">
             <div class="section">
                 <h3>Login</h3>
@@ -79,6 +80,7 @@
             </div>
         </div>
 
+        <!-- ADMIN (DEĞİŞMEDİ) -->
         <div id="admin" class="tab-content" style="display:none;">
             <h2>Admin Panel</h2>
             <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
@@ -105,6 +107,7 @@
             </div>
         </div>
 
+        <!-- MY AVAILABILITY -->
         <div id="my-avail" class="tab-content" style="display:none;">
             <h2 id="avail-welcome">My Availability</h2>
             <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
@@ -137,6 +140,7 @@
             </div>
         </div>
 
+        <!-- TEAM -->
         <div id="team" class="tab-content" style="display:none;">
             <h2>Team Calendar</h2>
             <div class="section">
@@ -147,6 +151,7 @@
             </div>
         </div>
 
+        <!-- MEETING -->
         <div id="meeting" class="tab-content" style="display:none;">
             <h2>Plan Meeting</h2>
             <div class="section">
@@ -170,21 +175,23 @@
 </div>
 
 <script>
-// GLOBAL STATE
+// ===== GLOBAL STATE =====
 let DB = { users: {}, availability: {} };
 let ME = null;
 let SELECTED_DAYS = new Set();
 let START_TIME = '09:00';
 let END_TIME = '17:00';
 
-// NETLIFY FUNCTION ENDPOINT
+// ===== CONSTANTS =====
 const API_URL = '/.netlify/functions/github-proxy';
+const VIEWER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-// UTILITY FUNCTIONS
-function log(msg) { console.log('[DEBUG]', msg); }
+// ===== UTILS =====
+function log(...a) { console.log('[DEBUG]', ...a); }
 function setStatus(txt, color = '#4CAF50') {
-    document.getElementById('status').textContent = txt;
-    document.getElementById('status').style.background = color;
+    const s = document.getElementById('status');
+    s.textContent = txt;
+    s.style.background = color;
 }
 function showMsg(id, txt, type) {
     document.getElementById(id).innerHTML = `<div class="msg ${type}">${txt}</div>`;
@@ -198,41 +205,36 @@ function showTab(name) {
     if (name === 'meeting') loadParticipants();
 }
 
-// GITHUB API VIA NETLIFY FUNCTION
+// ===== GITHUB API VIA NETLIFY FUNCTION =====
 async function apiCall(path, method = 'GET', data = null) {
-    log(`API Call: ${method} ${path}`);
     const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path, method, data })
     });
-    
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'API request failed');
+        let errorText = '';
+        try { const e = await response.json(); errorText = e.error; } catch {}
+        throw new Error(errorText || 'API request failed');
     }
-    
     return await response.json();
 }
 
 async function loadDB() {
-    log('Loading database...');
     try {
         const res = await apiCall('data.json');
         const json = decodeURIComponent(escape(atob(res.content)));
         DB = JSON.parse(json);
-        log('Database loaded: ' + Object.keys(DB.users).length + ' users');
         if (!DB.availability) DB.availability = {};
+        if (!DB.users) DB.users = {};
         return true;
     } catch (e) {
-        log('Database not found or error: ' + e.message);
         DB = { users: {}, availability: {} };
         return false;
     }
 }
 
 async function saveDB() {
-    log('Saving database...');
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
     let sha = null;
     try {
@@ -244,10 +246,9 @@ async function saveDB() {
         content,
         sha
     });
-    log('Database saved');
 }
 
-// PASSWORD HASHING
+// ===== PASSWORD / LOGIN =====
 async function hashPwd(pwd) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -260,40 +261,36 @@ function genPwd() {
     return pwd;
 }
 
-// LOGIN
 async function doLogin() {
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const pwd = document.getElementById('login-pwd').value;
-    
-    if (!email || !pwd) {
-        showMsg('login-msg', 'Fill both fields', 'error');
-        return;
-    }
-    
+    if (!email || !pwd) { showMsg('login-msg', 'Fill both fields', 'error'); return; }
+
     setStatus('Logging in...', '#ff9800');
-    
     try {
         await loadDB();
         const hash = await hashPwd(pwd);
         const found = Object.entries(DB.users).find(([id, u]) => u.email === email && u.pwd === hash);
-        
-        if (!found) {
-            showMsg('login-msg', 'Invalid email or password', 'error');
-            setStatus('Login Failed', '#f44336');
-            return;
-        }
-        
+        if (!found) { showMsg('login-msg', 'Invalid email or password', 'error'); setStatus('Login Failed', '#f44336'); return; }
+
         ME = { id: found[0], ...found[1] };
+
+        // ---- TZ: Kullanıcının tarayıcı TZ bilgisini DB'ye geçir (UI değişmeden) ----
+        const currentTZ = VIEWER_TZ;
+        if (ME && currentTZ && DB.users[ME.id]?.tz !== currentTZ) {
+            DB.users[ME.id].tz = currentTZ;
+            await saveDB();
+        }
+
         localStorage.setItem('current-user', JSON.stringify(ME));
-        
         setStatus('Logged in as ' + ME.name, '#4CAF50');
         document.getElementById('login-email').value = '';
         document.getElementById('login-pwd').value = '';
-        
+
         document.getElementById('tab-my-avail').disabled = false;
         document.getElementById('tab-team').disabled = false;
         document.getElementById('tab-meeting').disabled = false;
-        
+
         if (ME.admin) {
             document.getElementById('tab-admin').style.display = 'block';
             document.getElementById('tab-admin').disabled = false;
@@ -303,7 +300,6 @@ async function doLogin() {
             showTab('my-avail');
             setupAvailabilityTab();
         }
-        
         populateMonthSelects();
     } catch (e) {
         showMsg('login-msg', 'Error: ' + e.message, 'error');
@@ -322,59 +318,40 @@ function doLogout() {
     showTab('login');
 }
 
-// ADMIN FUNCTIONS
+// ===== ADMIN (DEĞİŞMEDİ) =====
 async function addNewUser() {
     const name = document.getElementById('new-name').value.trim();
     const email = document.getElementById('new-email').value.trim().toLowerCase();
     const role = document.getElementById('new-role').value.trim();
-    
-    if (!name || !email || !role) {
-        showMsg('admin-msg', 'Fill all fields', 'error');
-        return;
-    }
-    
+    if (!name || !email || !role) { showMsg('admin-msg', 'Fill all fields', 'error'); return; }
+
     await loadDB();
-    
-    if (Object.values(DB.users).some(u => u.email === email)) {
-        showMsg('admin-msg', 'Email already exists', 'error');
-        return;
-    }
-    
+    if (Object.values(DB.users).some(u => u.email === email)) { showMsg('admin-msg', 'Email already exists', 'error'); return; }
+
     try {
         const pwd = genPwd();
         const hash = await hashPwd(pwd);
         const id = 'user_' + Date.now();
-        
         DB.users[id] = { name, email, role, pwd: hash, admin: false };
         await saveDB();
-        
         alert(`User Created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${pwd}\n\nShare this password securely!`);
-        
         document.getElementById('new-name').value = '';
         document.getElementById('new-email').value = '';
         document.getElementById('new-role').value = '';
-        
         refreshUsersList();
         showMsg('admin-msg', 'User added successfully', 'success');
-    } catch (e) {
-        showMsg('admin-msg', 'Error: ' + e.message, 'error');
-    }
+    } catch (e) { showMsg('admin-msg', 'Error: ' + e.message, 'error'); }
 }
 
 async function refreshUsersList() {
     await loadDB();
     const list = Object.entries(DB.users);
-    
-    if (list.length === 0) {
-        document.getElementById('users-list').innerHTML = '<p>No users yet</p>';
-        return;
-    }
-    
+    if (list.length === 0) { document.getElementById('users-list').innerHTML = '<p>No users yet</p>'; return; }
     document.getElementById('users-list').innerHTML = list.map(([id, u]) => `
         <div class="user-card">
             <div>
                 <strong>${u.name}</strong> ${u.admin ? '(Admin)' : ''}<br>
-                <small>${u.email} | ${u.role || 'N/A'}</small>
+                <small>${u.email} | ${u.role || 'N/A'} ${u.tz ? ' | ' + u.tz : ''}</small>
             </div>
             <div>
                 <button class="btn btn-small" onclick="resetUserPwd('${id}')">Reset Password</button>
@@ -386,28 +363,22 @@ async function refreshUsersList() {
 
 async function resetUserPwd(id) {
     await loadDB();
-    const pwd = genPwd();
-    const hash = await hashPwd(pwd);
-    DB.users[id].pwd = hash;
-    await saveDB();
+    const pwd = genPwd(); const hash = await hashPwd(pwd);
+    DB.users[id].pwd = hash; await saveDB();
     alert(`Password Reset!\n\nUser: ${DB.users[id].name}\nEmail: ${DB.users[id].email}\nNew Password: ${pwd}`);
 }
 
 async function deleteUser(id) {
     if (!confirm('Delete this user permanently?')) return;
-    await loadDB();
-    delete DB.users[id];
-    if (DB.availability[id]) delete DB.availability[id];
-    await saveDB();
-    refreshUsersList();
+    await loadDB(); delete DB.users[id]; if (DB.availability[id]) delete DB.availability[id];
+    await saveDB(); refreshUsersList();
 }
 
-// AVAILABILITY
+// ===== AVAILABILITY =====
 function populateMonthSelects() {
     const months = [];
     for (let i = 0; i < 12; i++) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + i);
+        const d = new Date(); d.setMonth(d.getMonth() + i);
         const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         const txt = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         months.push(`<option value="${val}">${txt}</option>`);
@@ -427,117 +398,83 @@ function setupAvailabilityTab() {
 
 async function renderMyCalendar() {
     await loadDB();
-    
     const val = document.getElementById('avail-month').value;
     const [year, month] = val.split('-').map(Number);
     const firstDay = new Date(year, month - 1, 1);
     const lastDay = new Date(year, month, 0);
     const daysInMonth = lastDay.getDate();
     const startDow = (firstDay.getDay() + 6) % 7;
-    
+
     let html = '<div class="cal-grid">';
     ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
         html += `<div style="font-weight:bold;padding:10px;text-align:center;">${day}</div>`;
     });
-    
     for (let i = 0; i < startDow; i++) html += '<div></div>';
-    
+
     const myAvail = DB.availability[ME.id] || {};
-    
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month - 1, d);
         const dateStr = date.toISOString().split('T')[0];
-        const dow = date.getDay();
-        const isWeekend = dow === 0 || dow === 6;
-        
-        let cls = 'cal-day';
-        let extra = '';
-        
-        if (isWeekend) {
-            cls += ' weekend';
-        } else {
-            if (myAvail[dateStr]) {
-                cls += ' has-data';
-                const av = myAvail[dateStr];
-                extra = av.status === 'yes' ? `<small>${av.start}-${av.end}</small>` : '<small>Not Available</small>';
-            }
+        const dow = date.getDay(); const isWeekend = dow === 0 || dow === 6;
+        let cls = 'cal-day', extra = '';
+        if (isWeekend) { cls += ' weekend'; }
+        else if (myAvail[dateStr]) {
+            cls += ' has-data';
+            const av = myAvail[dateStr];
+            // Görüntüleyen kişinin TZ’ine göre etiket
+            const startLabel = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}) : (av.start || '');
+            const endLabel   = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ})   : (av.end || '');
+            extra = av.status === 'yes' ? `<small>${startLabel}-${endLabel}</small>` : '<small>Not Available</small>';
         }
-        
         html += `<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
     }
-    
     html += '</div>';
     document.getElementById('my-calendar').innerHTML = html;
-    SELECTED_DAYS.clear();
-    document.getElementById('time-section').style.display = 'none';
+    SELECTED_DAYS.clear(); document.getElementById('time-section').style.display = 'none';
 }
 
 function toggleDaySelection(dateStr, isWeekend) {
     if (isWeekend) return;
     const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
     if (!dayEl) return;
-    
-    if (SELECTED_DAYS.has(dateStr)) {
-        SELECTED_DAYS.delete(dateStr);
-        dayEl.classList.remove('selected');
-    } else {
-        SELECTED_DAYS.add(dateStr);
-        dayEl.classList.add('selected');
-    }
-    
+    if (SELECTED_DAYS.has(dateStr)) { SELECTED_DAYS.delete(dateStr); dayEl.classList.remove('selected'); }
+    else { SELECTED_DAYS.add(dateStr); dayEl.classList.add('selected'); }
     document.getElementById('selected-count').textContent = SELECTED_DAYS.size;
-    
-    if (SELECTED_DAYS.size > 0) {
-        document.getElementById('time-section').style.display = 'block';
-        generateTimePickers();
-    } else {
-        document.getElementById('time-section').style.display = 'none';
-    }
+    document.getElementById('time-section').style.display = SELECTED_DAYS.size ? 'block' : 'none';
+    if (SELECTED_DAYS.size) generateTimePickers();
 }
 
 function generateTimePickers() {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-        for (let m = 0; m < 60; m += 30) {
-            times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-        }
-    }
+    const times = []; for (let h=0; h<24; h++) for (let m=0; m<60; m+=30) times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
     const workTimes = times.slice(18, 40);
-    
-    document.getElementById('start-times').innerHTML = workTimes.map(t =>
-        `<div class="time-btn ${t === START_TIME ? 'selected' : ''}" onclick="selectStartTime('${t}')">${t}</div>`
-    ).join('');
-    
-    document.getElementById('end-times').innerHTML = workTimes.map(t =>
-        `<div class="time-btn ${t === END_TIME ? 'selected' : ''}" onclick="selectEndTime('${t}')">${t}</div>`
-    ).join('');
+    document.getElementById('start-times').innerHTML = workTimes.map(t => `<div class="time-btn ${t===START_TIME?'selected':''}" onclick="selectStartTime('${t}')">${t}</div>`).join('');
+    document.getElementById('end-times').innerHTML   = workTimes.map(t => `<div class="time-btn ${t===END_TIME  ?'selected':''}" onclick="selectEndTime('${t}')">${t}</div>`).join('');
 }
-
-function selectStartTime(t) { START_TIME = t; generateTimePickers(); }
-function selectEndTime(t) { END_TIME = t; generateTimePickers(); }
-function toggleTimeInputs() {
-    document.getElementById('time-inputs').style.display = 
-        document.getElementById('avail-status').value === 'yes' ? 'block' : 'none';
-}
+function selectStartTime(t){ START_TIME=t; generateTimePickers(); }
+function selectEndTime(t){ END_TIME=t; generateTimePickers(); }
+function toggleTimeInputs(){ document.getElementById('time-inputs').style.display = document.getElementById('avail-status').value==='yes'?'block':'none'; }
 
 async function saveMyAvailability() {
-    if (SELECTED_DAYS.size === 0) {
-        showMsg('avail-msg', 'Select at least one day', 'error');
-        return;
-    }
-    
+    if (SELECTED_DAYS.size === 0) { showMsg('avail-msg', 'Select at least one day', 'error'); return; }
     await loadDB();
     const status = document.getElementById('avail-status').value;
     if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
-    
+    const myTZ = (DB.users[ME.id] && DB.users[ME.id].tz) ? DB.users[ME.id].tz : VIEWER_TZ;
+
     SELECTED_DAYS.forEach(dateStr => {
+        // Kullanıcının yerel zamanından UTC ISO üret
+        const startLocal = new Date(`${dateStr}T${START_TIME}:00`);
+        const endLocal   = new Date(`${dateStr}T${END_TIME}:00`);
         DB.availability[ME.id][dateStr] = {
-            status: status,
+            status,
             start: status === 'yes' ? START_TIME : null,
-            end: status === 'yes' ? END_TIME : null
+            end:   status === 'yes' ? END_TIME   : null,
+            startUTC: status === 'yes' ? startLocal.toISOString() : null,
+            endUTC:   status === 'yes' ? endLocal.toISOString()   : null,
+            tz: myTZ
         };
     });
-    
+
     try {
         setStatus('Saving...', '#ff9800');
         await saveDB();
@@ -550,60 +487,60 @@ async function saveMyAvailability() {
     }
 }
 
-// TEAM CALENDAR
+// ===== TEAM CALENDAR (her kullanıcı kendi TZ’siyle etiketlenir) =====
 async function renderTeamCalendar() {
     await loadDB();
     const val = document.getElementById('team-month').value;
     const [year, month] = val.split('-').map(Number);
     const lastDay = new Date(year, month, 0);
     const daysInMonth = lastDay.getDate();
-    
-    const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
-    if (users.length === 0) {
-        document.getElementById('team-calendar').innerHTML = '<p>No users found</p>';
-        return;
-    }
-    
+
+    const users = Object.entries(DB.users).filter(([id,u])=>!u.admin);
+    if (users.length === 0) { document.getElementById('team-calendar').innerHTML = '<p>No users found</p>'; return; }
+
     let html = '<table><thead><tr><th>User</th>';
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month - 1, d);
-        if (date.getDay() >= 1 && date.getDay() <= 5) html += `<th>${d}</th>`;
+        if (date.getDay()>=1 && date.getDay()<=5) html += `<th>${d}</th>`;
     }
     html += '</tr></thead><tbody>';
-    
-    users.forEach(([uid, u]) => {
-        html += `<tr><td><strong>${u.name}</strong><br><small>${u.role || ''}</small></td>`;
+
+    users.forEach(([uid,u])=>{
+        html += `<tr><td><strong>${u.name}</strong><br><small>${u.role || ''}${u.tz ? ' • '+u.tz : ''}</small></td>`;
         const userAvail = DB.availability[uid] || {};
-        
-        for (let d = 1; d <= daysInMonth; d++) {
-            const date = new Date(year, month - 1, d);
-            if (date.getDay() >= 1 && date.getDay() <= 5) {
+        for (let d=1; d<=daysInMonth; d++) {
+            const date = new Date(year, month-1, d);
+            if (date.getDay()>=1 && date.getDay()<=5) {
                 const dateStr = date.toISOString().split('T')[0];
                 const av = userAvail[dateStr];
-                let cls = 'avail-unknown', txt = '-';
+                let cls='avail-unknown', txt='-';
                 if (av) {
-                    cls = av.status === 'yes' ? 'avail-yes' : 'avail-no';
-                    txt = av.status === 'yes' ? `✓<br><small>${av.start}-${av.end}</small>` : '✗';
+                    cls = av.status==='yes' ? 'avail-yes' : 'avail-no';
+                    if (av.status==='yes') {
+                        const tz = u.tz || av.tz || VIEWER_TZ; // kullanıcı TZ’si
+                        const s = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.start||'');
+                        const e = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([],   {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.end||'');
+                        txt = `✓<br><small>${s}-${e}</small>`;
+                    } else {
+                        txt = '✗';
+                    }
                 }
                 html += `<td class="${cls}">${txt}</td>`;
             }
         }
         html += '</tr>';
     });
-    
+
     html += '</tbody></table>';
     document.getElementById('team-calendar').innerHTML = html;
 }
 
-// MEETING PLANNER
+// ===== MEETING PLANNER (UTC ISO ile kesişim + Google Calendar ISO) =====
 async function loadParticipants() {
     await loadDB();
     const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
-    if (users.length === 0) {
-        document.getElementById('participants').innerHTML = '<p>No users</p>';
-        return;
-    }
-    document.getElementById('participants').innerHTML = users.map(([id, u]) =>
+    if (users.length === 0) { document.getElementById('participants').innerHTML = '<p>No users</p>'; return; }
+    document.getElementById('participants').innerHTML = users.map(([id,u]) =>
         `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role || 'N/A'})</label>`
     ).join('');
 }
@@ -613,40 +550,44 @@ async function findMeetingTimes() {
     const val = document.getElementById('meeting-month').value;
     const [year, month] = val.split('-').map(Number);
     const duration = parseFloat(document.getElementById('meeting-duration').value);
-    
+
     const selectedIds = Array.from(document.querySelectorAll('#participants input:checked')).map(cb => cb.value);
-    if (selectedIds.length < 2) {
-        showMsg('meeting-results', 'Select at least 2 participants', 'error');
-        return;
-    }
-    
+    if (selectedIds.length < 2) { showMsg('meeting-results', 'Select at least 2 participants', 'error'); return; }
+
     const lastDay = new Date(year, month, 0);
     const commonSlots = [];
-    
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-        const date = new Date(year, month - 1, d);
-        if (date.getDay() >= 1 && date.getDay() <= 5) {
+
+    for (let d=1; d<=lastDay.getDate(); d++){
+        const date = new Date(year, month-1, d);
+        if (date.getDay()>=1 && date.getDay()<=5) {
             const dateStr = date.toISOString().split('T')[0];
             const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr]?.status === 'yes');
-            
             if (allAvail) {
                 const slots = selectedIds.map(id => {
                     const av = DB.availability[id][dateStr];
-                    return { id, start: av.start, end: av.end, name: DB.users[id].name };
+                    return {
+                        id,
+                        name: DB.users[id].name,
+                        startISO: av.startUTC || (av.start ? new Date(`${dateStr}T${av.start}:00`).toISOString() : null),
+                        endISO:   av.endUTC   || (av.end   ? new Date(`${dateStr}T${av.end}:00`).toISOString()   : null),
+                    };
                 });
-                
-                const latestStart = slots.reduce((max, s) => s.start > max ? s.start : max, slots[0].start);
-                const earliestEnd = slots.reduce((min, s) => s.end < min ? s.end : min, slots[0].end);
-                const startMin = parseInt(latestStart.split(':')[0]) * 60 + parseInt(latestStart.split(':')[1]);
-                const endMin = parseInt(earliestEnd.split(':')[0]) * 60 + parseInt(earliestEnd.split(':')[1]);
-                const availHours = (endMin - startMin) / 60;
-                
+                // UTC ISO bazlı kesişim
+                const latestStartISO  = slots.reduce((max,s)=>(!max || (s.startISO && s.startISO > max)) ? s.startISO : max, null);
+                const earliestEndISO  = slots.reduce((min,s)=>(!min || (s.endISO && s.endISO < min)) ? s.endISO : min, null);
+                const startMs = Date.parse(latestStartISO);
+                const endMs   = Date.parse(earliestEndISO);
+                const availHours = (endMs - startMs) / 3600000;
+
                 if (availHours >= duration) {
                     commonSlots.push({
                         date: dateStr,
                         formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-                        start: latestStart,
-                        end: earliestEnd,
+                        startISO: latestStartISO,
+                        endISO: earliestEndISO,
+                        // Görüntüleyene etiket: kendi TZ’inde göster
+                        start: new Date(latestStartISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
+                        end:   new Date(earliestEndISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
                         duration: availHours,
                         participants: slots
                     });
@@ -654,56 +595,53 @@ async function findMeetingTimes() {
             }
         }
     }
-    
+
     if (commonSlots.length === 0) {
         document.getElementById('meeting-results').innerHTML = '<div class="msg error">No common times found</div>';
         return;
     }
-    
+
     let html = `<div class="msg success">Found ${commonSlots.length} slot(s)</div>`;
     commonSlots.forEach(slot => {
         html += `<div class="section" style="background:#d4edda;border-color:#28a745;">
             <h4>${slot.formatted}</h4>
             <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)}h)</p>
             <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
-            <button class="btn" onclick="createGoogleMeet('${slot.date}','${slot.start}','${slot.end}','${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
+            <button class="btn" onclick="createGoogleMeetISO('${slot.startISO}','${slot.endISO}','${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
         </div>`;
     });
     document.getElementById('meeting-results').innerHTML = html;
 }
 
-function createGoogleMeet(date, startTime, endTime, participantIds) {
+// ISO tabanlı Google Calendar
+function createGoogleMeetISO(startISO, endISO, participantIds) {
     const participantEmails = participantIds.split(',').map(id => DB.users[id].email).join(',');
-    const startDateTime = new Date(`${date}T${startTime}:00`);
-    const endDateTime = new Date(`${date}T${endTime}:00`);
-    const formatGoogleDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-        `&text=${encodeURIComponent('Team Meeting')}` +
-        `&dates=${formatGoogleDate(startDateTime)}/${formatGoogleDate(endDateTime)}` +
-        `&details=${encodeURIComponent('Scheduled via Team Availability System')}` +
-        `&add=${encodeURIComponent(participantEmails)}`;
-    
+    const fmt = (iso) => iso.replace(/[-:]/g,'').split('.')[0] + 'Z';
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+      + `&text=${encodeURIComponent('Team Meeting')}`
+      + `&dates=${fmt(startISO)}/${fmt(endISO)}`
+      + `&details=${encodeURIComponent('Scheduled via Team Availability System')}`
+      + `&add=${encodeURIComponent(participantEmails)}`;
     window.open(url, '_blank');
     alert('Google Calendar opened!\n\n1. Click "Add Google Meet"\n2. Save event');
 }
 
-// INIT
+// ===== INIT =====
 window.addEventListener('DOMContentLoaded', async () => {
     try {
         setStatus('Loading...', '#ff9800');
         await loadDB();
         setStatus('Ready', '#4CAF50');
-        
+
         const savedUser = localStorage.getItem('current-user');
         if (savedUser) {
             ME = JSON.parse(savedUser);
             if (DB.users[ME.id]) {
-                setStatus('Logged in as ' + ME.name, '#4CAF50');
+                // Oturum açılmış kullanıcıyı hazırla
                 document.getElementById('tab-my-avail').disabled = false;
                 document.getElementById('tab-team').disabled = false;
                 document.getElementById('tab-meeting').disabled = false;
-                
+
                 if (ME.admin) {
                     document.getElementById('tab-admin').style.display = 'block';
                     document.getElementById('tab-admin').disabled = false;
