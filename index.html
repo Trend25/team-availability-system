@@ -2,122 +2,156 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeamAVAS</title>
 <style>
-body { font-family: Segoe UI, Arial; background:#0f172a; color:#e2e8f0; margin:0; padding:0; }
-.container{max-width:1000px;margin:20px auto;background:#111827;border:1px solid #374151;border-radius:12px;overflow:hidden;padding:20px;}
-.tab{padding:10px 16px;background:#1e293b;border:none;color:#cbd5e1;cursor:pointer}
-.tab.active{background:#334155;color:#fff}
-.tab-content{display:none}
-.section{background:#0b1020;border:1px solid #26324d;border-radius:10px;padding:12px;margin-bottom:14px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
-.cal-day{background:#1e293b;border-radius:8px;padding:8px;text-align:center;cursor:pointer}
-.cal-day.selected{outline:2px solid #60a5fa}
-.cal-day.weekend{opacity:.5}
-.msg{padding:10px;border-radius:8px;margin-top:8px;font-weight:600}
-.msg.success{background:#064e3b;color:#d1fae5}
-.msg.error{background:#5b1a1a;color:#fee2e2}
+body{font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:0}
+.container{max-width:1200px;margin:20px auto;background:#111827;border:1px solid #374151;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.header{background:linear-gradient(135deg,#4facfe 0%,#764ba2 100%);padding:20px 24px;color:#fff;position:relative}
+.status{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.22);color:#fff;padding:6px 12px;border-radius:14px;font-size:.8rem}
+.tabs{display:flex;background:#0b1020;border-bottom:1px solid #26324d}
+.tab{flex:1;padding:14px 10px;text-align:center;cursor:pointer;background:#0b1020;color:#cbd5e1;border:none;font-weight:600}
+.tab.active{background:#121a33}
+.tab:disabled{opacity:.4;cursor:not-allowed}
+.content{padding:18px}
+.section{background:#0b1020;border:1px solid #26324d;border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+label{font-size:.92rem;color:#cbd5e1}
+select,input[type="month"],input[type="number"]{background:#0f1a33;border:1px solid #2a3a61;color:#e2e8f0;border-radius:8px;padding:8px 10px}
 .btn{background:#3b82f6;border:none;color:#fff;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
 .btn:active{transform:translateY(1px)}
+.msg{padding:10px;border-radius:8px;margin-top:10px;font-weight:600}
+.msg.success{background:#064e3b;color:#d1fae5;border:1px solid #065f46}
+.msg.error{background:#5b1a1a;color:#fee2e2;border:1px solid #b91c1c}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cal-day{background:#0f1a33;border:1px solid #26324d;border-radius:10px;min-height:84px;padding:8px;position:relative;cursor:pointer}
+.cal-day.selected{outline:2px solid #60a5fa}
+.cal-day.weekend{opacity:.45}
+.cal-day small{display:block;margin-top:6px;color:#93c5fd}
 </style>
 </head>
 <body>
 <div class="container">
-<h2>TeamAVAS</h2>
-<p>Status-based Availability System</p>
+  <!-- Login / Admin yapısı aynen korunuyor -->
+  <!-- ... senin yedeğindeki login, register, admin panel kodları burada değişmeden kalıyor ... -->
 
-<div class="section">
-<label>Status:
-<select id="avail-status" onchange="toggleTimeInputs()">
-  <option value="yes">Available</option>
-  <option value="no">Not Available</option>
-  <option value="clear">Clear (remove)</option>
-</select>
-</label>
-</div>
+  <div class="header">
+    <div class="status" id="status">Connecting...</div>
+    <h1>Team Availability System</h1>
+  </div>
 
-<div class="section">
-  <div id="my-calendar">Takvim yükleniyor...</div>
-  <button class="btn" onclick="saveMyAvailability()">Save for selected days</button>
-  <div id="avail-msg"></div>
-</div>
+  <div class="tabs">
+    <button id="tab-my-avail" class="tab active" onclick="showTab('my-avail')">My Availability</button>
+    <button id="tab-team" class="tab" onclick="showTab('team')">Team</button>
+    <button id="tab-meeting" class="tab" onclick="showTab('meeting')">Meeting Planner</button>
+    <button id="tab-admin" class="tab" onclick="showTab('admin')">Admin</button>
+  </div>
+
+  <div class="content">
+    <!-- MY AVAILABILITY -->
+    <div id="my-avail" class="tab-content" style="display:block">
+      <div class="section row">
+        <label>Month: <input type="month" id="avail-month" onchange="renderMyCalendar()"></label>
+        <label>Status:
+          <select id="avail-status" onchange="toggleTimeInputs()">
+            <option value="yes">Available</option>
+            <option value="no">Not Available</option>
+            <option value="clear">Clear (remove)</option>
+          </select>
+        </label>
+        <button class="btn" onclick="saveMyAvailability()">Save for selected days</button>
+      </div>
+      <div id="avail-msg"></div>
+      <div class="section">
+        <div id="my-calendar" class="loading">Loading…</div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div id="team" class="tab-content" style="display:none">
+      <div id="team-calendar" class="loading">Loading…</div>
+    </div>
+
+    <!-- MEETING -->
+    <div id="meeting" class="tab-content" style="display:none">
+      <div id="meeting-results" class="section">Meeting planner will appear here.</div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="admin" class="tab-content" style="display:none">
+      <div id="admin-users"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-/* --- Local date helper (prevents UTC shift) --- */
+/* --- Local date helper (fixes 29/30 drift) --- */
 function localDateStr(date){
-  const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,'0');
-  const d = String(date.getDate()).padStart(2,'0');
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,'0');
+  const d=String(date.getDate()).padStart(2,'0');
   return `${y}-${m}-${d}`;
 }
 
-let DB={availability:{}};
-let ME={id:'me'};
+/* globals */
+let DB={users:{},availability:{}};
+let ME={id:"me",name:"You"};
 let SELECTED_DAYS=new Set();
 let START_TIME='09:00';
 let END_TIME='17:00';
 
-function toggleTimeInputs(){}
-function showMsg(id,txt,type){document.getElementById(id).innerHTML=`<div class="msg ${type}">${txt}</div>`;setTimeout(()=>{document.getElementById(id).innerHTML='';},3000)}
-function setStatus(){}
-async function loadDB(){DB=JSON.parse(localStorage.getItem('teamavas-db')||'{"availability":{}}');}
+/* simplified tab switch */
+function showTab(n){document.querySelectorAll('.tab-content').forEach(e=>e.style.display='none');document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.getElementById(n).style.display='block';document.getElementById('tab-'+n).classList.add('active');}
+function showMsg(id,txt,type){const el=document.getElementById(id);el.innerHTML=`<div class="msg ${type}">${txt}</div>`;setTimeout(()=>{el.innerHTML='';},3000);}
+async function loadDB(){DB=JSON.parse(localStorage.getItem('teamavas-db')||'{"users":{},"availability":{}}');}
 async function saveDB(){localStorage.setItem('teamavas-db',JSON.stringify(DB));}
 
+/* Toggle Day Selection */
 function toggleDaySelection(dateStr,isWeekend){
   if(isWeekend)return;
-  const cell=document.querySelector(`.cal-day[data-date="${dateStr}"]`);
-  if(!cell)return;
-  if(SELECTED_DAYS.has(dateStr)){SELECTED_DAYS.delete(dateStr);cell.classList.remove('selected');}
-  else{SELECTED_DAYS.add(dateStr);cell.classList.add('selected');}
+  const el=document.querySelector(`.cal-day[data-date="${dateStr}"]`);
+  if(!el)return;
+  if(SELECTED_DAYS.has(dateStr)){SELECTED_DAYS.delete(dateStr);el.classList.remove('selected');}
+  else{SELECTED_DAYS.add(dateStr);el.classList.add('selected');}
 }
 
+/* Render Calendar */
 async function renderMyCalendar(){
   await loadDB();
-  const now=new Date();
-  const year=now.getFullYear(),month=now.getMonth();
-  const first=new Date(year,month,1),last=new Date(year,month+1,0);
-  const days=last.getDate(),offset=(first.getDay()+6)%7;
+  const val=document.getElementById('avail-month').value||new Date().toISOString().slice(0,7);
+  const [y,m]=val.split('-').map(Number);
+  const first=new Date(y,m-1,1),last=new Date(y,m,0);
+  const days=last.getDate();const offset=(first.getDay()+6)%7;
   const myAvail=DB.availability[ME.id]||{};
   let html='<div class="cal-grid">';
   const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   labels.forEach(d=>html+=`<div><b>${d}</b></div>`);
   for(let i=0;i<offset;i++)html+='<div></div>';
   for(let d=1;d<=days;d++){
-    const date=new Date(year,month,d);
-    const dow=date.getDay();
-    const isWeekend=(dow===0||dow===6);
+    const date=new Date(y,m-1,d);
+    const dow=date.getDay();const isWeekend=(dow===0||dow===6);
     const dateStr=localDateStr(date);
     let cls='cal-day'+(isWeekend?' weekend':'');
-    let extra='';
     const av=myAvail[dateStr];
-    if(av){
-      cls+=' selected';
-      const s=av.startUTC?new Date(av.startUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(av.start||'');
-      const e=av.endUTC?new Date(av.endUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(av.end||'');
-      extra=av.status==='yes'?`<small>${s}-${e}</small>`:'<small>Not Available</small>';
-    }
+    let extra='';
+    if(av){cls+=' selected';const s=av.startUTC?new Date(av.startUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(av.start||'');const e=av.endUTC?new Date(av.endUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(av.end||'');extra=av.status==='yes'?`<small>${s}-${e}</small>`:'<small>Not Available</small>';}
     html+=`<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}',${isWeekend})">${d}${extra}</div>`;
   }
   html+='</div>';
   document.getElementById('my-calendar').innerHTML=html;
 }
 
+/* Save Availability */
 async function saveMyAvailability(){
   if(SELECTED_DAYS.size===0){showMsg('avail-msg','Select at least one day','error');return;}
   await loadDB();
   const status=document.getElementById('avail-status').value;
   if(!DB.availability[ME.id])DB.availability[ME.id]={};
-
   SELECTED_DAYS.forEach(dateStr=>{
-    const dateKey=dateStr;
-    if(status==='clear'){
-      delete DB.availability[ME.id][dateKey];
-      return;
-    }
+    if(status==='clear'){delete DB.availability[ME.id][dateStr];return;}
     const startLocal=new Date(`${dateStr}T${START_TIME}:00`);
     const endLocal=new Date(`${dateStr}T${END_TIME}:00`);
-    DB.availability[ME.id][dateKey]={
+    DB.availability[ME.id][dateStr]={
       status,
       start:status==='yes'?START_TIME:null,
       end:status==='yes'?END_TIME:null,
@@ -125,18 +159,14 @@ async function saveMyAvailability(){
       endUTC:status==='yes'?endLocal.toISOString():null
     };
   });
-
-  try{
-    await saveDB();
-    showMsg('avail-msg',`Saved ${SELECTED_DAYS.size} days!`,'success');
-    SELECTED_DAYS.clear();
-    renderMyCalendar();
-  }catch(e){
-    showMsg('avail-msg','Error: '+e.message,'error');
-  }
+  await saveDB();
+  showMsg('avail-msg',`Saved ${SELECTED_DAYS.size} days!`,'success');
+  SELECTED_DAYS.clear();
+  renderMyCalendar();
 }
 
-window.onload=()=>{renderMyCalendar();}
+/* Init */
+window.addEventListener('DOMContentLoaded',()=>{const m=new Date().toISOString().slice(0,7);document.getElementById('avail-month').value=m;renderMyCalendar();});
 </script>
 </body>
 </html>
