@@ -1,698 +1,454 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Availability System</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; text-align: center; position: relative; }
-        .status { position: absolute; top: 10px; left: 10px; padding: 5px 10px; background: rgba(255,255,255,0.2); border-radius: 15px; font-size: 0.8rem; }
-        .tabs { display: flex; background: #f5f5f5; border-bottom: 2px solid #ddd; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; border: none; background: #f5f5f5; font-weight: 600; }
-        .tab.active { background: white; border-bottom: 3px solid #4facfe; }
-        .tab:disabled { opacity: 0.5; cursor: not-allowed; }
-        .content { padding: 30px; }
-        .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4facfe; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; }
-        .btn { background: #4facfe; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; }
-        .btn:hover { background: #3a8bd9; }
-        .btn-small { padding: 6px 12px; font-size: 0.9rem; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-        .msg { padding: 15px; border-radius: 5px; margin: 15px 0; }
-        .msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .msg.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .user-card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 20px; }
-        .cal-day { padding: 10px; border: 2px solid #ddd; border-radius: 5px; text-align: center; cursor: pointer; min-height: 60px; }
-        .cal-day.weekend { background: #f0f0f0; opacity: 0.5; cursor: not-allowed; }
-        .cal-day.selected { background: #4facfe; color: white; border-color: #4facfe; }
-        .cal-day.has-data { background: #d4edda; }
-        .cal-day small { display: block; font-size: 0.75rem; margin-top: 5px; }
-        .time-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-        .time-btn { padding: 8px; border: 2px solid #ddd; border-radius: 5px; background: white; cursor: pointer; text-align: center; }
-        .time-btn.selected { background: #4facfe; color: white; border-color: #4facfe; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-        th { background: #4facfe; color: white; }
-        .avail-yes { background: #d4edda; }
-        .avail-no { background: #f8d7da; }
-        .avail-unknown { background: #fff3cd; }
-        .loading { text-align: center; padding: 40px; color: #666; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Availability System</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+    .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);overflow:hidden}
+    .header{background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);color:#fff;padding:20px;text-align:center;position:relative}
+    .status{position:absolute;top:10px;left:10px;padding:5px 10px;background:rgba(255,255,255,.2);border-radius:15px;font-size:.8rem}
+    .tabs{display:flex;background:#f5f5f5;border-bottom:2px solid #ddd}
+    .tab{flex:1;padding:15px;text-align:center;cursor:pointer;border:none;background:#f5f5f5;font-weight:600}
+    .tab.active{background:#fff;border-bottom:3px solid #4facfe}
+    .tab:disabled{opacity:.5;cursor:not-allowed}
+    .content{padding:30px}
+    .section{background:#f9f9f9;padding:20px;border-radius:8px;margin-bottom:20px;border-left:4px solid #4facfe}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:5px;font-weight:600}
+    .form-group input,.form-group select{width:100%;padding:10px;border:2px solid #ddd;border-radius:5px;font-size:1rem}
+    .btn{background:#4facfe;color:#fff;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;font-size:1rem;font-weight:600}
+    .btn:hover{background:#3a8bd9}
+    .btn-small{padding:6px 12px;font-size:.9rem}
+    .btn-danger{background:#dc3545}.btn-danger:hover{background:#c82333}
+    .msg{padding:15px;border-radius:5px;margin:15px 0}
+    .msg.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .user-card{background:#fff;padding:15px;margin:10px 0;border-radius:5px;border:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:20px}
+    .cal-day{padding:10px;border:2px solid #ddd;border-radius:5px;text-align:center;cursor:pointer;min-height:60px}
+    .cal-day.weekend{background:#f0f0f0;opacity:.5;cursor:not-allowed}
+    .cal-day.selected{background:#4facfe;color:#fff;border-color:#4facfe}
+    .cal-day.has-data{background:#d4edda}
+    .cal-day small{display:block;font-size:.75rem;margin-top:5px}
+    .time-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
+    .time-btn{padding:8px;border:2px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;text-align:center}
+    .time-btn.selected{background:#4facfe;color:#fff;border-color:#4facfe}
+    table{width:100%;border-collapse:collapse;margin-top:20px}
+    th,td{padding:10px;border:1px solid #ddd;text-align:center}
+    th{background:#4facfe;color:#fff}
+    .avail-yes{background:#d4edda}
+    .avail-no{background:#f8d7da}
+    .avail-unknown{background:#fff3cd}
+  </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <div class="status" id="status">Connecting...</div>
-        <h1>Team Availability System</h1>
-        <p>Powered by GitHub + Netlify</p>
+  <div class="header">
+    <div class="status" id="status">Connecting...</div>
+    <h1>Team Availability System</h1>
+    <p>Powered by GitHub + Netlify</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('login')" id="tab-login">Login</button>
+    <button class="tab" onclick="showTab('admin')" id="tab-admin" disabled style="display:none;">Admin</button>
+    <button class="tab" onclick="showTab('my-avail')" id="tab-my-avail" disabled>My Availability</button>
+    <button class="tab" onclick="showTab('team')" id="tab-team" disabled>Team Calendar</button>
+    <button class="tab" onclick="showTab('meeting')" id="tab-meeting" disabled>Plan Meeting</button>
+  </div>
+
+  <div class="content">
+    <!-- LOGIN -->
+    <div id="login" class="tab-content">
+      <div class="section">
+        <h3>Login</h3>
+        <div class="form-group"><label>Email</label><input type="email" id="login-email"/></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-pwd"/></div>
+        <button class="btn" onclick="doLogin()">Login</button>
+        <div id="login-msg"></div>
+      </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('login')" id="tab-login">Login</button>
-        <button class="tab" onclick="showTab('admin')" id="tab-admin" disabled style="display:none;">Admin</button>
-        <button class="tab" onclick="showTab('my-avail')" id="tab-my-avail" disabled>My Availability</button>
-        <button class="tab" onclick="showTab('team')" id="tab-team" disabled>Team Calendar</button>
-        <button class="tab" onclick="showTab('meeting')" id="tab-meeting" disabled>Plan Meeting</button>
+    <!-- ADMIN -->
+    <div id="admin" class="tab-content" style="display:none;">
+      <h2>Admin Panel</h2>
+      <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
+      <div class="section">
+        <h3>Add New User</h3>
+        <div class="form-group"><label>Name</label><input type="text" id="new-name"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="new-email"/></div>
+        <div class="form-group"><label>Role</label><input type="text" id="new-role" placeholder="Developer, Designer, etc."/></div>
+        <button class="btn" onclick="addNewUser()">Add User</button>
+        <div id="admin-msg"></div>
+      </div>
+      <div class="section">
+        <h3>All Users</h3>
+        <div id="users-list"></div>
+      </div>
     </div>
 
-    <div class="content">
-        <!-- LOGIN -->
-        <div id="login" class="tab-content">
-            <div class="section">
-                <h3>Login</h3>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="login-email">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="login-pwd">
-                </div>
-                <button class="btn" onclick="doLogin()">Login</button>
-                <div id="login-msg"></div>
-            </div>
+    <!-- MY AVAILABILITY -->
+    <div id="my-avail" class="tab-content" style="display:none;">
+      <h2 id="avail-welcome">My Availability</h2>
+      <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
+
+      <div class="section">
+        <label>Select Month:</label>
+        <select id="avail-month" onchange="renderMyCalendar()"></select>
+        <div id="my-calendar"></div>
+      </div>
+
+      <div class="section" id="time-section" style="display:none;">
+        <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select id="avail-status" onchange="toggleTimeInputs()">
+            <option value="yes">Available</option>
+            <option value="no">Not Available</option>
+          </select>
         </div>
 
-        <!-- ADMIN (DEĞİŞMEDİ) -->
-        <div id="admin" class="tab-content" style="display:none;">
-            <h2>Admin Panel</h2>
-            <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
-            <div class="section">
-                <h3>Add New User</h3>
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="new-name">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="new-email">
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <input type="text" id="new-role" placeholder="Developer, Designer, etc.">
-                </div>
-                <button class="btn" onclick="addNewUser()">Add User</button>
-                <div id="admin-msg"></div>
-            </div>
-            <div class="section">
-                <h3>All Users</h3>
-                <div id="users-list"></div>
-            </div>
+        <!-- Window 1 -->
+        <div id="time-inputs">
+          <div class="form-group"><label>Window 1 – Start</label><div class="time-picker" id="start-times-1"></div></div>
+          <div class="form-group"><label>Window 1 – End</label><div class="time-picker" id="end-times-1"></div></div>
         </div>
 
-        <!-- MY AVAILABILITY -->
-        <div id="my-avail" class="tab-content" style="display:none;">
-            <h2 id="avail-welcome">My Availability</h2>
-            <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
-            <div class="section">
-                <label>Select Month:</label>
-                <select id="avail-month" onchange="renderMyCalendar()"></select>
-                <div id="my-calendar"></div>
-            </div>
-            <div class="section" id="time-section" style="display:none;">
-                <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="avail-status" onchange="toggleTimeInputs()">
-                        <option value="yes">Available</option>
-                        <option value="no">Not Available</option>
-                    </select>
-                </div>
-                <div id="time-inputs">
-                    <div class="form-group">
-                        <label>Start Time</label>
-                        <div class="time-picker" id="start-times"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>End Time</label>
-                        <div class="time-picker" id="end-times"></div>
-                    </div>
-                </div>
-                <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
-                <div id="avail-msg"></div>
-            </div>
+        <!-- Window 2 -->
+        <div class="form-group">
+          <label><input type="checkbox" id="enable-slot-2" onchange="toggleSlot2()"/> Add second time window</label>
+        </div>
+        <div id="slot-2" style="display:none;">
+          <div class="form-group"><label>Window 2 – Start</label><div class="time-picker" id="start-times-2"></div></div>
+          <div class="form-group"><label>Window 2 – End</label><div class="time-picker" id="end-times-2"></div></div>
         </div>
 
-        <!-- TEAM -->
-        <div id="team" class="tab-content" style="display:none;">
-            <h2>Team Calendar</h2>
-            <div class="section">
-                <label>Select Month:</label>
-                <select id="team-month"></select>
-                <button class="btn" onclick="renderTeamCalendar()">Load Calendar</button>
-                <div id="team-calendar"></div>
-            </div>
-        </div>
-
-        <!-- MEETING -->
-        <div id="meeting" class="tab-content" style="display:none;">
-            <h2>Plan Meeting</h2>
-            <div class="section">
-                <div class="form-group">
-                    <label>Select Month</label>
-                    <select id="meeting-month"></select>
-                </div>
-                <div class="form-group">
-                    <label>Meeting Duration (hours)</label>
-                    <input type="number" id="meeting-duration" value="1" min="0.5" step="0.5">
-                </div>
-                <div class="form-group">
-                    <label>Select Participants (excluding admins)</label>
-                    <div id="participants"></div>
-                </div>
-                <button class="btn" onclick="findMeetingTimes()">Find Available Times</button>
-                <div id="meeting-results"></div>
-            </div>
-        </div>
+        <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
+        <div id="avail-msg"></div>
+      </div>
     </div>
+
+    <!-- TEAM -->
+    <div id="team" class="tab-content" style="display:none;">
+      <h2>Team Calendar</h2>
+      <div class="section">
+        <label>Select Month:</label>
+        <select id="team-month"></select>
+        <button class="btn" onclick="renderTeamCalendar()">Load Calendar</button>
+        <div id="team-calendar"></div>
+      </div>
+    </div>
+
+    <!-- MEETING -->
+    <div id="meeting" class="tab-content" style="display:none;">
+      <h2>Plan Meeting</h2>
+      <div class="section">
+        <div class="form-group"><label>Select Month</label><select id="meeting-month"></select></div>
+        <div class="form-group"><label>Meeting Duration (hours)</label><input type="number" id="meeting-duration" value="1" min="0.5" step="0.5"/></div>
+        <div class="form-group"><label>Select Participants (excluding admins)</label><div id="participants"></div></div>
+        <button class="btn" onclick="findMeetingTimes()">Find Available Times</button>
+        <div id="meeting-results"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 // ===== GLOBAL STATE =====
-let DB = { users: {}, availability: {} };
+let DB = { users:{}, availability:{} };
 let ME = null;
 let SELECTED_DAYS = new Set();
-let START_TIME = '09:00';
-let END_TIME = '17:00';
+let START1='09:00', END1='17:00';
+let START2=''; let END2=''; let SLOT2_ENABLED=false;
 
-// ===== CONSTANTS =====
-const API_URL = '/.netlify/functions/github-proxy';
-const VIEWER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// ===== CONSTS =====
+const API_URL='/.netlify/functions/github-proxy';
+const VIEWER_TZ=Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 // ===== UTILS =====
-function log(...a) { console.log('[DEBUG]', ...a); }
-function setStatus(txt, color = '#4CAF50') {
-    const s = document.getElementById('status');
-    s.textContent = txt;
-    s.style.background = color;
+function setStatus(txt,color='#4CAF50'){const s=document.getElementById('status');s.textContent=txt;s.style.background=color;}
+function showMsg(id,txt,type){document.getElementById(id).innerHTML=`<div class="msg ${type}">${txt}</div>`;setTimeout(()=>document.getElementById(id).innerHTML='',5000);}
+function showTab(name){document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));document.getElementById(name).style.display='block';document.getElementById('tab-'+name).classList.add('active');if(name==='meeting')loadParticipants();}
+
+// ===== API =====
+async function apiCall(path,method='GET',data=null){
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,method,data})});
+  if(!r.ok){let t='';try{t=(await r.json()).error;}catch{} throw new Error(t||'API request failed');}
+  return await r.json();
 }
-function showMsg(id, txt, type) {
-    document.getElementById(id).innerHTML = `<div class="msg ${type}">${txt}</div>`;
-    setTimeout(() => document.getElementById(id).innerHTML = '', 5000);
-}
-function showTab(name) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-    document.getElementById(name).style.display = 'block';
-    document.getElementById('tab-' + name).classList.add('active');
-    if (name === 'meeting') loadParticipants();
-}
+async function loadDB(){try{const res=await apiCall('data.json');const json=decodeURIComponent(escape(atob(res.content)));DB=JSON.parse(json);DB.availability??={};DB.users??={};return true;}catch(e){DB={users:{},availability:{}};return false;}}
+async function saveDB(){const content=btoa(unescape(encodeURIComponent(JSON.stringify(DB,null,2))));let sha=null;try{const existing=await apiCall('data.json');sha=existing.sha;}catch(e){}await apiCall('data.json','PUT',{message:'Update availability data',content,sha});}
 
-// ===== GITHUB API VIA NETLIFY FUNCTION =====
-async function apiCall(path, method = 'GET', data = null) {
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path, method, data })
-    });
-    if (!response.ok) {
-        let errorText = '';
-        try { const e = await response.json(); errorText = e.error; } catch {}
-        throw new Error(errorText || 'API request failed');
-    }
-    return await response.json();
-}
+// ===== AUTH =====
+async function hashPwd(p){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function genPwd(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];return p;}
 
-async function loadDB() {
-    try {
-        const res = await apiCall('data.json');
-        const json = decodeURIComponent(escape(atob(res.content)));
-        DB = JSON.parse(json);
-        if (!DB.availability) DB.availability = {};
-        if (!DB.users) DB.users = {};
-        return true;
-    } catch (e) {
-        DB = { users: {}, availability: {} };
-        return false;
-    }
-}
-
-async function saveDB() {
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
-    let sha = null;
-    try {
-        const existing = await apiCall('data.json');
-        sha = existing.sha;
-    } catch (e) {}
-    await apiCall('data.json', 'PUT', {
-        message: 'Update availability data',
-        content,
-        sha
-    });
-}
-
-// ===== PASSWORD / LOGIN =====
-async function hashPwd(pwd) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function genPwd() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let pwd = '';
-    for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-    return pwd;
-}
-
-async function doLogin() {
-    const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const pwd = document.getElementById('login-pwd').value;
-    if (!email || !pwd) { showMsg('login-msg', 'Fill both fields', 'error'); return; }
-
-    setStatus('Logging in...', '#ff9800');
-    try {
-        await loadDB();
-        const hash = await hashPwd(pwd);
-        const found = Object.entries(DB.users).find(([id, u]) => u.email === email && u.pwd === hash);
-        if (!found) { showMsg('login-msg', 'Invalid email or password', 'error'); setStatus('Login Failed', '#f44336'); return; }
-
-        ME = { id: found[0], ...found[1] };
-
-        // ---- TZ: Kullanıcının tarayıcı TZ bilgisini DB'ye geçir (UI değişmeden) ----
-        const currentTZ = VIEWER_TZ;
-        if (ME && currentTZ && DB.users[ME.id]?.tz !== currentTZ) {
-            DB.users[ME.id].tz = currentTZ;
-            await saveDB();
-        }
-
-        localStorage.setItem('current-user', JSON.stringify(ME));
-        setStatus('Logged in as ' + ME.name, '#4CAF50');
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-pwd').value = '';
-
-        document.getElementById('tab-my-avail').disabled = false;
-        document.getElementById('tab-team').disabled = false;
-        document.getElementById('tab-meeting').disabled = false;
-
-        if (ME.admin) {
-            document.getElementById('tab-admin').style.display = 'block';
-            document.getElementById('tab-admin').disabled = false;
-            showTab('admin');
-            refreshUsersList();
-        } else {
-            showTab('my-avail');
-            setupAvailabilityTab();
-        }
-        populateMonthSelects();
-    } catch (e) {
-        showMsg('login-msg', 'Error: ' + e.message, 'error');
-        setStatus('Error', '#f44336');
-    }
-}
-
-function doLogout() {
-    localStorage.removeItem('current-user');
-    ME = null;
-    document.getElementById('tab-my-avail').disabled = true;
-    document.getElementById('tab-team').disabled = true;
-    document.getElementById('tab-meeting').disabled = true;
-    document.getElementById('tab-admin').style.display = 'none';
-    setStatus('Logged out', '#ff9800');
-    showTab('login');
-}
-
-// ===== ADMIN (DEĞİŞMEDİ) =====
-async function addNewUser() {
-    const name = document.getElementById('new-name').value.trim();
-    const email = document.getElementById('new-email').value.trim().toLowerCase();
-    const role = document.getElementById('new-role').value.trim();
-    if (!name || !email || !role) { showMsg('admin-msg', 'Fill all fields', 'error'); return; }
-
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const pwd=document.getElementById('login-pwd').value;
+  if(!email||!pwd){showMsg('login-msg','Fill both fields','error');return;}
+  setStatus('Logging in...','#ff9800');
+  try{
     await loadDB();
-    if (Object.values(DB.users).some(u => u.email === email)) { showMsg('admin-msg', 'Email already exists', 'error'); return; }
-
-    try {
-        const pwd = genPwd();
-        const hash = await hashPwd(pwd);
-        const id = 'user_' + Date.now();
-        DB.users[id] = { name, email, role, pwd: hash, admin: false };
-        await saveDB();
-        alert(`User Created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${pwd}\n\nShare this password securely!`);
-        document.getElementById('new-name').value = '';
-        document.getElementById('new-email').value = '';
-        document.getElementById('new-role').value = '';
-        refreshUsersList();
-        showMsg('admin-msg', 'User added successfully', 'success');
-    } catch (e) { showMsg('admin-msg', 'Error: ' + e.message, 'error'); }
-}
-
-async function refreshUsersList() {
-    await loadDB();
-    const list = Object.entries(DB.users);
-    if (list.length === 0) { document.getElementById('users-list').innerHTML = '<p>No users yet</p>'; return; }
-    document.getElementById('users-list').innerHTML = list.map(([id, u]) => `
-        <div class="user-card">
-            <div>
-                <strong>${u.name}</strong> ${u.admin ? '(Admin)' : ''}<br>
-                <small>${u.email} | ${u.role || 'N/A'} ${u.tz ? ' | ' + u.tz : ''}</small>
-            </div>
-            <div>
-                <button class="btn btn-small" onclick="resetUserPwd('${id}')">Reset Password</button>
-                <button class="btn btn-small btn-danger" onclick="deleteUser('${id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function resetUserPwd(id) {
-    await loadDB();
-    const pwd = genPwd(); const hash = await hashPwd(pwd);
-    DB.users[id].pwd = hash; await saveDB();
-    alert(`Password Reset!\n\nUser: ${DB.users[id].name}\nEmail: ${DB.users[id].email}\nNew Password: ${pwd}`);
-}
-
-async function deleteUser(id) {
-    if (!confirm('Delete this user permanently?')) return;
-    await loadDB(); delete DB.users[id]; if (DB.availability[id]) delete DB.availability[id];
-    await saveDB(); refreshUsersList();
-}
-
-// ===== AVAILABILITY =====
-// >>> FIXED: month list built with day=1 to avoid 31st spillover and preserves current selections
-function populateMonthSelects() {
-    const selects = [
-        document.getElementById('avail-month'),
-        document.getElementById('team-month'),
-        document.getElementById('meeting-month')
-    ];
-    const keepValues = selects.map(sel => sel ? sel.value : null);
-
-    const months = [];
-    const now = new Date();
-    // normalize to the first of the month at midnight to prevent spillover
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    for (let i = 0; i < 12; i++) {
-        const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
-        const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const txt = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        months.push(`<option value="${val}">${txt}</option>`);
-    }
-    const html = months.join('');
-    selects.forEach(sel => { if (sel) sel.innerHTML = html; });
-
-    // restore previous selection if available
-    keepValues.forEach((val, idx) => {
-        if (val && selects[idx]) selects[idx].value = val;
-    });
-}
-
-function setupAvailabilityTab() {
-    document.getElementById('avail-welcome').textContent = `Welcome ${ME.name}`;
+    const hash=await hashPwd(pwd);
+    const found=Object.entries(DB.users).find(([id,u])=>u.email===email&&u.pwd===hash);
+    if(!found){showMsg('login-msg','Invalid email or password','error');setStatus('Login Failed','#f44336');return;}
+    ME={id:found[0],...found[1]};
+    const tz=VIEWER_TZ; if(tz && DB.users[ME.id]?.tz!==tz){DB.users[ME.id].tz=tz;await saveDB();}
+    localStorage.setItem('current-user',JSON.stringify(ME));
+    setStatus('Logged in as '+ME.name);
+    document.getElementById('tab-my-avail').disabled=false;
+    document.getElementById('tab-team').disabled=false;
+    document.getElementById('tab-meeting').disabled=false;
+    if(ME.admin){document.getElementById('tab-admin').style.display='block';document.getElementById('tab-admin').disabled=false;showTab('admin');refreshUsersList();}
+    else{showTab('my-avail');setupAvailabilityTab();}
     populateMonthSelects();
-    renderMyCalendar();
-    generateTimePickers();
+  }catch(e){showMsg('login-msg','Error: '+e.message,'error');setStatus('Error','#f44336');}
+}
+function doLogout(){localStorage.removeItem('current-user');ME=null;document.getElementById('tab-my-avail').disabled=true;document.getElementById('tab-team').disabled=true;document.getElementById('tab-meeting').disabled=true;document.getElementById('tab-admin').style.display='none';setStatus('Logged out','#ff9800');showTab('login');}
+
+// ===== ADMIN =====
+async function addNewUser(){const name=document.getElementById('new-name').value.trim();const email=document.getElementById('new-email').value.trim().toLowerCase();const role=document.getElementById('new-role').value.trim();if(!name||!email||!role){showMsg('admin-msg','Fill all fields','error');return;}await loadDB();if(Object.values(DB.users).some(u=>u.email===email)){showMsg('admin-msg','Email already exists','error');return;}try{const pwd=genPwd();const hash=await hashPwd(pwd);const id='user_'+Date.now();DB.users[id]={name,email,role,pwd:hash,admin:false};await saveDB();alert(`User Created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${pwd}\n\nShare this password securely!`);document.getElementById('new-name').value='';document.getElementById('new-email').value='';document.getElementById('new-role').value='';refreshUsersList();showMsg('admin-msg','User added successfully','success');}catch(e){showMsg('admin-msg','Error: '+e.message,'error');}}
+async function refreshUsersList(){await loadDB();const list=Object.entries(DB.users);if(!list.length){document.getElementById('users-list').innerHTML='<p>No users yet</p>';return;}document.getElementById('users-list').innerHTML=list.map(([id,u])=>`<div class="user-card"><div><strong>${u.name}</strong> ${u.admin?'(Admin)':''}<br><small>${u.email} | ${u.role||'N/A'} ${u.tz?' | '+u.tz:''}</small></div><div><button class="btn btn-small" onclick="resetUserPwd('${id}')">Reset Password</button><button class="btn btn-small btn-danger" onclick="deleteUser('${id}')">Delete</button></div></div>`).join('');}
+async function resetUserPwd(id){await loadDB();const pwd=genPwd();const hash=await hashPwd(pwd);DB.users[id].pwd=hash;await saveDB();alert(`Password Reset!\n\nUser: ${DB.users[id].name}\nEmail: ${DB.users[id].email}\nNew Password: ${pwd}`);}
+async function deleteUser(id){if(!confirm('Delete this user permanently?'))return;await loadDB();delete DB.users[id];if(DB.availability[id])delete DB.availability[id];await saveDB();refreshUsersList();}
+
+// ===== MONTH SELECTS (Kasım fix) =====
+function populateMonthSelects(){
+  const selects=[document.getElementById('avail-month'),document.getElementById('team-month'),document.getElementById('meeting-month')];
+  const keep=selects.map(s=>s?s.value:null);
+  const months=[];const now=new Date();const start=new Date(now.getFullYear(),now.getMonth(),1);
+  for(let i=0;i<12;i++){const d=new Date(start.getFullYear(),start.getMonth()+i,1);const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;const txt=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});months.push(`<option value="${val}">${txt}</option>`);}
+  const html=months.join('');selects.forEach(s=>{if(s)s.innerHTML=html;});keep.forEach((v,i)=>{if(v&&selects[i])selects[i].value=v;});
 }
 
-async function renderMyCalendar() {
-    await loadDB();
-    const val = document.getElementById('avail-month').value;
-    const [year, month] = val.split('-').map(Number);
-    const firstDay = new Date(year, month - 1, 1);
-    const lastDay = new Date(year, month, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDow = (firstDay.getDay() + 6) % 7;
-
-    let html = '<div class="cal-grid">';
-    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
-        html += `<div style="font-weight:bold;padding:10px;text-align:center;">${day}</div>`;
-    });
-    for (let i = 0; i < startDow; i++) html += '<div></div>';
-
-    const myAvail = DB.availability[ME.id] || {};
-    for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month - 1, d);
-        const dateStr = date.toISOString().split('T')[0];
-        const dow = date.getDay(); const isWeekend = dow === 0 || dow === 6;
-        let cls = 'cal-day', extra = '';
-        if (isWeekend) { cls += ' weekend'; }
-        else if (myAvail[dateStr]) {
-            cls += ' has-data';
-            const av = myAvail[dateStr];
-            const startLabel = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}) : (av.start || '');
-            const endLabel   = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ})   : (av.end || '');
-            extra = av.status === 'yes' ? `<small>${startLabel}-${endLabel}</small>` : '<small>Not Available</small>';
-        }
-        html += `<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
+// ===== AVAILABILITY UI =====
+function setupAvailabilityTab(){document.getElementById('avail-welcome').textContent=`Welcome ${ME.name}`;populateMonthSelects();renderMyCalendar();generateTimePickers();}
+async function renderMyCalendar(){
+  await loadDB();
+  const val=document.getElementById('avail-month').value;const [year,month]=val.split('-').map(Number);
+  const firstDay=new Date(year,month-1,1);const lastDay=new Date(year,month,0);const daysInMonth=lastDay.getDate();const startDow=(firstDay.getDay()+6)%7;
+  let html='<div class="cal-grid">';['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>html+=`<div style="font-weight:bold;padding:10px;text-align:center;">${d}</div>`);for(let i=0;i<startDow;i++)html+='<div></div>';
+  const my=DB.availability[ME.id]||{};
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(year,month-1,d);const dateStr=date.toISOString().split('T')[0];const dow=date.getDay();const weekend=(dow===0||dow===6);
+    let cls='cal-day', extra='';
+    const av=my[dateStr];
+    if(weekend){cls+=' weekend';}
+    else if(av){cls+=' has-data'; const slots=normalizeToSlots(av);
+      if(slots.length){extra=slots.map(s=>`<small>${toLabel(s.startUTC,s.start)}-${toLabel(s.endUTC,s.end)}</small>`).join('');}
+      else{extra='<small>Not Available</small>';}
     }
-    html += '</div>';
-    document.getElementById('my-calendar').innerHTML = html;
-    SELECTED_DAYS.clear(); document.getElementById('time-section').style.display = 'none';
-}
-
-function toggleDaySelection(dateStr, isWeekend) {
-    if (isWeekend) return;
-    const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
-    if (!dayEl) return;
-    if (SELECTED_DAYS.has(dateStr)) { SELECTED_DAYS.delete(dateStr); dayEl.classList.remove('selected'); }
-    else { SELECTED_DAYS.add(dateStr); dayEl.classList.add('selected'); }
-    document.getElementById('selected-count').textContent = SELECTED_DAYS.size;
-    document.getElementById('time-section').style.display = SELECTED_DAYS.size ? 'block' : 'none';
-    if (SELECTED_DAYS.size) generateTimePickers();
-}
-
-function generateTimePickers() {
-    const times = []; for (let h=0; h<24; h++) for (let m=0; m<60; m+=30) times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-    const workTimes = times.slice(18, 40);
-    document.getElementById('start-times').innerHTML = workTimes.map(t => `<div class="time-btn ${t===START_TIME?'selected':''}" onclick="selectStartTime('${t}')">${t}</div>`).join('');
-    document.getElementById('end-times').innerHTML   = workTimes.map(t => `<div class="time-btn ${t===END_TIME  ?'selected':''}" onclick="selectEndTime('${t}')">${t}</div>`).join('');
-}
-function selectStartTime(t){ START_TIME=t; generateTimePickers(); }
-function selectEndTime(t){ END_TIME=t; generateTimePickers(); }
-function toggleTimeInputs(){ document.getElementById('time-inputs').style.display = document.getElementById('avail-status').value==='yes'?'block':'none'; }
-
-async function saveMyAvailability() {
-    if (SELECTED_DAYS.size === 0) { showMsg('avail-msg', 'Select at least one day', 'error'); return; }
-    await loadDB();
-    const status = document.getElementById('avail-status').value;
-    if (!DB.availability[ME.id]) DB.availability[ME.id] = {};
-    const myTZ = (DB.users[ME.id] && DB.users[ME.id].tz) ? DB.users[ME.id].tz : VIEWER_TZ;
-
-    SELECTED_DAYS.forEach(dateStr => {
-        const startLocal = new Date(`${dateStr}T${START_TIME}:00`);
-        const endLocal   = new Date(`${dateStr}T${END_TIME}:00`);
-        DB.availability[ME.id][dateStr] = {
-            status,
-            start: status === 'yes' ? START_TIME : null,
-            end:   status === 'yes' ? END_TIME   : null,
-            startUTC: status === 'yes' ? startLocal.toISOString() : null,
-            endUTC:   status === 'yes' ? endLocal.toISOString()   : null,
-            tz: myTZ
-        };
-    });
-
-    try {
-        setStatus('Saving...', '#ff9800');
-        await saveDB();
-        setStatus('Saved!', '#4CAF50');
-        showMsg('avail-msg', `Saved ${SELECTED_DAYS.size} days!`, 'success');
-        renderMyCalendar();
-    } catch (e) {
-        showMsg('avail-msg', 'Error: ' + e.message, 'error');
-        setStatus('Save Failed', '#f44336');
-    }
-}
-
-// ===== TEAM CALENDAR (her kullanıcı kendi TZ’siyle etiketlenir) =====
-async function renderTeamCalendar() {
-    await loadDB();
-    const val = document.getElementById('team-month').value;
-    const [year, month] = val.split('-').map(Number);
-    const lastDay = new Date(year, month, 0);
-    const daysInMonth = lastDay.getDate();
-
-    const users = Object.entries(DB.users).filter(([id,u])=>!u.admin);
-    if (users.length === 0) { document.getElementById('team-calendar').innerHTML = '<p>No users found</p>'; return; }
-
-    let html = '<table><thead><tr><th>User</th>';
-    for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month - 1, d);
-        if (date.getDay()>=1 && date.getDay()<=5) html += `<th>${d}</th>`;
-    }
-    html += '</tr></thead><tbody>';
-
-    users.forEach(([uid,u])=>{
-        html += `<tr><td><strong>${u.name}</strong><br><small>${u.role || ''}${u.tz ? ' • '+u.tz : ''}</small></td>`;
-        const userAvail = DB.availability[uid] || {};
-        for (let d=1; d<=daysInMonth; d++) {
-            const date = new Date(year, month-1, d);
-            if (date.getDay()>=1 && date.getDay()<=5) {
-                const dateStr = date.toISOString().split('T')[0];
-                const av = userAvail[dateStr];
-                let cls='avail-unknown', txt='-';
-                if (av) {
-                    cls = av.status==='yes' ? 'avail-yes' : 'avail-no';
-                    if (av.status==='yes') {
-                        const tz = u.tz || av.tz || VIEWER_TZ;
-                        const s = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.start||'');
-                        const e = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([],   {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.end||'');
-                        txt = `✓<br><small>${s}-${e}</small>`;
-                    } else {
-                        txt = '✗';
-                    }
-                }
-                html += `<td class="${cls}">${txt}</td>`;
-            }
-        }
-        html += '</tr>';
-    });
-
-    html += '</tbody></table>';
-    document.getElementById('team-calendar').innerHTML = html;
-}
-
-// ===== MEETING PLANNER (UTC ISO ile kesişim + Google Calendar ISO) =====
-async function loadParticipants() {
-    await loadDB();
-    const users = Object.entries(DB.users).filter(([id, u]) => !u.admin);
-    if (users.length === 0) { document.getElementById('participants').innerHTML = '<p>No users</p>'; return; }
-    document.getElementById('participants').innerHTML = users.map(([id,u]) =>
-        `<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role || 'N/A'})</label>`
-    ).join('');
-}
-
-async function findMeetingTimes() {
-    await loadDB();
-    const val = document.getElementById('meeting-month').value;
-    aconst = 1;
-    const [year, month] = val.split('-').map(Number);
-    const duration = parseFloat(document.getElementById('meeting-duration').value);
-
-    const selectedIds = Array.from(document.querySelectorAll('#participants input:checked')).map(cb => cb.value);
-    if (selectedIds.length < 2) { showMsg('meeting-results', 'Select at least 2 participants', 'error'); return; }
-
-    const lastDay = new Date(year, month, 0);
-    const commonSlots = [];
-
-    for (let d=1; d<=lastDay.getDate(); d++){
-        const date = new Date(year, month-1, d);
-        if (date.getDay()>=1 && date.getDay()<=5) {
-            const dateStr = date.toISOString().split('T')[0];
-            const allAvail = selectedIds.every(id => DB.availability[id]?.[dateStr]?.status === 'yes');
-            if (allAvail) {
-                const slots = selectedIds.map(id => {
-                    const av = DB.availability[id][dateStr];
-                    return {
-                        id,
-                        name: DB.users[id].name,
-                        startISO: av.startUTC || (av.start ? new Date(`${dateStr}T${av.start}:00`).toISOString() : null),
-                        endISO:   av.endUTC   || (av.end   ? new Date(`${dateStr}T${av.end}:00`).toISOString()   : null),
-                    };
-                });
-                const latestStartISO  = slots.reduce((max,s)=>(!max || (s.startISO && s.startISO > max)) ? s.startISO : max, null);
-                const earliestEndISO  = slots.reduce((min,s)=>(!min || (s.endISO && s.endISO < min)) ? s.endISO : min, null);
-                const startMs = Date.parse(latestStartISO);
-                const endMs   = Date.parse(earliestEndISO);
-                const availHours = (endMs - startMs) / 3600000;
-
-                if (availHours >= duration) {
-                    commonSlots.push({
-                        date: dateStr,
-                        formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
-                        startISO: latestStartISO,
-                        endISO: earliestEndISO,
-                        start: new Date(latestStartISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
-                        end:   new Date(earliestEndISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
-                        duration: availHours,
-                        participants: slots
-                    });
-                }
-            }
-        }
-    }
-
-    if (commonSlots.length === 0) {
-        document.getElementById('meeting-results').innerHTML = '<div class="msg error">No common times found</div>';
-        return;
-    }
-
-    let html = `<div class="msg success">Found ${commonSlots.length} slot(s)</div>`;
-    commonSlots.forEach(slot => {
-        html += `<div class="section" style="background:#d4edda;border-color:#28a745;">
-            <h4>${slot.formatted}</h4>
-            <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.duration.toFixed(1)}h)</p>
-            <p><strong>Participants:</strong> ${slot.participants.map(p => p.name).join(', ')}</p>
-            <button class="btn" onclick="createGoogleMeetISO('${slot.startISO}','${slot.endISO}','${slot.participants.map(p => p.id).join(',')}')">Create Google Meet</button>
-        </div>`;
-    });
-    document.getElementById('meeting-results').innerHTML = html;
-}
-
-// ISO tabanlı Google Calendar
-function createGoogleMeetISO(startISO, endISO, participantIds) {
-    const participantEmails = participantIds.split(',').map(id => DB.users[id].email).join(',');
-    const fmt = (iso) => iso.replace(/[-:]/g,'').split('.')[0] + 'Z';
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE`
-      + `&text=${encodeURIComponent('Team Meeting')}`
-      + `&dates=${fmt(startISO)}/${fmt(endISO)}`
-      + `&details=${encodeURIComponent('Scheduled via Team Availability System')}`
-      + `&add=${encodeURIComponent(participantEmails)}`;
-    window.open(url, '_blank');
-    alert('Google Calendar opened!\n\n1. Click "Add Google Meet"\n2. Save event');
-}
-
-/* ===== NOMAD TZ AUTO-UPDATE (for moving users) ===== */
-async function ensureUserTZ() {
-  try {
-    const current = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    if (ME && current && DB && DB.users && DB.users[ME.id] && DB.users[ME.id].tz !== current) {
-      await loadDB();
-      DB.users[ME.id].tz = current;
-      await saveDB();
-      if (typeof renderTeamCalendar === 'function') renderTeamCalendar();
-      if (typeof renderMyCalendar === 'function') renderMyCalendar();
-      setStatus(`Timezone updated: ${current}`, '#4CAF50');
-      console.log(`🌍 Timezone auto-updated for ${ME.name}: ${current}`);
-    }
-  } catch (err) {
-    console.warn('ensureUserTZ error:', err);
+    html+=`<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${weekend})">${d}${extra}</div>`;
   }
+  html+='</div>';document.getElementById('my-calendar').innerHTML=html;SELECTED_DAYS.clear();document.getElementById('time-section').style.display='none';
 }
-window.addEventListener('focus', ensureUserTZ);
-setInterval(ensureUserTZ, 15 * 60 * 1000);
+function toggleDaySelection(dateStr,isWeekend){if(isWeekend)return;const el=document.querySelector(`.cal-day[data-date="${dateStr}"]`);if(!el)return;if(SELECTED_DAYS.has(dateStr)){SELECTED_DAYS.delete(dateStr);el.classList.remove('selected');}else{SELECTED_DAYS.add(dateStr);el.classList.add('selected');}document.getElementById('selected-count').textContent=SELECTED_DAYS.size;document.getElementById('time-section').style.display=SELECTED_DAYS.size?'block':'none';if(SELECTED_DAYS.size)generateTimePickers();}
+function toggleTimeInputs(){const show=document.getElementById('avail-status').value==='yes';document.getElementById('time-inputs').style.display=show?'block':'none';document.getElementById('slot-2').style.display=show&&SLOT2_ENABLED?'block':'none';}
 
-// ===== INIT =====
-window.addEventListener('DOMContentLoaded', async () => {
-    try {
-        setStatus('Loading...', '#ff9800');
-        await loadDB();
-        setStatus('Ready', '#4CAF50');
+// time pickers (09:00-19:30 arası 30 dk adımlı)
+function generateTimePickers(){
+  const times=[];for(let h=0;h<24;h++)for(let m=0;m<60;m+=30)times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  const work=times.slice(18,40);
+  const map=(sel,val,slot,kind)=>{document.getElementById(sel).innerHTML=work.map(t=>`<div class="time-btn ${t===val?'selected':''}" onclick="pick('${slot}','${kind}','${t}')">${t}</div>`).join('');};
+  map('start-times-1',START1,'1','start'); map('end-times-1',END1,'1','end');
+  if(SLOT2_ENABLED){ if(!START2) START2=START1; if(!END2) END2=END1; map('start-times-2',START2,'2','start'); map('end-times-2',END2,'2','end'); }
+}
+function pick(slot,kind,t){ if(slot==='1'){ if(kind==='start')START1=t; else END1=t; } else { if(kind==='start')START2=t; else END2=t; } generateTimePickers(); }
+function toggleSlot2(){SLOT2_ENABLED=document.getElementById('enable-slot-2').checked;document.getElementById('slot-2').style.display=SLOT2_ENABLED?'block':'none';generateTimePickers();}
 
-        const savedUser = localStorage.getItem('current-user');
-        if (savedUser) {
-            ME = JSON.parse(savedUser);
-            if (DB.users[ME.id]) {
-                document.getElementById('tab-my-avail').disabled = false;
-                document.getElementById('tab-team').disabled = false;
-                document.getElementById('tab-meeting').disabled = false;
+function toLabel(iso,fallback){return iso?new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ}): (fallback||'');}
+function normalizeToSlots(av){ // back-compat
+  if(av?.slots) return av.slots;
+  if(av?.status==='yes' && (av.start||av.startUTC)){return [{start:av.start,end:av.end,startUTC:av.startUTC||new Date(`${av.date||''}T${av.start}:00`).toISOString(),endUTC:av.endUTC||new Date(`${av.date||''}T${av.end}:00`).toISOString()}];}
+  return [];
+}
 
-                if (ME.admin) {
-                    document.getElementById('tab-admin').style.display = 'block';
-                    document.getElementById('tab-admin').disabled = false;
-                    showTab('admin');
-                    refreshUsersList();
-                } else {
-                    showTab('my-avail');
-                    setupAvailabilityTab();
-                }
-                populateMonthSelects();
-                loadParticipants();
-                ensureUserTZ();
-            } else {
-                localStorage.removeItem('current-user');
-            }
-        }
-    } catch (e) {
-        setStatus('Connection Error', '#f44336');
-        console.error('Init error:', e);
+async function saveMyAvailability(){
+  if(SELECTED_DAYS.size===0){showMsg('avail-msg','Select at least one day','error');return;}
+  await loadDB();
+  const status=document.getElementById('avail-status').value;
+  if(!DB.availability[ME.id]) DB.availability[ME.id]={};
+  const myTZ=DB.users[ME.id]?.tz||VIEWER_TZ;
+
+  if(status==='yes'){
+    // validate
+    const toMS=t=>{const [H,M]=t.split(':').map(Number);return H*60+M;};
+    if(toMS(START1)>=toMS(END1)){showMsg('avail-msg','Window 1 start must be before end','error');return;}
+    if(SLOT2_ENABLED && toMS(START2)>=toMS(END2)){showMsg('avail-msg','Window 2 start must be before end','error');return;}
+  }
+
+  SELECTED_DAYS.forEach(dateStr=>{
+    let record={ status, slots:[], tz:myTZ };
+    if(status==='yes'){
+      const mk=(s,e)=>({start:s,end:e,startUTC:new Date(`${dateStr}T${s}:00`).toISOString(),endUTC:new Date(`${dateStr}T${e}:00`).toISOString()});
+      record.slots.push(mk(START1,END1));
+      if(SLOT2_ENABLED) record.slots.push(mk(START2,END2));
     }
+    DB.availability[ME.id][dateStr]=record;
+  });
+
+  try{ setStatus('Saving...','#ff9800'); await saveDB(); setStatus('Saved!','#4CAF50'); showMsg('avail-msg',`Saved ${SELECTED_DAYS.size} days!`,'success'); renderMyCalendar();
+  }catch(e){ showMsg('avail-msg','Error: '+e.message,'error'); setStatus('Save Failed','#f44336'); }
+}
+
+// ===== TEAM CALENDAR (çoklu slot gösterimi) =====
+async function renderTeamCalendar(){
+  await loadDB();
+  const val=document.getElementById('team-month').value;const [year,month]=val.split('-').map(Number);
+  const lastDay=new Date(year,month,0);const days=lastDay.getDate();
+  const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
+  if(!users.length){document.getElementById('team-calendar').innerHTML='<p>No users found</p>';return;}
+
+  let html='<table><thead><tr><th>User</th>';
+  for(let d=1;d<=days;d++){const date=new Date(year,month-1,d);if(date.getDay()>=1&&date.getDay()<=5)html+=`<th>${d}</th>`;}
+  html+='</tr></thead><tbody>';
+
+  users.forEach(([uid,u])=>{
+    html+=`<tr><td><strong>${u.name}</strong><br><small>${u.role||''}${u.tz?' • '+u.tz:''}</small></td>`;
+    const userAvail=DB.availability[uid]||{};
+    for(let d=1;d<=days;d++){
+      const date=new Date(year,month-1,d); if(date.getDay()<1||date.getDay()>5) continue;
+      const dateStr=date.toISOString().split('T')[0]; const av=userAvail[dateStr];
+      let cls='avail-unknown', txt='-';
+      if(av){
+        if(av.status==='no'){cls='avail-no';txt='✗';}
+        else{
+          const slots=normalizeToSlots(av);
+          if(slots.length){
+            cls='avail-yes';
+            const tz=u.tz||av.tz||VIEWER_TZ;
+            txt=slots.map(s=>{
+              const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:tz}):s.start;
+              const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:tz}):s.end;
+              return `✓<br><small>${sLbl}-${eLbl}</small>`;
+            }).join('<br>');
+          } else { cls='avail-no'; txt='✗'; }
+        }
+      }
+      html+=`<td class="${cls}">${txt}</td>`;
+    }
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  document.getElementById('team-calendar').innerHTML=html;
+}
+
+// ===== MEETING (çoklu slot kesişimi) =====
+async function loadParticipants(){
+  await loadDB();
+  const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
+  if(!users.length){document.getElementById('participants').innerHTML='<p>No users</p>';return;}
+  document.getElementById('participants').innerHTML=users.map(([id,u])=>`<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role||'N/A'})</label>`).join('');
+}
+
+function intersectTwoSets(A,B){ // A,B: [{startISO,endISO}]
+  const out=[];
+  A.forEach(a=>{B.forEach(b=>{
+    const s=Math.max(Date.parse(a.startISO),Date.parse(b.startISO));
+    const e=Math.min(Date.parse(a.endISO),Date.parse(b.endISO));
+    if(e>s) out.push({startISO:new Date(s).toISOString(), endISO:new Date(e).toISOString()});
+  })});
+  return out;
+}
+
+async function findMeetingTimes(){
+  await loadDB();
+  const val=document.getElementById('meeting-month').value; const [year,month]=val.split('-').map(Number);
+  const duration=parseFloat(document.getElementById('meeting-duration').value);
+  const selectedIds=Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value);
+  if(selectedIds.length<2){showMsg('meeting-results','Select at least 2 participants','error');return;}
+
+  const lastDay=new Date(year,month,0);
+  const results=[];
+
+  for(let d=1; d<=lastDay.getDate(); d++){
+    const date=new Date(year,month-1,d); if(date.getDay()<1||date.getDay()>5) continue;
+    const dateStr=date.toISOString().split('T')[0];
+
+    // her kullanıcı için günün slotları -> ISO aralık listesi
+    const perUser = [];
+    let allYes = true;
+    for(const id of selectedIds){
+      const av=DB.availability[id]?.[dateStr];
+      if(!av || av.status!=='yes'){ allYes=false; break; }
+      const slots=normalizeToSlots(av).map(s=>({
+        startISO: s.startUTC || new Date(`${dateStr}T${s.start}:00`).toISOString(),
+        endISO:   s.endUTC   || new Date(`${dateStr}T${s.end}:00`).toISOString()
+      }));
+      if(!slots.length){ allYes=false; break; }
+      perUser.push(slots);
+    }
+    if(!allYes) continue;
+
+    // çoklu set kesişimi
+    let intersection = perUser[0];
+    for(let i=1;i<perUser.length;i++) intersection = intersectTwoSets(intersection, perUser[i]);
+
+    // süreyi sağlayanları ekle
+    intersection.forEach(win=>{
+      const hours=(Date.parse(win.endISO)-Date.parse(win.startISO))/3600000;
+      if(hours>=duration){
+        results.push({
+          dateStr,
+          formatted: date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),
+          startISO: win.startISO,
+          endISO: win.endISO
+        });
+      }
+    });
+  }
+
+  if(!results.length){
+    document.getElementById('meeting-results').innerHTML='<div class="msg error">No common times found</div>';
+    return;
+  }
+
+  let html=`<div class="msg success">Found ${results.length} slot(s)</div>`;
+  results.forEach(r=>{
+    const start=new Date(r.startISO).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ});
+    const end  =new Date(r.endISO).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ});
+    html+=`<div class="section" style="background:#d4edda;border-color:#28a745;">
+      <h4>${r.formatted}</h4>
+      <p><strong>Time:</strong> ${start} - ${end}</p>
+      <button class="btn" onclick="createGoogleMeetISO('${r.startISO}','${r.endISO}','${Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value).join(',')}')">Create Google Meet</button>
+    </div>`;
+  });
+  document.getElementById('meeting-results').innerHTML=html;
+}
+
+function createGoogleMeetISO(startISO,endISO,participantIds){
+  const emails=participantIds.split(',').map(id=>DB.users[id].email).join(',');
+  const fmt=iso=>iso.replace(/[-:]/g,'').split('.')[0]+'Z';
+  const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Team Meeting')}&dates=${fmt(startISO)}/${fmt(endISO)}&details=${encodeURIComponent('Scheduled via Team Availability System')}&add=${encodeURIComponent(emails)}`;
+  window.open(url,'_blank');
+  alert('Google Calendar opened!\n\n1. Click "Add Google Meet"\n2. Save event');
+}
+
+/* ===== INIT & TZ ===== */
+async function ensureUserTZ(){try{const current=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';if(ME&&DB.users[ME.id]&&DB.users[ME.id].tz!==current){await loadDB();DB.users[ME.id].tz=current;await saveDB();if(typeof renderTeamCalendar==='function')renderTeamCalendar();if(typeof renderMyCalendar==='function')renderMyCalendar();setStatus(`Timezone updated: ${current}`);}}catch(e){console.warn('ensureUserTZ error:',e);}}
+window.addEventListener('focus',ensureUserTZ);setInterval(ensureUserTZ,15*60*1000);
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    setStatus('Loading...','#ff9800'); await loadDB(); setStatus('Ready','#4CAF50');
+    const saved=localStorage.getItem('current-user');
+    if(saved){ ME=JSON.parse(saved);
+      if(DB.users[ME.id]){
+        document.getElementById('tab-my-avail').disabled=false;
+        document.getElementById('tab-team').disabled=false;
+        document.getElementById('tab-meeting').disabled=false;
+        if(ME.admin){document.getElementById('tab-admin').style.display='block';document.getElementById('tab-admin').disabled=false;showTab('admin');refreshUsersList();}
+        else{showTab('my-avail');setupAvailabilityTab();}
+        populateMonthSelects(); loadParticipants(); ensureUserTZ();
+      }else{localStorage.removeItem('current-user');}
+    }
+  }catch(e){setStatus('Connection Error','#f44336');console.error('Init error:',e);}
 });
 </script>
 </body>
