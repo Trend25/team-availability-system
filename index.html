@@ -23,25 +23,40 @@
     .btn:hover{background:#3a8bd9}
     .btn-small{padding:6px 12px;font-size:.9rem}
     .btn-danger{background:#dc3545}.btn-danger:hover{background:#c82333}
-    .msg{padding:15px;border-radius:5px;margin:15px 0}
+    .btn-ghost{background:#eef6ff;color:#1864ab}
+    .row{display:flex;gap:10px;align-items:center}
+    .muted{color:#666;font-size:.9rem}
+    .msg{padding:12px;border-radius:6px;margin:12px 0}
     .msg.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
     .msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .msg.info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
     .user-card{background:#fff;padding:15px;margin:10px 0;border-radius:5px;border:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:20px}
     .cal-day{padding:10px;border:2px solid #ddd;border-radius:5px;text-align:center;cursor:pointer;min-height:60px}
     .cal-day.weekend{background:#f0f0f0;opacity:.5;cursor:not-allowed}
     .cal-day.selected{background:#4facfe;color:#fff;border-color:#4facfe}
     .cal-day.has-data{background:#d4edda}
     .cal-day small{display:block;font-size:.75rem;margin-top:5px}
+
     .time-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
     .time-btn{padding:8px;border:2px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;text-align:center}
     .time-btn.selected{background:#4facfe;color:#fff;border-color:#4facfe}
+
     table{width:100%;border-collapse:collapse;margin-top:20px}
     th,td{padding:10px;border:1px solid #ddd;text-align:center}
     th{background:#4facfe;color:#fff}
     .avail-yes{background:#d4edda}
     .avail-no{background:#f8d7da}
     .avail-unknown{background:#fff3cd}
+
+    /* Participants checkbox alignment (closer + bigger) */
+    #participants label{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:.95rem}
+    #participants input[type="checkbox"]{transform:scale(1.2)}
+
+    /* Tiny badges for slot headers */
+    .slot-badge{display:inline-block;background:#e8f2ff;color:#1864ab;border:1px solid #cfe3ff;border-radius:999px;padding:2px 8px;font-size:.75rem;margin-right:8px}
+    .slot-card{background:#fff;border:1px dashed #cfe3ff;border-radius:10px;padding:10px;margin:10px 0}
   </style>
 </head>
 <body>
@@ -102,7 +117,11 @@
       </div>
 
       <div class="section" id="time-section" style="display:none;">
-        <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
+          <button class="btn btn-ghost btn-small" onclick="addTimeWindow()">➕ Add another time window</button>
+        </div>
+        <p class="muted">You can add up to 3 windows per day.</p>
 
         <div class="form-group">
           <label>Status</label>
@@ -112,20 +131,8 @@
           </select>
         </div>
 
-        <!-- Window 1 -->
-        <div id="time-inputs">
-          <div class="form-group"><label>Window 1 – Start</label><div class="time-picker" id="start-times-1"></div></div>
-          <div class="form-group"><label>Window 1 – End</label><div class="time-picker" id="end-times-1"></div></div>
-        </div>
-
-        <!-- Window 2 -->
-        <div class="form-group">
-          <label><input type="checkbox" id="enable-slot-2" onchange="toggleSlot2()"/> Add second time window</label>
-        </div>
-        <div id="slot-2" style="display:none;">
-          <div class="form-group"><label>Window 2 – Start</label><div class="time-picker" id="start-times-2"></div></div>
-          <div class="form-group"><label>Window 2 – End</label><div class="time-picker" id="end-times-2"></div></div>
-        </div>
+        <!-- dynamic windows will appear here -->
+        <div id="windows"></div>
 
         <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
         <div id="avail-msg"></div>
@@ -136,9 +143,19 @@
     <div id="team" class="tab-content" style="display:none;">
       <h2>Team Calendar</h2>
       <div class="section">
-        <label>Select Month:</label>
-        <select id="team-month"></select>
-        <button class="btn" onclick="renderTeamCalendar()">Load Calendar</button>
+        <div class="row">
+          <div style="flex:1">
+            <label>Select Month:</label>
+            <select id="team-month"></select>
+          </div>
+          <div class="row" style="align-items:center">
+            <label class="row" title="Show all times in your timezone for easier comparison">
+              <input type="checkbox" id="team-use-viewer-tz" onchange="renderTeamCalendar()">
+              Show times in my timezone
+            </label>
+          </div>
+          <button class="btn" onclick="renderTeamCalendar()">Load Calendar</button>
+        </div>
         <div id="team-calendar"></div>
       </div>
     </div>
@@ -162,8 +179,8 @@
 let DB = { users:{}, availability:{} };
 let ME = null;
 let SELECTED_DAYS = new Set();
-let START1='09:00', END1='17:00';
-let START2=''; let END2=''; let SLOT2_ENABLED=false;
+// time windows state (up to 3)
+let SLOTS = [{start:'09:00', end:'17:00'}];
 
 // ===== CONSTS =====
 const API_URL='/.netlify/functions/github-proxy';
@@ -226,68 +243,120 @@ function populateMonthSelects(){
   const html=months.join('');selects.forEach(s=>{if(s)s.innerHTML=html;});keep.forEach((v,i)=>{if(v&&selects[i])selects[i].value=v;});
 }
 
-// ===== AVAILABILITY UI =====
-function setupAvailabilityTab(){document.getElementById('avail-welcome').textContent=`Welcome ${ME.name}`;populateMonthSelects();renderMyCalendar();generateTimePickers();}
+// ===== AVAILABILITY UI (dynamic windows) =====
+function setupAvailabilityTab(){document.getElementById('avail-welcome').textContent=`Welcome ${ME.name}`;populateMonthSelects();renderMyCalendar();renderWindows();}
+function toggleTimeInputs(){const show=document.getElementById('avail-status').value==='yes';document.getElementById('windows').style.display=show?'block':'none';}
+function addTimeWindow(){
+  if(SLOTS.length>=3){showMsg('avail-msg','You can add at most 3 windows per day.','info');return;}
+  const last=SLOTS[SLOTS.length-1];
+  SLOTS.push({start:last.start,end:last.end});
+  renderWindows(); showMsg('avail-msg','New time window added.','info');
+}
+function removeWindow(idx){
+  if(SLOTS.length===1){showMsg('avail-msg','At least one window is required when status is Available.','error');return;}
+  SLOTS.splice(idx,1); renderWindows();
+}
+function renderWindows(){
+  const wrap=document.getElementById('windows');
+  wrap.innerHTML = SLOTS.map((slot,idx)=>`
+    <div class="slot-card" id="slot-${idx}">
+      <div class="row" style="justify-content:space-between;">
+        <div><span class="slot-badge">Window ${idx+1}</span><span class="muted">Pick start & end</span></div>
+        ${idx>0?`<button class="btn btn-small btn-ghost" onclick="removeWindow(${idx})">Remove</button>`:''}
+      </div>
+      <div class="form-group"><label>Start</label><div class="time-picker" id="start-times-${idx}"></div></div>
+      <div class="form-group"><label>End</label><div class="time-picker" id="end-times-${idx}"></div></div>
+    </div>
+  `).join('');
+  generateTimePickers();
+}
+function generateTimePickers(){
+  const times=[];for(let h=0;h<24;h++)for(let m=0;m<60;m+=30)times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  const work=times.slice(18,40); // 09:00-19:30
+  SLOTS.forEach((slot,idx)=>{
+    const map=(sel,val,kind)=>{document.getElementById(sel).innerHTML=work.map(t=>`<div class="time-btn ${t===val?'selected':''}" onclick="pick('${idx}','${kind}','${t}')">${t}</div>`).join('');};
+    map(`start-times-${idx}`,slot.start,'start');
+    map(`end-times-${idx}`,slot.end,'end');
+  });
+}
+function pick(idx,kind,t){ if(kind==='start') SLOTS[idx].start=t; else SLOTS[idx].end=t; generateTimePickers(); }
+
 async function renderMyCalendar(){
   await loadDB();
   const val=document.getElementById('avail-month').value;const [year,month]=val.split('-').map(Number);
   const firstDay=new Date(year,month-1,1);const lastDay=new Date(year,month,0);const daysInMonth=lastDay.getDate();const startDow=(firstDay.getDay()+6)%7;
+
   let html='<div class="cal-grid">';['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>html+=`<div style="font-weight:bold;padding:10px;text-align:center;">${d}</div>`);for(let i=0;i<startDow;i++)html+='<div></div>';
+
   const my=DB.availability[ME.id]||{};
   for(let d=1;d<=daysInMonth;d++){
-    const date=new Date(year,month-1,d);const dateStr=date.toISOString().split('T')[0];const dow=date.getDay();const weekend=(dow===0||dow===6);
+    const date=new Date(year,month-1,d);const dateStr=date.toISOString().split('T')[0];
+    const dow=date.getDay();const weekend=(dow===0||dow===6);
     let cls='cal-day', extra='';
     const av=my[dateStr];
     if(weekend){cls+=' weekend';}
-    else if(av){cls+=' has-data'; const slots=normalizeToSlots(av);
-      if(slots.length){extra=slots.map(s=>`<small>${toLabel(s.startUTC,s.start)}-${toLabel(s.endUTC,s.end)}</small>`).join('');}
-      else{extra='<small>Not Available</small>';}
+    else if(av){
+      const slots=normalizeToSlots(av);
+      if(av.status==='no'){extra='<small>Not Available</small>';cls+=' has-data';}
+      else if(slots.length){
+        cls+=' has-data';
+        extra=slots.map(s=>`<small>${toLabel(s.startUTC,s.start)}-${toLabel(s.endUTC,s.end)}</small>`).join('');
+      }
     }
     html+=`<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${weekend})">${d}${extra}</div>`;
   }
-  html+='</div>';document.getElementById('my-calendar').innerHTML=html;SELECTED_DAYS.clear();document.getElementById('time-section').style.display='none';
+  html+='</div>';
+  document.getElementById('my-calendar').innerHTML=html;
+  SELECTED_DAYS.clear(); document.getElementById('time-section').style.display='none';
 }
-function toggleDaySelection(dateStr,isWeekend){if(isWeekend)return;const el=document.querySelector(`.cal-day[data-date="${dateStr}"]`);if(!el)return;if(SELECTED_DAYS.has(dateStr)){SELECTED_DAYS.delete(dateStr);el.classList.remove('selected');}else{SELECTED_DAYS.add(dateStr);el.classList.add('selected');}document.getElementById('selected-count').textContent=SELECTED_DAYS.size;document.getElementById('time-section').style.display=SELECTED_DAYS.size?'block':'none';if(SELECTED_DAYS.size)generateTimePickers();}
-function toggleTimeInputs(){const show=document.getElementById('avail-status').value==='yes';document.getElementById('time-inputs').style.display=show?'block':'none';document.getElementById('slot-2').style.display=show&&SLOT2_ENABLED?'block':'none';}
-
-// time pickers (09:00-19:30 arası 30 dk adımlı)
-function generateTimePickers(){
-  const times=[];for(let h=0;h<24;h++)for(let m=0;m<60;m+=30)times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-  const work=times.slice(18,40);
-  const map=(sel,val,slot,kind)=>{document.getElementById(sel).innerHTML=work.map(t=>`<div class="time-btn ${t===val?'selected':''}" onclick="pick('${slot}','${kind}','${t}')">${t}</div>`).join('');};
-  map('start-times-1',START1,'1','start'); map('end-times-1',END1,'1','end');
-  if(SLOT2_ENABLED){ if(!START2) START2=START1; if(!END2) END2=END1; map('start-times-2',START2,'2','start'); map('end-times-2',END2,'2','end'); }
-}
-function pick(slot,kind,t){ if(slot==='1'){ if(kind==='start')START1=t; else END1=t; } else { if(kind==='start')START2=t; else END2=t; } generateTimePickers(); }
-function toggleSlot2(){SLOT2_ENABLED=document.getElementById('enable-slot-2').checked;document.getElementById('slot-2').style.display=SLOT2_ENABLED?'block':'none';generateTimePickers();}
-
+function toggleDaySelection(dateStr,isWeekend){if(isWeekend)return;const el=document.querySelector(`.cal-day[data-date="${dateStr}"]`);if(!el)return;if(SELECTED_DAYS.has(dateStr)){SELECTED_DAYS.delete(dateStr);el.classList.remove('selected');}else{SELECTED_DAYS.add(dateStr);el.classList.add('selected');}document.getElementById('selected-count').textContent=SELECTED_DAYS.size;document.getElementById('time-section').style.display=SELECTED_DAYS.size?'block':'none';if(SELECTED_DAYS.size)renderWindows();}
 function toLabel(iso,fallback){return iso?new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ}): (fallback||'');}
-function normalizeToSlots(av){ // back-compat
+function normalizeToSlots(av){
   if(av?.slots) return av.slots;
-  if(av?.status==='yes' && (av.start||av.startUTC)){return [{start:av.start,end:av.end,startUTC:av.startUTC||new Date(`${av.date||''}T${av.start}:00`).toISOString(),endUTC:av.endUTC||new Date(`${av.date||''}T${av.end}:00`).toISOString()}];}
+  if(av?.status==='yes' && (av.start||av.startUTC)){
+    return [{start:av.start,end:av.end,startUTC:av.startUTC,endUTC:av.endUTC}];
+  }
   return [];
+}
+
+function validateSlots(){
+  // basic: each start<end, max 3, and no overlaps
+  const toMin = t=>{const [H,M]=t.split(':').map(Number);return H*60+M;};
+  for(const s of SLOTS){
+    if(toMin(s.start)>=toMin(s.end)){
+      showMsg('avail-msg','Start time must be earlier than end time.','error');
+      return false;
+    }
+  }
+  // sort by start and check overlap
+  const order=[...SLOTS].sort((a,b)=>toMin(a.start)-toMin(b.start));
+  for(let i=1;i<order.length;i++){
+    if(toMin(order[i-1].end)>toMin(order[i].start)){
+      showMsg('avail-msg','Time windows overlap. Please adjust.','error');
+      return false;
+    }
+  }
+  return true;
 }
 
 async function saveMyAvailability(){
   if(SELECTED_DAYS.size===0){showMsg('avail-msg','Select at least one day','error');return;}
   await loadDB();
   const status=document.getElementById('avail-status').value;
+  if(status==='yes' && !validateSlots()) return;
+
   if(!DB.availability[ME.id]) DB.availability[ME.id]={};
   const myTZ=DB.users[ME.id]?.tz||VIEWER_TZ;
-
-  if(status==='yes'){
-    // validate
-    const toMS=t=>{const [H,M]=t.split(':').map(Number);return H*60+M;};
-    if(toMS(START1)>=toMS(END1)){showMsg('avail-msg','Window 1 start must be before end','error');return;}
-    if(SLOT2_ENABLED && toMS(START2)>=toMS(END2)){showMsg('avail-msg','Window 2 start must be before end','error');return;}
-  }
 
   SELECTED_DAYS.forEach(dateStr=>{
     let record={ status, slots:[], tz:myTZ };
     if(status==='yes'){
-      const mk=(s,e)=>({start:s,end:e,startUTC:new Date(`${dateStr}T${s}:00`).toISOString(),endUTC:new Date(`${dateStr}T${e}:00`).toISOString()});
-      record.slots.push(mk(START1,END1));
-      if(SLOT2_ENABLED) record.slots.push(mk(START2,END2));
+      record.slots = SLOTS.map(s=>({
+        start:s.start,
+        end:s.end,
+        startUTC:new Date(`${dateStr}T${s.start}:00`).toISOString(),
+        endUTC:new Date(`${dateStr}T${s.end}:00`).toISOString()
+      }));
     }
     DB.availability[ME.id][dateStr]=record;
   });
@@ -296,13 +365,14 @@ async function saveMyAvailability(){
   }catch(e){ showMsg('avail-msg','Error: '+e.message,'error'); setStatus('Save Failed','#f44336'); }
 }
 
-// ===== TEAM CALENDAR (çoklu slot gösterimi) =====
+// ===== TEAM CALENDAR (viewer-TZ toggle + multi-slot) =====
 async function renderTeamCalendar(){
   await loadDB();
   const val=document.getElementById('team-month').value;const [year,month]=val.split('-').map(Number);
   const lastDay=new Date(year,month,0);const days=lastDay.getDate();
   const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
   if(!users.length){document.getElementById('team-calendar').innerHTML='<p>No users found</p>';return;}
+  const forceViewer = document.getElementById('team-use-viewer-tz')?.checked;
 
   let html='<table><thead><tr><th>User</th>';
   for(let d=1;d<=days;d++){const date=new Date(year,month-1,d);if(date.getDay()>=1&&date.getDay()<=5)html+=`<th>${d}</th>`;}
@@ -321,7 +391,7 @@ async function renderTeamCalendar(){
           const slots=normalizeToSlots(av);
           if(slots.length){
             cls='avail-yes';
-            const tz=u.tz||av.tz||VIEWER_TZ;
+            const tz = forceViewer ? VIEWER_TZ : (u.tz || av.tz || VIEWER_TZ);
             txt=slots.map(s=>{
               const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:tz}):s.start;
               const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:tz}):s.end;
@@ -339,15 +409,14 @@ async function renderTeamCalendar(){
   document.getElementById('team-calendar').innerHTML=html;
 }
 
-// ===== MEETING (çoklu slot kesişimi) =====
+// ===== MEETING (multi-slot intersection) =====
 async function loadParticipants(){
   await loadDB();
   const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
   if(!users.length){document.getElementById('participants').innerHTML='<p>No users</p>';return;}
-  document.getElementById('participants').innerHTML=users.map(([id,u])=>`<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role||'N/A'})</label>`).join('');
+  document.getElementById('participants').innerHTML=users.map(([id,u])=>`<label><input type="checkbox" value="${id}">${u.name} (${u.role||'N/A'})</label>`).join('');
 }
-
-function intersectTwoSets(A,B){ // A,B: [{startISO,endISO}]
+function intersectTwoSets(A,B){
   const out=[];
   A.forEach(a=>{B.forEach(b=>{
     const s=Math.max(Date.parse(a.startISO),Date.parse(b.startISO));
@@ -356,25 +425,21 @@ function intersectTwoSets(A,B){ // A,B: [{startISO,endISO}]
   })});
   return out;
 }
-
 async function findMeetingTimes(){
   await loadDB();
   const val=document.getElementById('meeting-month').value; const [year,month]=val.split('-').map(Number);
   const duration=parseFloat(document.getElementById('meeting-duration').value);
-  const selectedIds=Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value);
-  if(selectedIds.length<2){showMsg('meeting-results','Select at least 2 participants','error');return;}
+  const selected=Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value);
+  if(selected.length<2){showMsg('meeting-results','Select at least 2 participants','error');return;}
 
   const lastDay=new Date(year,month,0);
-  const results=[];
+  const results=[]; let rejectedNote='';
 
   for(let d=1; d<=lastDay.getDate(); d++){
     const date=new Date(year,month-1,d); if(date.getDay()<1||date.getDay()>5) continue;
     const dateStr=date.toISOString().split('T')[0];
-
-    // her kullanıcı için günün slotları -> ISO aralık listesi
-    const perUser = [];
-    let allYes = true;
-    for(const id of selectedIds){
+    const perUser=[]; let allYes=true;
+    for(const id of selected){
       const av=DB.availability[id]?.[dateStr];
       if(!av || av.status!=='yes'){ allYes=false; break; }
       const slots=normalizeToSlots(av).map(s=>({
@@ -386,12 +451,14 @@ async function findMeetingTimes(){
     }
     if(!allYes) continue;
 
-    // çoklu set kesişimi
-    let intersection = perUser[0];
-    for(let i=1;i<perUser.length;i++) intersection = intersectTwoSets(intersection, perUser[i]);
+    let inter = perUser[0];
+    for(let i=1;i<perUser.length;i++) inter = intersectTwoSets(inter, perUser[i]);
 
-    // süreyi sağlayanları ekle
-    intersection.forEach(win=>{
+    if(!inter.length) continue;
+
+    // keep slots >= duration; track if any were shorter for UX note
+    let anyShort=false;
+    inter.forEach(win=>{
       const hours=(Date.parse(win.endISO)-Date.parse(win.startISO))/3600000;
       if(hours>=duration){
         results.push({
@@ -400,12 +467,15 @@ async function findMeetingTimes(){
           startISO: win.startISO,
           endISO: win.endISO
         });
-      }
+      } else { anyShort=true; }
     });
+    if(anyShort) rejectedNote='Closest overlaps are shorter than requested duration.';
   }
 
   if(!results.length){
-    document.getElementById('meeting-results').innerHTML='<div class="msg error">No common times found</div>';
+    document.getElementById('meeting-results').innerHTML=
+      `<div class="msg error">No common times found</div>${
+        rejectedNote?`<div class="msg info">${rejectedNote} Try a shorter duration (e.g., 0.5h).</div>`:''}`;
     return;
   }
 
@@ -421,7 +491,6 @@ async function findMeetingTimes(){
   });
   document.getElementById('meeting-results').innerHTML=html;
 }
-
 function createGoogleMeetISO(startISO,endISO,participantIds){
   const emails=participantIds.split(',').map(id=>DB.users[id].email).join(',');
   const fmt=iso=>iso.replace(/[-:]/g,'').split('.')[0]+'Z';
