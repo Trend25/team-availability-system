@@ -27,25 +27,36 @@ body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#
 .msg.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
 .msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
 .user-card{background:#fff;padding:15px;margin:10px 0;border-radius:5px;border:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+
+/* My availability calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:20px}
 .cal-day{padding:10px;border:2px solid #ddd;border-radius:5px;text-align:center;cursor:pointer;min-height:60px}
 .cal-day.weekend{background:#f0f0f0;opacity:.5;cursor:not-allowed}
 .cal-day.selected{background:#4facfe;color:#fff;border-color:#4facfe}
 .cal-day.has-data{background:#d4edda}
 .cal-day small{display:block;font-size:.75rem;margin-top:5px;line-height:1.1}
+
+/* time pickers */
 .time-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
 .time-btn{padding:8px;border:2px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;text-align:center}
 .time-btn.selected{background:#4facfe;color:#fff;border-color:#4facfe}
+
+/* team table */
 table{width:100%;border-collapse:collapse;margin-top:20px}
-th,td{padding:10px;border:1px solid #ddd;text-align:center;vertical-align:top}
+th,td{padding:10px;border:1px solid #ddd;text-align:center;vertical-align:middle}
 th{background:#4facfe;color:#fff}
+td{height:76px}                   /* sabit hücre yüksekliği -> hizalama bozulmaz */
 .avail-yes{background:#d4edda}
 .avail-no{background:#f8d7da}
 .avail-unknown{background:#fff3cd}
-.loading{text-align:center;padding:40px;color:#666}
-/* çok satır kontrollü görünüm */
+
+/* slot kısaltma */
+.slot-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;overflow:hidden}
 .slotlist{display:block;max-height:3.2em;overflow:hidden}
 .more-link{display:inline-block;margin-top:4px;font-size:.75rem;text-decoration:underline;cursor:pointer;color:#0b5ed7}
+
+/* ipucu bandı */
+.hint{margin-top:10px;padding:10px;border-radius:6px;background:#e7f1ff;color:#0b5ed7;border:1px solid #b6d4fe;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -99,34 +110,32 @@ th{background:#4facfe;color:#fff}
       <h2 id="avail-welcome">My Availability</h2>
       <button class="btn btn-small" onclick="doLogout()" style="float:right;">Logout</button>
       <div class="section">
-        <label>Select Month:</label>
+        <label>Ay Seç:</label>
         <select id="avail-month" onchange="renderMyCalendar()"></select>
+        <div class="hint">💡 Aynı güne birden fazla saat aralığı eklemek için günü tekrar seçip farklı saatlerle <b>Kaydet</b>’e basın.</div>
         <div id="my-calendar"></div>
       </div>
       <div class="section" id="time-section" style="display:none;">
-        <h3>Set Time for Selected Days (<span id="selected-count">0</span> days selected)</h3>
+        <h3>Seçili Gün(ler) için Saat Ayarla (<span id="selected-count">0</span>)</h3>
         <div class="form-group">
-          <label>Status</label>
+          <label>Durum</label>
           <select id="avail-status" onchange="toggleTimeInputs()">
-            <option value="yes">Available</option>
-            <option value="no">Not Available</option>
+            <option value="yes">Müsait</option>
+            <option value="no">Müsait Değil</option>
           </select>
         </div>
         <div id="time-inputs">
           <div class="form-group">
-            <label>Start Time</label>
+            <label>Başlangıç</label>
             <div class="time-picker" id="start-times"></div>
           </div>
           <div class="form-group">
-            <label>End Time</label>
+            <label>Bitiş</label>
             <div class="time-picker" id="end-times"></div>
           </div>
         </div>
-        <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
+        <button class="btn" onclick="saveMyAvailability()">Kaydet</button>
         <div id="avail-msg"></div>
-        <p style="font-size:.85rem;color:#555;margin-top:8px;">
-          İpucu: Aynı güne birden fazla aralık eklemek için <strong>aynı gün(leri)</strong> seçip farklı saatlerle <em>yeniden kaydedin</em>.
-        </p>
       </div>
     </div>
 
@@ -169,28 +178,20 @@ function setStatus(t,c='#4CAF50'){const s=document.getElementById('status');s.te
 function showMsg(id,txt,type){document.getElementById(id).innerHTML=`<div class="msg ${type}">${txt}</div>`;setTimeout(()=>document.getElementById(id).innerHTML='',5000);}
 function showTab(name){document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));document.getElementById(name).style.display='block';document.getElementById('tab-'+name).classList.add('active');if(name==='meeting')loadParticipants();}
 
-// “+N daha” için yardımcılar
+// “+N daha” için yardımcı
 function renderSlotListHTML(slots, tz, maxLines=2){
-  // slots: [{startUTC,endUTC,start?,end?}]
   const lines=slots.map(s=>{
     const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.start||'');
     const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.end||'');
     return `${sLbl}-${eLbl}`;
   });
-  if(lines.length<=maxLines){
-    return `<small class="slotlist">${lines.join('<br>')}</small>`;
-  }
+  if(lines.length<=maxLines) return `<small class="slotlist">${lines.join('<br>')}</small>`;
   const first=lines.slice(0,maxLines).join('<br>');
   const rest=lines.slice(maxLines).join('<br>');
   return `<small class="slotlist">${first}<span class="extra-slots" style="display:none"><br>${rest}</span></small>
           <a class="more-link" onclick="return showAllSlots(this)">+${lines.length-maxLines} daha</a>`;
 }
-function showAllSlots(a){
-  const span=a.previousElementSibling.querySelector('.extra-slots');
-  if(span){span.style.display='inline';}
-  a.remove();
-  return false;
-}
+function showAllSlots(a){const span=a.previousElementSibling.querySelector('.extra-slots');if(span)span.style.display='inline';a.remove();return false;}
 
 // ===== API =====
 async function apiCall(path,method='GET',data=null){
@@ -247,7 +248,7 @@ async function resetUserPwd(id){await loadDB();const pwd=genPwd();const hash=awa
 async function deleteUser(id){if(!confirm('Delete this user permanently?'))return;await loadDB();delete DB.users[id];if(DB.availability[id])delete DB.availability[id];await saveDB();refreshUsersList();}
 
 // ===== AVAILABILITY =====
-// (Kasım atlama düzeltmesi + seçim koruma)
+// Kasım atlama düzeltmesi + seçim koruma
 function populateMonthSelects(){
   const selects=[document.getElementById('avail-month'),document.getElementById('team-month'),document.getElementById('meeting-month')];
   const keep=selects.map(s=>s?s.value:null);
@@ -258,8 +259,8 @@ function populateMonthSelects(){
 function setupAvailabilityTab(){document.getElementById('avail-welcome').textContent=`Welcome ${ME.name}`;populateMonthSelects();renderMyCalendar();generateTimePickers();}
 function toISO(dateStr,time){return new Date(`${dateStr}T${time}:00`).toISOString();}
 
+// geri uyumluluk
 function normalizeDayRecord(rec){
-  // Geri uyumluluk
   if(!rec) return {slots:[]};
   if(Array.isArray(rec.slots)) return rec;
   const slots=[];
@@ -333,7 +334,7 @@ async function saveMyAvailability(){
   SELECTED_DAYS.forEach(dateStr=>{
     const current=normalizeDayRecord(DB.availability[ME.id][dateStr]);
     if(status==='no'){
-      DB.availability[ME.id][dateStr]={tz:myTZ,slots:[]}; // günü temizle
+      DB.availability[ME.id][dateStr]={tz:myTZ,slots:[]}; // explicit: müsait değil
     }else{
       const sISO=new Date(`${dateStr}T${START_TIME}:00`).toISOString();
       const eISO=new Date(`${dateStr}T${END_TIME}:00`).toISOString();
@@ -377,8 +378,8 @@ async function renderTeamCalendar(){
           if(rec.slots && rec.slots.length){
             cls='avail-yes';
             const tz=u.tz||rec.tz||VIEWER_TZ;
-            txt='✓<br>'+renderSlotListHTML(rec.slots, tz, 2);
-          } else {
+            txt=`<div class="slot-wrap">✓${renderSlotListHTML(rec.slots, tz, 2)}</div>`;
+          } else if ('slots' in rec) { // explicit 'müsait değil'
             cls='avail-no';txt='✗';
           }
         }
@@ -392,17 +393,34 @@ async function renderTeamCalendar(){
   document.getElementById('team-calendar').innerHTML=html;
 }
 
-// ===== MEETING (çoklu aralık kesişimi) =====
+// ===== MEETING (çoklu aralık + TZ güvenli) =====
 async function loadParticipants(){
   await loadDB();
   const users=Object.entries(DB.users).filter(([id,u])=>!u.admin);
   document.getElementById('participants').innerHTML=users.length?users.map(([id,u])=>`<label style="display:block;padding:5px;"><input type="checkbox" value="${id}">${u.name} (${u.role||'N/A'})</label>`).join(''):'<p>No users</p>';
 }
+function intersectIntervals(a,b){const out=[];a.forEach(i=>b.forEach(j=>{const s=Math.max(i.s,j.s),e=Math.min(i.e,j.e);if(e>s)out.push({s,e});}));return out;}
 
-function intersectIntervals(a,b){
-  const out=[];
-  a.forEach(i=>{b.forEach(j=>{const s=Math.max(i.s,j.s),e=Math.min(i.e,j.e);if(e>s) out.push({s,e});});});
-  return out;
+/* KULLANICININ TZ’SİNDEKİ duvar saatini UTC’ye çevir */
+function tzParts(date, tz){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(date);
+  const m={};parts.forEach(p=>{if(p.type!=='literal')m[p.type]=p.value;});
+  return {y:+m.year,m:+m.month,d:+m.day,hh:+m.hour,mm:+m.minute,ss:+m.second};
+}
+function partsToUTCms(y,m,d,hh,mm,ss=0){return Date.UTC(y,m-1,d,hh,mm,ss);}
+function localWallTimeToUTCISO(dateStr, time, tz){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const [hh,mm]=time.split(':').map(Number);
+  // İlk tahmin: bu duvar zamanı UTC kabul edilirse…
+  let guess=partsToUTCms(y,m,d,hh,mm,0);
+  // Bu an, ilgili TZ’de kaç görünüyor?
+  const shown=tzParts(new Date(guess), tz);
+  // Hedef ile görünen arasındaki farkı dakikadan düzelt
+  const desiredUTC=partsToUTCms(y,m,d,hh,mm,0);
+  const shownUTC=partsToUTCms(shown.y,shown.m,shown.d,shown.hh,shown.mm,shown.ss);
+  const delta=desiredUTC - shownUTC;
+  const corrected=guess + delta;
+  return new Date(corrected).toISOString();
 }
 
 async function findMeetingTimes(){
@@ -423,8 +441,21 @@ async function findMeetingTimes(){
 
     let common=null;
     for(const id of selectedIds){
+      const user=DB.users[id];
       const rec=normalizeDayRecord(DB.availability[id]?.[dateStr]);
-      const slots=(rec.slots||[]).filter(s=>s.startUTC&&s.endUTC).map(s=>({s:Date.parse(s.startUTC),e:Date.parse(s.endUTC)}));
+      let slots=(rec.slots||[]).map(s=>{
+        let startISO=s.startUTC, endISO=s.endUTC;
+        if(!startISO && s.start){ // legacy -> kullanıcının TZ’sine göre üret
+          const tz=user?.tz||rec.tz||VIEWER_TZ;
+          startISO=localWallTimeToUTCISO(dateStr, s.start, tz);
+        }
+        if(!endISO && s.end){
+          const tz=user?.tz||rec.tz||VIEWER_TZ;
+          endISO=localWallTimeToUTCISO(dateStr, s.end, tz);
+        }
+        return startISO&&endISO?{s:Date.parse(startISO),e:Date.parse(endISO)}:null;
+      }).filter(Boolean);
+
       if(!slots.length){common=[];break;}
       common = common===null ? slots : intersectIntervals(common, slots);
       if(!common.length) break;
