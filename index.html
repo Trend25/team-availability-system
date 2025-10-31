@@ -43,6 +43,9 @@ th{background:#4facfe;color:#fff}
 .avail-no{background:#f8d7da}
 .avail-unknown{background:#fff3cd}
 .loading{text-align:center;padding:40px;color:#666}
+/* çok satır kontrollü görünüm */
+.slotlist{display:block;max-height:3.2em;overflow:hidden}
+.more-link{display:inline-block;margin-top:4px;font-size:.75rem;text-decoration:underline;cursor:pointer;color:#0b5ed7}
 </style>
 </head>
 <body>
@@ -166,6 +169,29 @@ function setStatus(t,c='#4CAF50'){const s=document.getElementById('status');s.te
 function showMsg(id,txt,type){document.getElementById(id).innerHTML=`<div class="msg ${type}">${txt}</div>`;setTimeout(()=>document.getElementById(id).innerHTML='',5000);}
 function showTab(name){document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));document.getElementById(name).style.display='block';document.getElementById('tab-'+name).classList.add('active');if(name==='meeting')loadParticipants();}
 
+// “+N daha” için yardımcılar
+function renderSlotListHTML(slots, tz, maxLines=2){
+  // slots: [{startUTC,endUTC,start?,end?}]
+  const lines=slots.map(s=>{
+    const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.start||'');
+    const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.end||'');
+    return `${sLbl}-${eLbl}`;
+  });
+  if(lines.length<=maxLines){
+    return `<small class="slotlist">${lines.join('<br>')}</small>`;
+  }
+  const first=lines.slice(0,maxLines).join('<br>');
+  const rest=lines.slice(maxLines).join('<br>');
+  return `<small class="slotlist">${first}<span class="extra-slots" style="display:none"><br>${rest}</span></small>
+          <a class="more-link" onclick="return showAllSlots(this)">+${lines.length-maxLines} daha</a>`;
+}
+function showAllSlots(a){
+  const span=a.previousElementSibling.querySelector('.extra-slots');
+  if(span){span.style.display='inline';}
+  a.remove();
+  return false;
+}
+
 // ===== API =====
 async function apiCall(path,method='GET',data=null){
   const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,method,data})});
@@ -233,17 +259,12 @@ function setupAvailabilityTab(){document.getElementById('avail-welcome').textCon
 function toISO(dateStr,time){return new Date(`${dateStr}T${time}:00`).toISOString();}
 
 function normalizeDayRecord(rec){
-  // Geri uyumluluk: eski tekli kayıtları slots formatına çevir
+  // Geri uyumluluk
   if(!rec) return {slots:[]};
   if(Array.isArray(rec.slots)) return rec;
   const slots=[];
   if(rec.status==='yes' && (rec.startUTC||rec.start)){
-    slots.push({
-      start:rec.start||null,
-      end:rec.end||null,
-      startUTC:rec.startUTC||null,
-      endUTC:rec.endUTC||null
-    });
+    slots.push({start:rec.start||null,end:rec.end||null,startUTC:rec.startUTC||null,endUTC:rec.endUTC||null});
   }
   return {tz:rec.tz,slots};
 }
@@ -269,15 +290,10 @@ async function renderMyCalendar(){
     let cls='cal-day',extra='';
     if(isWeekend) cls+=' weekend';
     else{
-      let rec=normalizeDayRecord(myAll[dateStr]);
+      const rec=normalizeDayRecord(myAll[dateStr]);
       if(rec.slots && rec.slots.length){
         cls+=' has-data';
-        const labels=rec.slots.map(s=>{
-          const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ}):(s.start||'');
-          const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ}):(s.end||'');
-          return `${sLbl}-${eLbl}`;
-        }).join('<br>');
-        extra=`<small>${labels}</small>`;
+        extra=renderSlotListHTML(rec.slots, VIEWER_TZ, 2);
       }
     }
     html+=`<div class="${cls}" data-date="${dateStr}" onclick="toggleDaySelection('${dateStr}', ${isWeekend})">${d}${extra}</div>`;
@@ -317,11 +333,10 @@ async function saveMyAvailability(){
   SELECTED_DAYS.forEach(dateStr=>{
     const current=normalizeDayRecord(DB.availability[ME.id][dateStr]);
     if(status==='no'){
-      DB.availability[ME.id][dateStr]={tz:myTZ,slots:[]}; // günü tamamen boş yap
+      DB.availability[ME.id][dateStr]={tz:myTZ,slots:[]}; // günü temizle
     }else{
-      // yeni aralığı ekle (append)
-      const sISO=toISO(dateStr,START_TIME);
-      const eISO=toISO(dateStr,END_TIME);
+      const sISO=new Date(`${dateStr}T${START_TIME}:00`).toISOString();
+      const eISO=new Date(`${dateStr}T${END_TIME}:00`).toISOString();
       current.tz=myTZ;
       current.slots=current.slots||[];
       current.slots.push({start:START_TIME,end:END_TIME,startUTC:sISO,endUTC:eISO});
@@ -362,12 +377,7 @@ async function renderTeamCalendar(){
           if(rec.slots && rec.slots.length){
             cls='avail-yes';
             const tz=u.tz||rec.tz||VIEWER_TZ;
-            const lines=rec.slots.map(s=>{
-              const sLbl=s.startUTC?new Date(s.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.start||'');
-              const eLbl=s.endUTC?new Date(s.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:tz}):(s.end||'');
-              return `${sLbl}-${eLbl}`;
-            }).join('<br>');
-            txt=`✓<br><small>${lines}</small>`;
+            txt='✓<br>'+renderSlotListHTML(rec.slots, tz, 2);
           } else {
             cls='avail-no';txt='✗';
           }
@@ -390,14 +400,8 @@ async function loadParticipants(){
 }
 
 function intersectIntervals(a,b){
-  // a,b: [{s:ms,e:ms}]
   const out=[];
-  a.forEach(i=>{
-    b.forEach(j=>{
-      const s=Math.max(i.s,j.s), e=Math.min(i.e,j.e);
-      if(e>s) out.push({s,e});
-    });
-  });
+  a.forEach(i=>{b.forEach(j=>{const s=Math.max(i.s,j.s),e=Math.min(i.e,j.e);if(e>s) out.push({s,e});});});
   return out;
 }
 
@@ -417,7 +421,6 @@ async function findMeetingTimes(){
     if(date.getDay()<1 || date.getDay()>5) continue;
     const dateStr=date.toISOString().split('T')[0];
 
-    // her kullanıcı için gün içi aralıkları (UTC ms)
     let common=null;
     for(const id of selectedIds){
       const rec=normalizeDayRecord(DB.availability[id]?.[dateStr]);
@@ -428,14 +431,12 @@ async function findMeetingTimes(){
     }
     if(!common || !common.length) continue;
 
-    // süre filtresi ve sonuçlara ekle
     common.forEach(iv=>{
       const hours=(iv.e-iv.s)/3600000;
       if(hours>=duration){
         const startISO=new Date(iv.s).toISOString();
         const endISO=new Date(iv.e).toISOString();
         results.push({
-          date:dateStr,
           label:date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),
           startISO,endISO,
           start:new Date(iv.s).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:VIEWER_TZ}),
@@ -449,11 +450,12 @@ async function findMeetingTimes(){
   if(!results.length){document.getElementById('meeting-results').innerHTML='<div class="msg error">No common times found</div>';return;}
 
   let html=`<div class="msg success">Found ${results.length} slot(s)</div>`;
+  const idsNow=()=>Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value).join(',');
   results.forEach(slot=>{
     html+=`<div class="section" style="background:#d4edda;border-color:#28a745;">
       <h4>${slot.label}</h4>
       <p><strong>Time:</strong> ${slot.start} - ${slot.end} (${slot.hours.toFixed(1)}h)</p>
-      <button class="btn" onclick="createGoogleMeetISO('${slot.startISO}','${slot.endISO}','${Array.from(document.querySelectorAll('#participants input:checked')).map(cb=>cb.value).join(',')}')">Create Google Meet</button>
+      <button class="btn" onclick="createGoogleMeetISO('${slot.startISO}','${slot.endISO}','${idsNow()}')">Create Google Meet</button>
     </div>`;
   });
   document.getElementById('meeting-results').innerHTML=html;
