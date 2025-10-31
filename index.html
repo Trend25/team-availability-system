@@ -375,18 +375,33 @@ async function deleteUser(id) {
 }
 
 // ===== AVAILABILITY =====
+// >>> FIXED: month list built with day=1 to avoid 31st spillover and preserves current selections
 function populateMonthSelects() {
+    const selects = [
+        document.getElementById('avail-month'),
+        document.getElementById('team-month'),
+        document.getElementById('meeting-month')
+    ];
+    const keepValues = selects.map(sel => sel ? sel.value : null);
+
     const months = [];
+    const now = new Date();
+    // normalize to the first of the month at midnight to prevent spillover
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+
     for (let i = 0; i < 12; i++) {
-        const d = new Date(); d.setMonth(d.getMonth() + i);
+        const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
         const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         const txt = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         months.push(`<option value="${val}">${txt}</option>`);
     }
     const html = months.join('');
-    document.getElementById('avail-month').innerHTML = html;
-    document.getElementById('team-month').innerHTML = html;
-    document.getElementById('meeting-month').innerHTML = html;
+    selects.forEach(sel => { if (sel) sel.innerHTML = html; });
+
+    // restore previous selection if available
+    keepValues.forEach((val, idx) => {
+        if (val && selects[idx]) selects[idx].value = val;
+    });
 }
 
 function setupAvailabilityTab() {
@@ -421,7 +436,6 @@ async function renderMyCalendar() {
         else if (myAvail[dateStr]) {
             cls += ' has-data';
             const av = myAvail[dateStr];
-            // Görüntüleyen kişinin TZ’ine göre etiket
             const startLabel = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}) : (av.start || '');
             const endLabel   = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ})   : (av.end || '');
             extra = av.status === 'yes' ? `<small>${startLabel}-${endLabel}</small>` : '<small>Not Available</small>';
@@ -462,7 +476,6 @@ async function saveMyAvailability() {
     const myTZ = (DB.users[ME.id] && DB.users[ME.id].tz) ? DB.users[ME.id].tz : VIEWER_TZ;
 
     SELECTED_DAYS.forEach(dateStr => {
-        // Kullanıcının yerel zamanından UTC ISO üret
         const startLocal = new Date(`${dateStr}T${START_TIME}:00`);
         const endLocal   = new Date(`${dateStr}T${END_TIME}:00`);
         DB.availability[ME.id][dateStr] = {
@@ -517,7 +530,7 @@ async function renderTeamCalendar() {
                 if (av) {
                     cls = av.status==='yes' ? 'avail-yes' : 'avail-no';
                     if (av.status==='yes') {
-                        const tz = u.tz || av.tz || VIEWER_TZ; // kullanıcı TZ’si
+                        const tz = u.tz || av.tz || VIEWER_TZ;
                         const s = av.startUTC ? new Date(av.startUTC).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.start||'');
                         const e = av.endUTC   ? new Date(av.endUTC).toLocaleTimeString([],   {hour:'2-digit', minute:'2-digit', timeZone: tz}) : (av.end||'');
                         txt = `✓<br><small>${s}-${e}</small>`;
@@ -548,6 +561,7 @@ async function loadParticipants() {
 async function findMeetingTimes() {
     await loadDB();
     const val = document.getElementById('meeting-month').value;
+    aconst = 1;
     const [year, month] = val.split('-').map(Number);
     const duration = parseFloat(document.getElementById('meeting-duration').value);
 
@@ -572,7 +586,6 @@ async function findMeetingTimes() {
                         endISO:   av.endUTC   || (av.end   ? new Date(`${dateStr}T${av.end}:00`).toISOString()   : null),
                     };
                 });
-                // UTC ISO bazlı kesişim
                 const latestStartISO  = slots.reduce((max,s)=>(!max || (s.startISO && s.startISO > max)) ? s.startISO : max, null);
                 const earliestEndISO  = slots.reduce((min,s)=>(!min || (s.endISO && s.endISO < min)) ? s.endISO : min, null);
                 const startMs = Date.parse(latestStartISO);
@@ -585,7 +598,6 @@ async function findMeetingTimes() {
                         formatted: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
                         startISO: latestStartISO,
                         endISO: earliestEndISO,
-                        // Görüntüleyene etiket: kendi TZ’inde göster
                         start: new Date(latestStartISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
                         end:   new Date(earliestEndISO).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit', timeZone: VIEWER_TZ}),
                         duration: availHours,
@@ -631,10 +643,9 @@ async function ensureUserTZ() {
   try {
     const current = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     if (ME && current && DB && DB.users && DB.users[ME.id] && DB.users[ME.id].tz !== current) {
-      await loadDB();                     // veriyi tazele
-      DB.users[ME.id].tz = current;       // yeni TZ'yi yaz
-      await saveDB();                     // kalıcı kaydet
-      // varsa görünümleri yenile
+      await loadDB();
+      DB.users[ME.id].tz = current;
+      await saveDB();
       if (typeof renderTeamCalendar === 'function') renderTeamCalendar();
       if (typeof renderMyCalendar === 'function') renderMyCalendar();
       setStatus(`Timezone updated: ${current}`, '#4CAF50');
@@ -644,9 +655,7 @@ async function ensureUserTZ() {
     console.warn('ensureUserTZ error:', err);
   }
 }
-// odağa gelince kontrol et (nomad hareketini yakalamak için)
 window.addEventListener('focus', ensureUserTZ);
-// periyodik kontrol (15 dakikada bir)
 setInterval(ensureUserTZ, 15 * 60 * 1000);
 
 // ===== INIT =====
@@ -660,7 +669,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (savedUser) {
             ME = JSON.parse(savedUser);
             if (DB.users[ME.id]) {
-                // Oturum açılmış kullanıcıyı hazırla
                 document.getElementById('tab-my-avail').disabled = false;
                 document.getElementById('tab-team').disabled = false;
                 document.getElementById('tab-meeting').disabled = false;
@@ -676,8 +684,6 @@ window.addEventListener('DOMContentLoaded', async () => {
                 }
                 populateMonthSelects();
                 loadParticipants();
-
-                // sayfa ilk yüklenirken de TZ değişimini kontrol et
                 ensureUserTZ();
             } else {
                 localStorage.removeItem('current-user');
