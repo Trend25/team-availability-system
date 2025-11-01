@@ -50,13 +50,24 @@
     .avail-no{background:#f8d7da}
     .avail-unknown{background:#fff3cd}
 
-    /* Participants checkbox alignment (closer + bigger) */
-    #participants label{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:.95rem}
-    #participants input[type="checkbox"]{transform:scale(1.2)}
-
     /* Tiny badges for slot headers */
     .slot-badge{display:inline-block;background:#e8f2ff;color:#1864ab;border:1px solid #cfe3ff;border-radius:999px;padding:2px 8px;font-size:.75rem;margin-right:8px}
     .slot-card{background:#fff;border:1px dashed #cfe3ff;border-radius:10px;padding:10px;margin:10px 0}
+
+    /* Participants – bulletproof alignment */
+    #participants{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-width:520px;     /* sağa taşmayı engeller */
+    }
+    .participant{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .participant input[type="checkbox"]{transform:scale(1.2)}
+    .participant .name{font-size:.95rem;line-height:1.2}
   </style>
 </head>
 <body>
@@ -166,7 +177,10 @@
       <div class="section">
         <div class="form-group"><label>Select Month</label><select id="meeting-month"></select></div>
         <div class="form-group"><label>Meeting Duration (hours)</label><input type="number" id="meeting-duration" value="1" min="0.5" step="0.5"/></div>
-        <div class="form-group"><label>Select Participants (excluding admins)</label><div id="participants"></div></div>
+        <div class="form-group">
+          <label>Select Participants (excluding admins)</label>
+          <div id="participants"></div>
+        </div>
         <button class="btn" onclick="findMeetingTimes()">Find Available Times</button>
         <div id="meeting-results"></div>
       </div>
@@ -320,7 +334,6 @@ function normalizeToSlots(av){
 }
 
 function validateSlots(){
-  // basic: each start<end, max 3, and no overlaps
   const toMin = t=>{const [H,M]=t.split(':').map(Number);return H*60+M;};
   for(const s of SLOTS){
     if(toMin(s.start)>=toMin(s.end)){
@@ -328,7 +341,6 @@ function validateSlots(){
       return false;
     }
   }
-  // sort by start and check overlap
   const order=[...SLOTS].sort((a,b)=>toMin(a.start)-toMin(b.start));
   for(let i=1;i<order.length;i++){
     if(toMin(order[i-1].end)>toMin(order[i].start)){
@@ -413,8 +425,15 @@ async function renderTeamCalendar(){
 async function loadParticipants(){
   await loadDB();
   const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
-  if(!users.length){document.getElementById('participants').innerHTML='<p>No users</p>';return;}
-  document.getElementById('participants').innerHTML=users.map(([id,u])=>`<label><input type="checkbox" value="${id}">${u.name} (${u.role||'N/A'})</label>`).join('');
+  const el = document.getElementById('participants');
+  if(!users.length){ el.innerHTML='<p>No users</p>'; return; }
+  // Her satır: checkbox + isim (label kullanmıyoruz)
+  el.innerHTML = users.map(([id,u]) => `
+    <div class="participant">
+      <input type="checkbox" value="${id}" id="p-${id}">
+      <span class="name">${u.name} (${u.role || 'N/A'})</span>
+    </div>
+  `).join('');
 }
 function intersectTwoSets(A,B){
   const out=[];
@@ -456,7 +475,6 @@ async function findMeetingTimes(){
 
     if(!inter.length) continue;
 
-    // keep slots >= duration; track if any were shorter for UX note
     let anyShort=false;
     inter.forEach(win=>{
       const hours=(Date.parse(win.endISO)-Date.parse(win.startISO))/3600000;
