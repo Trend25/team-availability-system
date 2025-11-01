@@ -50,24 +50,30 @@
     .avail-no{background:#f8d7da}
     .avail-unknown{background:#fff3cd}
 
-    /* Tiny badges for slot headers */
+    /* slot başlık rozeti */
     .slot-badge{display:inline-block;background:#e8f2ff;color:#1864ab;border:1px solid #cfe3ff;border-radius:999px;padding:2px 8px;font-size:.75rem;margin-right:8px}
     .slot-card{background:#fff;border:1px dashed #cfe3ff;border-radius:10px;padding:10px;margin:10px 0}
 
-    /* Participants – bulletproof alignment */
+    /* ✅ Participants – grid hizalama (checkbox + isim) */
     #participants{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      max-width:520px;     /* sağa taşmayı engeller */
-    }
-    .participant{
-      display:flex;
+      display:grid;
+      grid-template-columns:auto 1fr;
       align-items:center;
-      gap:10px;
+      column-gap:10px;
+      row-gap:8px;
+      max-width:420px;
+      margin-top:8px;
     }
-    .participant input[type="checkbox"]{transform:scale(1.2)}
-    .participant .name{font-size:.95rem;line-height:1.2}
+    #participants input[type="checkbox"]{
+      justify-self:end;
+      transform:scale(1.2);
+    }
+    #participants .name{
+      justify-self:start;
+      font-size:.95rem;
+      line-height:1.2;
+      white-space:nowrap;
+    }
   </style>
 </head>
 <body>
@@ -142,7 +148,6 @@
           </select>
         </div>
 
-        <!-- dynamic windows will appear here -->
         <div id="windows"></div>
 
         <button class="btn" onclick="saveMyAvailability()">Save for Selected Days</button>
@@ -193,7 +198,6 @@
 let DB = { users:{}, availability:{} };
 let ME = null;
 let SELECTED_DAYS = new Set();
-// time windows state (up to 3)
 let SLOTS = [{start:'09:00', end:'17:00'}];
 
 // ===== CONSTS =====
@@ -377,7 +381,7 @@ async function saveMyAvailability(){
   }catch(e){ showMsg('avail-msg','Error: '+e.message,'error'); setStatus('Save Failed','#f44336'); }
 }
 
-// ===== TEAM CALENDAR (viewer-TZ toggle + multi-slot) =====
+// ===== TEAM CALENDAR =====
 async function renderTeamCalendar(){
   await loadDB();
   const val=document.getElementById('team-month').value;const [year,month]=val.split('-').map(Number);
@@ -427,12 +431,11 @@ async function loadParticipants(){
   const users=Object.entries(DB.users).filter(([_,u])=>!u.admin);
   const el = document.getElementById('participants');
   if(!users.length){ el.innerHTML='<p>No users</p>'; return; }
-  // Her satır: checkbox + isim (label kullanmıyoruz)
+
+  // Grid: checkbox + isim (wrapper yok)
   el.innerHTML = users.map(([id,u]) => `
-    <div class="participant">
-      <input type="checkbox" value="${id}" id="p-${id}">
-      <span class="name">${u.name} (${u.role || 'N/A'})</span>
-    </div>
+    <input type="checkbox" value="${id}" id="p-${id}">
+    <span class="name">${u.name} (${u.role || 'N/A'})</span>
   `).join('');
 }
 function intersectTwoSets(A,B){
